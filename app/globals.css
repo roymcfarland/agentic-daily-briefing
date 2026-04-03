@@ -1,0 +1,101 @@
+:root {
+  color-scheme: light;
+  --bg: #f7f2e8;
+  --ink: #1f2937;
+  --muted: #5b6472;
+  --card: rgba(255, 252, 247, 0.88);
+  --line: rgba(31, 41, 55, 0.1);
+  --accent: #a44918;
+  --accent-soft: rgba(164, 73, 24, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: Georgia, "Times New Roman", serif;
+  background:
+    radial-gradient(circle at top left, rgba(164, 73, 24, 0.16), transparent 38%),
+    linear-gradient(180deg, #fbf8f1 0%, var(--bg) 100%);
+  color: var(--ink);
+}
+
+body {
+  padding: 32px 18px 48px;
+}
+
+.shell {
+  max-width: 880px;
+  margin: 0 auto;
+  display: grid;
+  gap: 20px;
+}
+
+.hero,
+.card {
+  border: 1px solid var(--line);
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(41, 37, 36, 0.08);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.76rem;
+  color: var(--accent);
+}
+
+h1,
+h2 {
+  margin: 0 0 12px;
+  line-height: 1.1;
+}
+
+h1 {
+  font-size: clamp(2.3rem, 6vw, 4.4rem);
+  max-width: 12ch;
+}
+
+h2 {
+  font-size: 1.35rem;
+}
+
+.lede,
+li {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+ul,
+ol {
+  margin: 0;
+  padding-left: 22px;
+}
+
+code {
+  background: var(--accent-soft);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: 18px 14px 32px;
+  }
+
+  .hero,
+  .card {
+    padding: 22px;
+    border-radius: 20px;
+  }
+}

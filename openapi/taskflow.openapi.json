@@ -1,0 +1,109 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Taskflow API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.taskflow.example.com"
+    }
+  ],
+  "paths": {
+    "/daily-summary": {
+      "post": {
+        "operationId": "getDailySummary",
+        "summary": "Fetches the daily summary for a single task area",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DailySummaryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Daily summary response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailySummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DailySummaryRequest": {
+        "type": "object",
+        "required": [
+          "area"
+        ],
+        "properties": {
+          "area": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "elevated-organics",
+              "brightline-labs"
+            ]
+          },
+          "asOfDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "DailySummaryResponse": {
+        "type": "object",
+        "required": [
+          "area",
+          "headline",
+          "openItems",
+          "blockers",
+          "priorities",
+          "dueToday"
+        ],
+        "properties": {
+          "area": {
+            "type": "string"
+          },
+          "headline": {
+            "type": "string"
+          },
+          "openItems": {
+            "type": "integer"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "priorities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dueToday": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rawSummary": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

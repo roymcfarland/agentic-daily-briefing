@@ -1,0 +1,40 @@
+const setupSteps = [
+  "Set Taskflow and Resend environment variables.",
+  "Run the Taskflow client generator after any OpenAPI schema change.",
+  "Deploy to Vercel and configure the cron secret.",
+  "Use the included UTC cron pair so Chicago 6:30 AM survives DST transitions.",
+];
+
+export default function HomePage() {
+  return (
+    <main className="shell">
+      <section className="hero">
+        <p className="eyebrow">Weekday Morning Brief</p>
+        <h1>Production-ready Next.js briefing pipeline for Vercel Cron.</h1>
+        <p className="lede">
+          Sends a weekday 6:30 AM America/Chicago email using Resend, Taskflow
+          daily summaries, and live research across the sectors you specified.
+        </p>
+      </section>
+
+      <section className="card">
+        <h2>Included</h2>
+        <ul>
+          <li>App Router API route at <code>/api/cron/morning-brief</code></li>
+          <li>Generated Taskflow client for <code>getDailySummary</code></li>
+          <li>Story dedupe, noise filtering, ranking, and HTML email output</li>
+          <li>Vitest coverage for ranking and formatter behavior</li>
+        </ul>
+      </section>
+
+      <section className="card">
+        <h2>Setup path</h2>
+        <ol>
+          {setupSteps.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+      </section>
+    </main>
+  );
+}
