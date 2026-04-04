@@ -8,11 +8,29 @@ const digest: BriefingDigest = {
   taskSummaries: [
     {
       area: "personal",
-      headline: "Focus on health admin and two follow-ups",
+      headline: "Personal: 4 active tasks across 2 parent items",
       openItems: 4,
-      blockers: ["Waiting on lab result"],
-      priorities: ["Confirm insurance call", "Reply to lender"],
-      dueToday: ["Insurance appeal"],
+      tasks: [
+        {
+          id: 1,
+          title: "Confirm insurance call",
+          status: "in-progress",
+          subtasks: [
+            {
+              id: 2,
+              title: "Upload supporting paperwork",
+              status: "on-deck",
+              subtasks: [],
+            },
+          ],
+        },
+        {
+          id: 3,
+          title: "Reply to lender",
+          status: "on-deck",
+          subtasks: [],
+        },
+      ],
     },
   ],
   stories: [
@@ -52,6 +70,8 @@ describe("renderBriefingEmail", () => {
 
     expect(text).toContain("Taskflow Snapshot");
     expect(text).toContain("[AI] Model vendors cut inference costs");
+    expect(text).toContain("- Confirm insurance call (in-progress)");
+    expect(text).toContain("  - Upload supporting paperwork (on-deck)");
     expect(text).toContain("One possible contrarian take:");
   });
 });

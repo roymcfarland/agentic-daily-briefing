@@ -1,14 +1,23 @@
 import { escapeHtml } from "@/lib/html";
-import type { BriefingDigest, ResearchTopic, TaskSummary } from "@/lib/briefing/types";
+import type { BriefingDigest, ResearchTopic, TaskNode, TaskSummary } from "@/lib/briefing/types";
 import { getTopicLabel } from "@/lib/research/topics";
 
-function renderList(items: string[], emptyText: string): string {
-  if (!items.length) {
-    return `<p style="margin:0;color:#6b7280;">${escapeHtml(emptyText)}</p>`;
+function renderTaskNodes(tasks: TaskNode[], depth = 0): string {
+  if (!tasks.length) {
+    return `<p style="margin:0;color:#6b7280;">No active tasks in this list.</p>`;
   }
 
-  return `<ul style="margin:8px 0 0;padding-left:18px;">${items
-    .map((item) => `<li style="margin:0 0 6px;">${escapeHtml(item)}</li>`)
+  const paddingLeft = depth === 0 ? 20 : 18;
+  return `<ul style="margin:8px 0 0;padding-left:${paddingLeft}px;">${tasks
+    .map(
+      (task) => `
+        <li style="margin:0 0 8px;">
+          <span style="color:#111827;">${escapeHtml(task.title)}</span>
+          <span style="color:#6b7280;"> (${escapeHtml(task.status)})</span>
+          ${task.subtasks.length ? renderTaskNodes(task.subtasks, depth + 1) : ""}
+        </li>
+      `,
+    )
     .join("")}</ul>`;
 }
 
@@ -18,14 +27,19 @@ function renderTaskSummary(summary: TaskSummary): string {
       <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#9a3412;">${escapeHtml(summary.area)}</p>
       <h3 style="margin:0 0 8px;font-size:18px;color:#111827;">${escapeHtml(summary.headline)}</h3>
       <p style="margin:0 0 12px;color:#374151;"><strong>${summary.openItems}</strong> open items</p>
-      <p style="margin:0 0 4px;font-weight:700;color:#111827;">Priorities</p>
-      ${renderList(summary.priorities, "No explicit priorities returned.")}
-      <p style="margin:12px 0 4px;font-weight:700;color:#111827;">Due today</p>
-      ${renderList(summary.dueToday, "Nothing due today.")}
-      <p style="margin:12px 0 4px;font-weight:700;color:#111827;">Blockers</p>
-      ${renderList(summary.blockers, "No blockers reported.")}
+      <p style="margin:0 0 4px;font-weight:700;color:#111827;">Active tasks</p>
+      ${renderTaskNodes(summary.tasks)}
     </section>
   `;
+}
+
+function appendTaskLines(lines: string[], tasks: TaskNode[], depth = 0) {
+  const prefix = `${"  ".repeat(depth)}- `;
+
+  for (const task of tasks) {
+    lines.push(`${prefix}${task.title} (${task.status})`);
+    appendTaskLines(lines, task.subtasks, depth + 1);
+  }
 }
 
 function renderTopic(topic: ResearchTopic, digest: BriefingDigest): string {
@@ -108,9 +122,12 @@ export function renderBriefingText(digest: BriefingDigest): string {
   for (const summary of digest.taskSummaries) {
     lines.push(`${summary.area}: ${summary.headline}`);
     lines.push(`Open items: ${summary.openItems}`);
-    lines.push(`Priorities: ${summary.priorities.join("; ") || "None"}`);
-    lines.push(`Due today: ${summary.dueToday.join("; ") || "None"}`);
-    lines.push(`Blockers: ${summary.blockers.join("; ") || "None"}`);
+    lines.push("Active tasks:");
+    if (!summary.tasks.length) {
+      lines.push("- None");
+    } else {
+      appendTaskLines(lines, summary.tasks);
+    }
     lines.push("");
   }
 

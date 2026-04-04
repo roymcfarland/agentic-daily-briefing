@@ -1,7 +1,14 @@
 export type CoverageArea =
   | "personal"
-  | "elevated-organics"
-  | "brightline-labs";
+  | "brightline-labs"
+  | "elevated-organics";
+
+export interface TaskNode {
+  id: number | string;
+  title: string;
+  status: "in-progress" | "on-deck";
+  subtasks: TaskNode[];
+}
 
 export type ResearchTopic =
   | "ai"
@@ -16,9 +23,7 @@ export interface TaskSummary {
   area: CoverageArea;
   headline: string;
   openItems: number;
-  blockers: string[];
-  priorities: string[];
-  dueToday: string[];
+  tasks: TaskNode[];
   rawSummary?: string;
 }
 

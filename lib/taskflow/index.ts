@@ -1,11 +1,11 @@
 import { getEnv } from "@/lib/env";
-import type { CoverageArea, TaskSummary } from "@/lib/briefing/types";
+import type { CoverageArea, TaskNode, TaskSummary } from "@/lib/briefing/types";
 import { TaskflowClient, type Task } from "@/lib/taskflow/generated/client";
 
 const AREAS: CoverageArea[] = [
   "personal",
-  "elevated-organics",
   "brightline-labs",
+  "elevated-organics",
 ];
 
 function normalizeCategory(category?: string): CoverageArea | null {
@@ -32,12 +32,6 @@ function sortTasks(tasks: Task[]): Task[] {
   });
 }
 
-function toTitles(tasks: Task[]): string[] {
-  return sortTasks(tasks)
-    .map((task) => task.title?.trim())
-    .filter((value): value is string => Boolean(value));
-}
-
 function byArea(tasks: Task[] | undefined): Record<CoverageArea, Task[]> {
   const grouped: Record<CoverageArea, Task[]> = {
     personal: [],
@@ -55,15 +49,57 @@ function byArea(tasks: Task[] | undefined): Record<CoverageArea, Task[]> {
   return grouped;
 }
 
-function createHeadline(area: CoverageArea, openItems: number, inProgress: number, dueToday: number): string {
+function statusOf(task: Task): "in-progress" | "on-deck" {
+  return task.status === "in-progress" ? "in-progress" : "on-deck";
+}
+
+function buildTaskTree(tasks: Task[]): TaskNode[] {
+  const sortedTasks = sortTasks(
+    tasks.filter((task) => task.id != null && task.title?.trim()),
+  );
+  const nodes = new Map<number, TaskNode>();
+  const childIds = new Set<number>();
+
+  for (const task of sortedTasks) {
+    nodes.set(task.id as number, {
+      id: task.id as number,
+      title: task.title!.trim(),
+      status: statusOf(task),
+      subtasks: [],
+    });
+  }
+
+  for (const task of sortedTasks) {
+    const id = task.id as number;
+    const parentId = task.parentId;
+    if (parentId == null) {
+      continue;
+    }
+
+    const node = nodes.get(id);
+    const parent = nodes.get(parentId);
+    if (!node || !parent) {
+      continue;
+    }
+
+    parent.subtasks.push(node);
+    childIds.add(id);
+  }
+
+  return sortedTasks
+    .map((task) => nodes.get(task.id as number)!)
+    .filter((node) => !childIds.has(node.id as number));
+}
+
+function createHeadline(area: CoverageArea, openItems: number, parentItems: number): string {
   const label =
     area === "personal"
       ? "Personal"
-      : area === "elevated-organics"
-        ? "Elevated Organics"
-        : "Brightline Labs";
+      : area === "brightline-labs"
+        ? "Brightline Labs"
+        : "Elevated Organics";
 
-  return `${label}: ${openItems} active items, ${inProgress} in progress, ${dueToday} recently completed`;
+  return `${label}: ${openItems} active tasks across ${parentItems} parent items`;
 }
 
 export async function getTaskSummaries(now: Date): Promise<TaskSummary[]> {
@@ -78,24 +114,17 @@ export async function getTaskSummaries(now: Date): Promise<TaskSummary[]> {
   const summary = await client.getDailySummary();
   const inProgressByArea = byArea(summary.inProgress);
   const onDeckByArea = byArea(summary.onDeck);
-  const iceBoxByArea = byArea(summary.iceBox);
-  const recentlyCompletedByArea = byArea(summary.recentlyCompleted);
 
   return AREAS.map((area) => {
-    const priorities = toTitles(onDeckByArea[area]).slice(0, 5);
-    const blockers = toTitles(iceBoxByArea[area]).slice(0, 5);
-    const dueToday = toTitles(recentlyCompletedByArea[area]).slice(0, 5);
-    const inProgress = toTitles(inProgressByArea[area]);
-    const openItems =
-      inProgressByArea[area].length + onDeckByArea[area].length + iceBoxByArea[area].length;
+    const activeTasks = [...inProgressByArea[area], ...onDeckByArea[area]];
+    const tasks = buildTaskTree(activeTasks);
+    const openItems = activeTasks.length;
 
     return {
       area,
-      headline: createHeadline(area, openItems, inProgress.length, dueToday.length),
+      headline: createHeadline(area, openItems, tasks.length),
       openItems,
-      blockers,
-      priorities: [...inProgress, ...priorities].slice(0, 6),
-      dueToday,
+      tasks,
       rawSummary: JSON.stringify({
         generatedAt: summary.generatedAt,
         completionRate: summary.summary?.completionRate,
