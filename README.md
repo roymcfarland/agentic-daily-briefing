@@ -89,6 +89,18 @@ Force a manual send outside the normal 6:30 AM America/Chicago cron window:
 curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/morning-brief?force=1"
 ```
 
+Preview the assembled briefing without sending email:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/morning-brief?preview=1"
+```
+
+Preview the assembled briefing outside the normal send window:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/morning-brief?force=1&preview=1"
+```
+
 ## Deploy to Vercel
 
 1. Import the repo into Vercel.
@@ -122,3 +134,4 @@ npm test
 - If a feed fails, the pipeline continues with the remaining sources.
 - The route returns JSON so Vercel Cron logs stay readable.
 - `force=1` can be used on an authenticated request for manual testing outside the scheduled send window.
+- `preview=1` can be used on an authenticated request to inspect the assembled digest without sending email.

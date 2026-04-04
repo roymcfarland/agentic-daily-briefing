@@ -22,6 +22,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const force = searchParams.get("force") === "1";
+  const preview = searchParams.get("preview") === "1";
   const now = new Date();
   if (!force && !isWeekdayMorningWindow(now)) {
     return NextResponse.json({
@@ -34,6 +35,15 @@ export async function GET(request: Request) {
 
   try {
     const digest = await buildBriefingDigest(now);
+    if (preview) {
+      return NextResponse.json({
+        ok: true,
+        preview: true,
+        forced: force,
+        digest,
+      });
+    }
+
     const email = await sendBriefingEmail(digest);
 
     return NextResponse.json({
