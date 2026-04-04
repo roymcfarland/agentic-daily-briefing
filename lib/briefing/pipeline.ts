@@ -20,13 +20,39 @@ function summarizeWatch(stories: RankedStory[]): string {
   return `${top.title} could matter more than it first appears if the downstream effect reaches pricing, partners, or regulation.`;
 }
 
-function summarizeIgnore(stories: RankedStory[]): string {
-  const noisy = stories.find((story) => story.signalOrNoise === "Noise");
-  if (!noisy) {
-    return "Ignore low-information headlines that do not clearly alter demand, margin, or execution risk.";
+function isWithinPastWeek(story: RankedStory, now: Date): boolean {
+  if (!story.publishedAt) {
+    return false;
   }
 
-  return `${noisy.title} looks easy to overreact to, but the current signal is still weak.`;
+  const publishedAt = new Date(story.publishedAt).getTime();
+  if (Number.isNaN(publishedAt)) {
+    return false;
+  }
+
+  const ageHours = Math.max(0, (now.getTime() - publishedAt) / (1000 * 60 * 60));
+  return ageHours <= 24 * 7;
+}
+
+function summarizeIgnore(displayedStories: RankedStory[], rankedStories: RankedStory[], now: Date): string {
+  const displayedNoise = displayedStories.find((story) => story.signalOrNoise === "Noise");
+  if (displayedNoise) {
+    return `${displayedNoise.title} looks easy to overreact to, but the current signal is still weak.`;
+  }
+
+  const displayedKeys = new Set(displayedStories.map((story) => story.dedupeKey));
+  const outsideNoise = rankedStories.find(
+    (story) =>
+      story.signalOrNoise === "Noise" &&
+      !displayedKeys.has(story.dedupeKey) &&
+      isWithinPastWeek(story, now),
+  );
+
+  if (outsideNoise) {
+    return `${outsideNoise.title} looks easy to overreact to, but it did not make the briefing because the decision value still seems limited.`;
+  }
+
+  return "Ignore low-information headlines that do not clearly alter demand, margin, or execution risk.";
 }
 
 function summarizeContrarian(stories: RankedStory[]): string {
@@ -108,7 +134,7 @@ export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
     taskSummaries,
     stories,
     oneThingToWatch: summarizeWatch(stories),
-    oneThingToIgnore: summarizeIgnore(rankedStories),
+    oneThingToIgnore: summarizeIgnore(stories, rankedStories, now),
     oneContrarianTake: summarizeContrarian(stories),
   };
 }

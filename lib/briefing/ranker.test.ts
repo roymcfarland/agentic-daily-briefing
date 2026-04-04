@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { buildDedupeKey, isLowSignal, rankStories } from "@/lib/briefing/ranker";
+import {
+  buildDedupeKey,
+  isFreshStory,
+  isLowSignal,
+  rankStories,
+} from "@/lib/briefing/ranker";
 import type { StoryCandidate } from "@/lib/briefing/types";
 
 describe("rankStories", () => {
@@ -45,5 +50,52 @@ describe("rankStories", () => {
 
     expect(isLowSignal(story)).toBe(true);
     expect(rankStories([story])).toHaveLength(0);
+  });
+
+  it("filters stories older than 72 hours", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-04T23:00:00Z"));
+
+    const staleStory: StoryCandidate = {
+      topic: "ai",
+      title: "Older AI infrastructure update",
+      summary: "This is outside the freshness window.",
+      source: "Reuters",
+      url: "https://example.com/older-ai",
+      publishedAt: "2026-03-31T21:00:00Z",
+    };
+
+    expect(isFreshStory(staleStory, new Date())).toBe(false);
+    expect(rankStories([staleStory])).toHaveLength(0);
+    vi.useRealTimers();
+  });
+
+  it("dedupes near-identical headlines from different sources", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-04T23:00:00Z"));
+
+    const stories: StoryCandidate[] = [
+      {
+        topic: "markets",
+        title: "Fed signals slower cuts after inflation surprise",
+        summary: "Policy makers signaled a slower pace.",
+        source: "Reuters",
+        url: "https://example.com/reuters-fed-2",
+        publishedAt: "2026-04-04T20:00:00Z",
+      },
+      {
+        topic: "markets",
+        title: "Fed signals slower rate cuts after inflation surprise",
+        summary: "A very similar framing from another source.",
+        source: "Some Blog",
+        url: "https://example.com/blog-fed-2",
+        publishedAt: "2026-04-04T21:00:00Z",
+      },
+    ];
+
+    const ranked = rankStories(stories);
+    expect(ranked).toHaveLength(1);
+    expect(ranked[0]?.source).toBe("Reuters");
+    vi.useRealTimers();
   });
 });

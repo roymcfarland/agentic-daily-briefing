@@ -8,6 +8,12 @@ const AREAS: CoverageArea[] = [
   "elevated-organics",
 ];
 
+const EXCLUDED_TASK_TITLES = new Set([
+  "Test task",
+  "Valid task",
+  "Ice box task",
+]);
+
 function normalizeCategory(category?: string): CoverageArea | null {
   if (
     category === "personal" ||
@@ -53,9 +59,14 @@ function statusOf(task: Task): "in-progress" | "on-deck" {
   return task.status === "in-progress" ? "in-progress" : "on-deck";
 }
 
+function isDisplayableTask(task: Task): boolean {
+  const title = task.title?.trim() ?? "";
+  return task.id != null && title.length > 0 && !EXCLUDED_TASK_TITLES.has(title);
+}
+
 function buildTaskTree(tasks: Task[]): TaskNode[] {
   const sortedTasks = sortTasks(
-    tasks.filter((task) => task.id != null && task.title?.trim()),
+    tasks.filter(isDisplayableTask),
   );
   const nodes = new Map<number, TaskNode>();
   const childIds = new Set<number>();
