@@ -12,7 +12,7 @@ import { fetchGoogleNewsStories } from "@/lib/research/google-news";
 import { TOPIC_CONFIG } from "@/lib/research/topics";
 
 function summarizeWatch(stories: RankedStory[]): string {
-  const top = stories[0];
+  const top = stories.find((story) => story.signalOrNoise === "Signal") ?? stories[0];
   if (!top) {
     return "Watch for any signal that changes capital allocation or execution timing today.";
   }

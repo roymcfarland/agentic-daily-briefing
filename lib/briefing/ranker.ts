@@ -56,6 +56,14 @@ const NOVELTY_PENALTIES = [
   /\b(most popular|top stories|watch list|here'?s what to watch)\b/i,
 ];
 
+const LOW_TRUST_SOURCE_PENALTIES: Array<[RegExp, number]> = [
+  [/\bbitcoin world\b/i, 8],
+  [/\bmlq\.ai\b/i, 5],
+  [/\bthelec\.net\b/i, 4],
+  [/\banalytics india magazine\b/i, 3],
+  [/\bamerican enterprise institute\b/i, 3],
+];
+
 function canonicalize(text: string): string {
   return text
     .toLowerCase()
@@ -181,6 +189,13 @@ function getSourceScore(source: string): number {
   return fuzzy?.[1] ?? 5;
 }
 
+function getSourcePenalty(source: string): number {
+  return LOW_TRUST_SOURCE_PENALTIES.reduce(
+    (total, [pattern, penalty]) => total + (pattern.test(source) ? penalty : 0),
+    0,
+  );
+}
+
 function getDecisionRelevanceScore(story: StoryCandidate): number {
   return (
     TOPIC_BONUS[story.topic] +
@@ -190,7 +205,8 @@ function getDecisionRelevanceScore(story: StoryCandidate): number {
     getCapitalScore(story) +
     getRegulatoryScore(story) +
     getLocalRelevanceScore(story) -
-    getNoveltyPenalty(story)
+    getNoveltyPenalty(story) -
+    getSourcePenalty(story.source)
   );
 }
 
@@ -268,7 +284,7 @@ export function rankStories(candidates: StoryCandidate[]): RankedStory[] {
         dedupeKey,
         score,
         whyItMatters: inferWhyItMatters(story),
-        signalOrNoise: score >= 40 ? "Signal" : "Noise",
+        signalOrNoise: score >= 35 ? "Signal" : "Noise",
         secondOrderEffect: inferSecondOrderEffect(story),
       } satisfies RankedStory;
     })
