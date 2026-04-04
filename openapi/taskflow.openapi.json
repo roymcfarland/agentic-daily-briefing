@@ -1,39 +1,115 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.1.0",
   "info": {
-    "title": "Taskflow API",
+    "title": "TaskFlow External API",
+    "description": "Read-only API for accessing TaskFlow task management data. Use this to retrieve task summaries, full task lists, and statistics for daily briefings.",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "https://api.taskflow.example.com"
+      "url": "https://taskflow.center",
+      "description": "Production"
     }
   ],
   "paths": {
-    "/daily-summary": {
-      "post": {
+    "/api/external/daily-summary": {
+      "get": {
         "operationId": "getDailySummary",
-        "summary": "Fetches the daily summary for a single task area",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DailySummaryRequest"
-              }
-            }
-          }
-        },
+        "summary": "Get daily task summary",
+        "description": "Returns a structured overview of all tasks organized by status, with stats by category. Ideal for generating a morning briefing. Includes in-progress tasks, on-deck queue, ice box items, and recently completed tasks from the last 7 days.",
         "responses": {
           "200": {
-            "description": "Daily summary response",
+            "description": "Daily summary with task counts, completion rate, and task lists by status",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DailySummaryResponse"
+                  "type": "object",
+                  "properties": {
+                    "generatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "totalActive": {
+                          "type": "integer",
+                          "description": "Total non-archived tasks"
+                        },
+                        "completionRate": {
+                          "type": "string",
+                          "description": "Percentage of done tasks out of active (on-deck + in-progress + done). Ice Box/backlog tasks are excluded. e.g. '42%'"
+                        },
+                        "byStatus": {
+                          "type": "object",
+                          "properties": {
+                            "iceBox": {
+                              "type": "integer"
+                            },
+                            "onDeck": {
+                              "type": "integer"
+                            },
+                            "inProgress": {
+                              "type": "integer"
+                            },
+                            "done": {
+                              "type": "integer"
+                            },
+                            "archived": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "byCategory": {
+                          "type": "object",
+                          "properties": {
+                            "personal": {
+                              "type": "integer"
+                            },
+                            "elevatedOrganics": {
+                              "type": "integer"
+                            },
+                            "brightlineLabs": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "inProgress": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    },
+                    "onDeck": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    },
+                    "iceBox": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    },
+                    "recentlyCompleted": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    }
+                  }
                 }
               }
             }
+          },
+          "401": {
+            "description": "Missing or malformed Authorization header"
+          },
+          "403": {
+            "description": "Invalid API key"
           }
         }
       }
@@ -41,13 +117,30 @@
   },
   "components": {
     "schemas": {
-      "DailySummaryRequest": {
+      "Task": {
         "type": "object",
-        "required": [
-          "area"
-        ],
         "properties": {
-          "area": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ice-box",
+              "on-deck",
+              "in-progress",
+              "done",
+              "archived"
+            ]
+          },
+          "category": {
             "type": "string",
             "enum": [
               "personal",
@@ -55,55 +148,36 @@
               "brightline-labs"
             ]
           },
-          "asOfDate": {
-            "type": "string",
-            "format": "date"
-          }
-        }
-      },
-      "DailySummaryResponse": {
-        "type": "object",
-        "required": [
-          "area",
-          "headline",
-          "openItems",
-          "blockers",
-          "priorities",
-          "dueToday"
-        ],
-        "properties": {
-          "area": {
-            "type": "string"
+          "parentId": {
+            "type": "integer",
+            "nullable": true,
+            "description": "ID of parent task if this is a subtask"
           },
-          "headline": {
-            "type": "string"
-          },
-          "openItems": {
+          "sortOrder": {
             "type": "integer"
           },
-          "blockers": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           },
-          "priorities": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "dueToday": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "rawSummary": {
-            "type": "string"
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       }
+    },
+    "securitySchemes": {
+      "apiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key passed as Bearer token in the Authorization header"
+      }
     }
-  }
+  },
+  "security": [
+    {
+      "apiKey": []
+    }
+  ]
 }
