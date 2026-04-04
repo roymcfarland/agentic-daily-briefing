@@ -15,12 +15,15 @@ function isAuthorized(request: Request): boolean {
 }
 
 export async function GET(request: Request) {
-  if (!isAuthorized(request) && process.env.NODE_ENV === "production") {
+  const authorized = isAuthorized(request);
+  if (!authorized && process.env.NODE_ENV === "production") {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
+  const { searchParams } = new URL(request.url);
+  const force = searchParams.get("force") === "1";
   const now = new Date();
-  if (!isWeekdayMorningWindow(now)) {
+  if (!force && !isWeekdayMorningWindow(now)) {
     return NextResponse.json({
       ok: true,
       skipped: true,
@@ -36,6 +39,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       ok: true,
       sent: true,
+      forced: force,
       id: email.data?.id ?? null,
       stories: digest.stories.length,
     });

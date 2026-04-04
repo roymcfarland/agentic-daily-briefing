@@ -83,6 +83,12 @@ Manually trigger the cron route in development:
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/morning-brief
 ```
 
+Force a manual send outside the normal 6:30 AM America/Chicago cron window:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/morning-brief?force=1"
+```
+
 ## Deploy to Vercel
 
 1. Import the repo into Vercel.
@@ -115,3 +121,4 @@ npm test
 - Research is gathered live at send time from public RSS search results, then deduped and ranked.
 - If a feed fails, the pipeline continues with the remaining sources.
 - The route returns JSON so Vercel Cron logs stay readable.
+- `force=1` can be used on an authenticated request for manual testing outside the scheduled send window.
