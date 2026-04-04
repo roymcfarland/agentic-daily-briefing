@@ -101,13 +101,24 @@ Preview the assembled briefing outside the normal send window:
 curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/morning-brief?force=1&preview=1"
 ```
 
+Production domain:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/cron/morning-brief?preview=1"
+```
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/cron/morning-brief?force=1"
+```
+
 ## Deploy to Vercel
 
 1. Import the repo into Vercel.
 2. Set the environment variables from `.env.example`.
 3. Ensure your sender domain is verified in Resend.
 4. Set `CRON_SECRET` in Vercel and call the route with that shared secret.
-5. Deploy. Vercel will pick up `vercel.json` and create the cron jobs.
+5. Point `roymcfarland.news` and `www.roymcfarland.news` at the Vercel project.
+6. Deploy. Vercel will pick up `vercel.json` and create the cron jobs.
 
 ## Taskflow client generation
 
