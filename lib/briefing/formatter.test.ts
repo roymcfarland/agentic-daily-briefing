@@ -33,7 +33,6 @@ const digest: BriefingDigest = {
       ],
     },
   ],
-  sportsUpdates: [],
   stories: [
     {
       topic: "ai",

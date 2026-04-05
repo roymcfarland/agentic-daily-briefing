@@ -64,16 +64,24 @@ function isDisplayableTask(task: Task): boolean {
   return task.id != null && title.length > 0 && !EXCLUDED_TASK_TITLES.has(title);
 }
 
+function getTaskKey(task: Pick<Task, "id">): string {
+  return String(task.id);
+}
+
 function buildTaskTree(tasks: Task[]): TaskNode[] {
-  const sortedTasks = sortTasks(
-    tasks.filter(isDisplayableTask),
-  );
-  const nodes = new Map<number, TaskNode>();
-  const childIds = new Set<number>();
+  const uniqueTasks = new Map<string, Task>();
+
+  for (const task of tasks.filter(isDisplayableTask)) {
+    uniqueTasks.set(getTaskKey(task), task);
+  }
+
+  const sortedTasks = sortTasks([...uniqueTasks.values()]);
+  const nodes = new Map<string, TaskNode>();
+  const childIds = new Set<string>();
 
   for (const task of sortedTasks) {
-    nodes.set(task.id as number, {
-      id: task.id as number,
+    nodes.set(getTaskKey(task), {
+      id: String(task.id),
       title: task.title!.trim(),
       status: statusOf(task),
       subtasks: [],
@@ -81,14 +89,14 @@ function buildTaskTree(tasks: Task[]): TaskNode[] {
   }
 
   for (const task of sortedTasks) {
-    const id = task.id as number;
+    const id = getTaskKey(task);
     const parentId = task.parentId;
     if (parentId == null) {
       continue;
     }
 
     const node = nodes.get(id);
-    const parent = nodes.get(parentId);
+    const parent = nodes.get(String(parentId));
     if (!node || !parent) {
       continue;
     }
@@ -98,8 +106,8 @@ function buildTaskTree(tasks: Task[]): TaskNode[] {
   }
 
   return sortedTasks
-    .map((task) => nodes.get(task.id as number)!)
-    .filter((node) => !childIds.has(node.id as number));
+    .map((task) => nodes.get(getTaskKey(task))!)
+    .filter((node) => !childIds.has(String(node.id)));
 }
 
 function createHeadline(area: CoverageArea, openItems: number, parentItems: number): string {

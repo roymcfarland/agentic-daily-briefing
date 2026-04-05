@@ -141,6 +141,19 @@ function chooseStories(stories: RankedStory[], maxItems: number): RankedStory[] 
     }
   }
 
+  for (const story of stories) {
+    if (selected.length >= maxItems) {
+      break;
+    }
+
+    if (seen.has(story.dedupeKey)) {
+      continue;
+    }
+
+    selected.push(story);
+    seen.add(story.dedupeKey);
+  }
+
   return selected;
 }
 
@@ -161,8 +174,7 @@ async function fetchLiveResearch(): Promise<StoryCandidate[]> {
   return candidates;
 }
 
-async function fetchSportsResearch(): Promise<SportsUpdate[]> {
-  const now = new Date();
+async function fetchSportsResearch(now: Date): Promise<SportsUpdate[]> {
   const results = await Promise.allSettled(
     SPORTS_CONFIG.flatMap((entry) =>
       entry.queries.map(async (query) => {
@@ -215,7 +227,7 @@ export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
   const [taskSummaries, researchCandidates, sportsUpdates] = await Promise.all([
     getTaskSummaries(now),
     fetchLiveResearch(),
-    fetchSportsResearch(),
+    fetchSportsResearch(now),
   ]);
 
   const rankedStories = rankStories(researchCandidates);
@@ -228,7 +240,6 @@ export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
     dateLabel: getChicagoDateLabel(now),
     taskSummaries,
     stories,
-    sportsUpdates: [],
     oneThingToWatch: summarizeWatch(stories),
     oneThingToIgnore: summarizeIgnore(stories, allRankedStories, now),
     oneContrarianTake: summarizeContrarian(stories),

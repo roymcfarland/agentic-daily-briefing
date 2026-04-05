@@ -6,8 +6,13 @@ type EnvKey =
   | "BRIEFING_TO_EMAILS"
   | "CRON_SECRET";
 
+function getOptionalEnv(key: string): string | undefined {
+  const value = process.env[key]?.trim();
+  return value ? value : undefined;
+}
+
 function getRequiredEnv(key: EnvKey): string {
-  const value = process.env[key];
+  const value = getOptionalEnv(key);
   if (!value) {
     throw new Error(`Missing required environment variable: ${key}`);
   }
@@ -15,19 +20,58 @@ function getRequiredEnv(key: EnvKey): string {
   return value;
 }
 
+function parseBoundedInteger(value: string | undefined, fallback: number, min: number, max: number): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  if (Number.isNaN(parsed)) {
+    return fallback;
+  }
+
+  return Math.min(max, Math.max(min, parsed));
+}
+
+function parseEmailList(value: string): string[] {
+  const emails = value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  if (!emails.length) {
+    throw new Error("BRIEFING_TO_EMAILS must include at least one recipient.");
+  }
+
+  return emails;
+}
+
+function assertHttpUrl(name: string, value: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error(`${name} must be a valid URL.`);
+  }
+
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error(`${name} must use http or https.`);
+  }
+
+  return parsed.toString().replace(/\/$/, "");
+}
+
 export function getEnv() {
+  const taskflowApiBaseUrl = assertHttpUrl(
+    "TASKFLOW_API_BASE_URL",
+    getRequiredEnv("TASKFLOW_API_BASE_URL"),
+  );
+
   return {
-    taskflowApiBaseUrl: getRequiredEnv("TASKFLOW_API_BASE_URL"),
+    taskflowApiBaseUrl,
     taskflowApiKey: getRequiredEnv("TASKFLOW_API_KEY"),
-    taskflowTimeoutMs: Number.parseInt(process.env.TASKFLOW_TIMEOUT_MS ?? "12000", 10),
+    taskflowTimeoutMs: parseBoundedInteger(process.env.TASKFLOW_TIMEOUT_MS, 12000, 1000, 30000),
     resendApiKey: getRequiredEnv("RESEND_API_KEY"),
     briefingFromEmail: getRequiredEnv("BRIEFING_FROM_EMAIL"),
-    briefingToEmails: getRequiredEnv("BRIEFING_TO_EMAILS")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean),
+    briefingToEmails: parseEmailList(getRequiredEnv("BRIEFING_TO_EMAILS")),
     cronSecret: getRequiredEnv("CRON_SECRET"),
-    briefingSubjectPrefix: process.env.BRIEFING_SUBJECT_PREFIX?.trim() || "Morning Brief",
-    briefingMaxItems: Number.parseInt(process.env.BRIEFING_MAX_ITEMS ?? "10", 10),
+    briefingSubjectPrefix: getOptionalEnv("BRIEFING_SUBJECT_PREFIX") || "Morning Brief",
+    briefingMaxItems: parseBoundedInteger(process.env.BRIEFING_MAX_ITEMS, 10, 10, 20),
   };
 }

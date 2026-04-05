@@ -61,7 +61,6 @@ export interface BriefingDigest {
   dateLabel: string;
   taskSummaries: TaskSummary[];
   stories: RankedStory[];
-  sportsUpdates: SportsUpdate[];
   oneThingToWatch: string;
   oneThingToIgnore: string;
   oneContrarianTake: string;

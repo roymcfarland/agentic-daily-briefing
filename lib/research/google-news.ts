@@ -15,6 +15,18 @@ interface RssItem {
   description?: string;
 }
 
+const FETCH_TIMEOUT_MS = 12000;
+
+function decodeEntities(input: string): string {
+  return input
+    .replaceAll("&nbsp;", " ")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">");
+}
+
 function toArray<T>(value: T | T[] | undefined): T[] {
   if (!value) {
     return [];
@@ -28,10 +40,21 @@ function cleanDescription(input: string | undefined): string {
     return "";
   }
 
-  return input
+  return decodeEntities(input)
     .replace(/<[^>]+>/g, " ")
+    .replace(/\s+&nbsp;\s+[^\s]+$/i, "")
     .replace(/\s+/g, " ")
     .replace(/^-\s*/, "")
+    .trim();
+}
+
+function cleanText(input: string | undefined): string {
+  if (!input) {
+    return "";
+  }
+
+  return decodeEntities(input)
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -53,30 +76,43 @@ export async function fetchGoogleNewsStories(
   url.searchParams.set("gl", "US");
   url.searchParams.set("ceid", "US:en");
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
   const response = await fetch(url.toString(), {
     headers: {
       "user-agent": "weekday-morning-brief/1.0",
+      accept: "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.1",
     },
     next: { revalidate: 0 },
-  });
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeout));
 
   if (!response.ok) {
     throw new Error(`Google News RSS failed for ${topic}: ${response.status}`);
   }
 
   const xml = await response.text();
-  const parsed = parser.parse(xml) as {
+  let parsed: {
     rss?: { channel?: { item?: RssItem | RssItem[] } };
   };
+
+  try {
+    parsed = parser.parse(xml) as {
+      rss?: { channel?: { item?: RssItem | RssItem[] } };
+    };
+  } catch {
+    throw new Error(`Google News RSS returned malformed XML for ${topic}`);
+  }
 
   return toArray(parsed.rss?.channel?.item)
     .map((item) => ({
       topic,
-      title: item.title?.replace(/\s+-\s+[^-]+$/, "").trim() ?? "",
+      title: cleanText(item.title?.replace(/\s+-\s+[^-]+$/, "")),
       summary: cleanDescription(item.description),
-      source: getSourceName(item.source),
-      url: item.link ?? "",
+      source: cleanText(getSourceName(item.source)),
+      url: cleanText(item.link),
       publishedAt: item.pubDate,
     }))
-    .filter((item) => item.title && item.url);
+    .filter((item) => item.title && item.url.startsWith("https://"));
 }

@@ -64,6 +64,60 @@ export interface TaskflowClientConfig {
   timeoutMs?: number;
 }
 
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isTask(value: unknown): value is Task {
+  if (!isObject(value)) {
+    return false;
+  }
+
+  if (value.id != null && typeof value.id !== "number") {
+    return false;
+  }
+
+  if (value.parentId != null && typeof value.parentId !== "number") {
+    return false;
+  }
+
+  return true;
+}
+
+function toTaskArray(value: unknown): Task[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(isTask);
+}
+
+function parseDailySummaryResponse(value: unknown): DailySummaryResponse {
+  if (!isObject(value)) {
+    throw new Error("Taskflow getDailySummary returned an invalid response body");
+  }
+
+  return {
+    generatedAt: typeof value.generatedAt === "string" ? value.generatedAt : undefined,
+    summary: isObject(value.summary)
+      ? {
+          totalActive:
+            typeof value.summary.totalActive === "number" ? value.summary.totalActive : undefined,
+          completionRate:
+            typeof value.summary.completionRate === "string"
+              ? value.summary.completionRate
+              : undefined,
+          byStatus: isObject(value.summary.byStatus) ? value.summary.byStatus : undefined,
+          byCategory: isObject(value.summary.byCategory) ? value.summary.byCategory : undefined,
+        }
+      : undefined,
+    inProgress: toTaskArray(value.inProgress),
+    onDeck: toTaskArray(value.onDeck),
+    iceBox: toTaskArray(value.iceBox),
+    recentlyCompleted: toTaskArray(value.recentlyCompleted),
+  };
+}
+
 export class TaskflowClient {
   constructor(private readonly config: TaskflowClientConfig) {}
 
@@ -84,7 +138,12 @@ export class TaskflowClient {
         throw new Error(\`Taskflow getDailySummary failed with \${response.status}\`);
       }
 
-      return (await response.json()) as DailySummaryResponse;
+      const contentType = response.headers.get("content-type") ?? "";
+      if (!contentType.toLowerCase().includes("application/json")) {
+        throw new Error("Taskflow getDailySummary returned a non-JSON response");
+      }
+
+      return parseDailySummaryResponse(await response.json());
     } finally {
       clearTimeout(timeout);
     }
