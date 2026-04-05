@@ -33,22 +33,7 @@ const digest: BriefingDigest = {
       ],
     },
   ],
-  sportsUpdates: [
-    {
-      topic: "sports",
-      sportsArea: "denver-broncos",
-      sportsLabel: "Denver Broncos",
-      title: "Broncos adjust offseason plan",
-      summary: "Denver adds depth and resets camp expectations.",
-      source: "AP",
-      url: "https://example.com/broncos",
-      dedupeKey: "broncos adjust offseason plan",
-      score: 31,
-      whyItMatters: "This is useful context if it changes momentum, fan attention, or the near-term storyline around a team or tournament you track.",
-      signalOrNoise: "Noise",
-      secondOrderEffect: "A small shift in form, injury status, or tournament momentum could change how the next few days play out.",
-    },
-  ],
+  sportsUpdates: [],
   stories: [
     {
       topic: "ai",
@@ -61,6 +46,18 @@ const digest: BriefingDigest = {
       whyItMatters: "Cheaper inference can reset product margins.",
       signalOrNoise: "Signal",
       secondOrderEffect: "More teams ship copilots sooner.",
+    },
+    {
+      topic: "sports",
+      title: "Denver Broncos adjust offseason plan",
+      summary: "Denver adds depth and resets camp expectations.",
+      source: "AP",
+      url: "https://example.com/broncos",
+      dedupeKey: "denver broncos adjust offseason plan",
+      score: 31,
+      whyItMatters: "This is useful context if it changes momentum, fan attention, or the near-term storyline around a team or tournament you track.",
+      signalOrNoise: "Noise",
+      secondOrderEffect: "A small shift in form, injury status, or tournament momentum could change how the next few days play out.",
     },
   ],
   oneThingToWatch: "Watch margin compression in AI software.",
@@ -76,7 +73,7 @@ describe("renderBriefingEmail", () => {
     expect(html).toContain("Why it matters:");
     expect(html).toContain("Signal or noise:");
     expect(html).toContain("One possible second-order effect:");
-    expect(html).toContain("Sports Update");
+    expect(html).toContain("Briefing Feed");
     expect(html).toContain("Denver Broncos");
     expect(html).toContain("One thing to watch:");
     expect(html).toContain("One thing to ignore:");
@@ -87,8 +84,8 @@ describe("renderBriefingEmail", () => {
     const text = renderBriefingText(digest);
 
     expect(text).toContain("Taskflow Snapshot");
-    expect(text).toContain("Sports Update");
-    expect(text).toContain("[Denver Broncos] Broncos adjust offseason plan");
+    expect(text).toContain("Briefing Feed");
+    expect(text).toContain("[sports] Denver Broncos adjust offseason plan");
     expect(text).toContain("[AI] Model vendors cut inference costs");
     expect(text).toContain("- Confirm insurance call (in-progress)");
     expect(text).toContain("  - Upload supporting paperwork (on-deck)");

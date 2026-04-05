@@ -1,11 +1,5 @@
 import { escapeHtml } from "@/lib/html";
-import type {
-  BriefingDigest,
-  ResearchTopic,
-  SportsUpdate,
-  TaskNode,
-  TaskSummary,
-} from "@/lib/briefing/types";
+import type { BriefingDigest, RankedStory, TaskNode, TaskSummary } from "@/lib/briefing/types";
 import { getTopicLabel } from "@/lib/research/topics";
 
 function renderTaskNodes(tasks: TaskNode[], depth = 0): string {
@@ -48,39 +42,10 @@ function appendTaskLines(lines: string[], tasks: TaskNode[], depth = 0) {
   }
 }
 
-function renderTopic(topic: ResearchTopic, digest: BriefingDigest): string {
-  const stories = digest.stories.filter((story) => story.topic === topic);
-  if (!stories.length) {
-    return "";
-  }
-
-  return `
-    <section style="margin-top:24px;">
-      <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">${escapeHtml(getTopicLabel(topic))}</h2>
-      ${stories
-        .map(
-          (story) => `
-            <article style="padding:18px 0;border-top:1px solid #e5e7eb;">
-              <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">${escapeHtml(story.source)}</p>
-              <h3 style="margin:0 0 8px;font-size:18px;">
-                <a href="${escapeHtml(story.url)}" style="color:#9a3412;text-decoration:none;">${escapeHtml(story.title)}</a>
-              </h3>
-              <p style="margin:0 0 8px;color:#111827;"><strong>What happened:</strong> ${escapeHtml(story.summary || story.title)}</p>
-              <p style="margin:0 0 8px;color:#111827;"><strong>Why it matters:</strong> ${escapeHtml(story.whyItMatters)}</p>
-              <p style="margin:0 0 8px;color:#111827;"><strong>Signal or noise:</strong> ${escapeHtml(story.signalOrNoise)}</p>
-              <p style="margin:0;color:#111827;"><strong>One possible second-order effect:</strong> ${escapeHtml(story.secondOrderEffect)}</p>
-            </article>
-          `,
-        )
-        .join("")}
-    </section>
-  `;
-}
-
-function renderSportsUpdate(story: SportsUpdate): string {
+function renderStory(story: RankedStory): string {
   return `
     <article style="padding:18px 0;border-top:1px solid #e5e7eb;">
-      <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">${escapeHtml(story.sportsLabel)} • ${escapeHtml(story.source)}</p>
+      <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">${escapeHtml(getTopicLabel(story.topic))} • ${escapeHtml(story.source)}</p>
       <h3 style="margin:0 0 8px;font-size:18px;">
         <a href="${escapeHtml(story.url)}" style="color:#9a3412;text-decoration:none;">${escapeHtml(story.title)}</a>
       </h3>
@@ -93,17 +58,6 @@ function renderSportsUpdate(story: SportsUpdate): string {
 }
 
 export function renderBriefingEmail(digest: BriefingDigest): string {
-  const topicOrder: ResearchTopic[] = [
-    "ai",
-    "markets",
-    "business",
-    "cpg-startups",
-    "cannabis",
-    "chicago",
-    "colorado",
-    "asymmetric-upside",
-  ];
-
   return `
   <!doctype html>
   <html lang="en">
@@ -121,11 +75,9 @@ export function renderBriefingEmail(digest: BriefingDigest): string {
         </section>
 
         <section style="margin-top:24px;">
-          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Sports Update</h2>
-          ${digest.sportsUpdates.map(renderSportsUpdate).join("")}
+          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Briefing Feed</h2>
+          ${digest.stories.map(renderStory).join("")}
         </section>
-
-        ${topicOrder.map((topic) => renderTopic(topic, digest)).join("")}
 
         <section style="margin-top:28px;padding-top:20px;border-top:2px solid #eadfce;">
           <h2 style="margin:0 0 12px;font-size:22px;">Closing View</h2>
@@ -158,19 +110,7 @@ export function renderBriefingText(digest: BriefingDigest): string {
     lines.push("");
   }
 
-  if (digest.sportsUpdates.length) {
-    lines.push("Sports Update");
-    for (const story of digest.sportsUpdates) {
-      lines.push(`[${story.sportsLabel}] ${story.title} (${story.source})`);
-      lines.push(`What happened: ${story.summary || story.title}`);
-      lines.push(`Why it matters: ${story.whyItMatters}`);
-      lines.push(`Signal or noise: ${story.signalOrNoise}`);
-      lines.push(`Second-order effect: ${story.secondOrderEffect}`);
-      lines.push(`Link: ${story.url}`);
-      lines.push("");
-    }
-  }
-
+  lines.push("Briefing Feed");
   for (const story of digest.stories) {
     lines.push(`[${getTopicLabel(story.topic)}] ${story.title} (${story.source})`);
     lines.push(`What happened: ${story.summary || story.title}`);

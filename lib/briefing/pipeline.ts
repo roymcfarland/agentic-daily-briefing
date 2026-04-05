@@ -17,6 +17,20 @@ type SportsCandidate = StoryCandidate & {
   sportsLabel: string;
 };
 
+const BRIEFING_TOPIC_ORDER: ResearchTopic[] = [
+  "ai",
+  "markets",
+  "business",
+  "cpg-startups",
+  "cannabis",
+  "chicago",
+  "colorado",
+  "asymmetric-upside",
+  "sports",
+];
+
+const MAX_STORIES_PER_TOPIC = 2;
+
 function containsKeyword(text: string, keywords: string[]): boolean {
   const haystack = text.toLowerCase();
   return keywords.some((keyword) => haystack.includes(keyword));
@@ -33,7 +47,7 @@ function isSportsStoryFresh(story: StoryCandidate, now: Date): boolean {
   }
 
   const ageHours = Math.max(0, (now.getTime() - published) / (1000 * 60 * 60));
-  return ageHours <= 24 * 7;
+  return ageHours <= 72;
 }
 
 function summarizeWatch(stories: RankedStory[]): string {
@@ -205,27 +219,18 @@ export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
   ]);
 
   const rankedStories = rankStories(researchCandidates);
-  const stories = chooseStories(rankedStories, env.briefingMaxItems);
+  const allRankedStories = [...rankedStories, ...sportsUpdates].sort(
+    (left, right) => right.score - left.score,
+  );
+  const stories = chooseStories(allRankedStories, env.briefingMaxItems);
 
   return {
     dateLabel: getChicagoDateLabel(now),
     taskSummaries,
     stories,
-    sportsUpdates,
+    sportsUpdates: [],
     oneThingToWatch: summarizeWatch(stories),
-    oneThingToIgnore: summarizeIgnore(stories, rankedStories, now),
+    oneThingToIgnore: summarizeIgnore(stories, allRankedStories, now),
     oneContrarianTake: summarizeContrarian(stories),
   };
 }
-const BRIEFING_TOPIC_ORDER: ResearchTopic[] = [
-  "ai",
-  "markets",
-  "business",
-  "cpg-startups",
-  "cannabis",
-  "chicago",
-  "colorado",
-  "asymmetric-upside",
-];
-
-const MAX_STORIES_PER_TOPIC = 2;
