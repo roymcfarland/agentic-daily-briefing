@@ -87,25 +87,25 @@ export const SPORTS_CONFIG: SportsConfig[] = [
     sportsArea: "denver-broncos",
     label: "Denver Broncos",
     queries: [
-      "\"Denver Broncos\" site:denverbroncos.com OR site:espn.com OR site:apnews.com",
+      "\"Denver Broncos\" OR Broncos offseason OR Broncos draft site:denverbroncos.com OR site:espn.com OR site:apnews.com",
     ],
-    requiredKeywords: ["broncos", "denver broncos"],
+    requiredKeywords: ["broncos", "denver broncos", "broncos draft", "broncos offseason"],
   },
   {
     sportsArea: "colorado-buffaloes-football",
     label: "Colorado Buffaloes Football",
     queries: [
-      "\"Colorado Buffaloes\" football site:cubuffs.com OR site:espn.com OR site:apnews.com",
+      "\"Colorado Buffaloes\" football OR Deion Sanders OR Buffs spring football site:cubuffs.com OR site:espn.com OR site:apnews.com",
     ],
-    requiredKeywords: ["colorado buffaloes", "buffaloes", "cu buffs", "cu buffs football"],
+    requiredKeywords: ["colorado buffaloes", "buffaloes football", "deion sanders", "buffs spring football", "cu buffs football"],
   },
   {
     sportsArea: "notre-dame-football",
     label: "Notre Dame Football",
     queries: [
-      "\"Notre Dame\" football site:fightingirish.com OR site:espn.com OR site:apnews.com",
+      "\"Notre Dame football\" OR Fighting Irish football OR Notre Dame spring football site:fightingirish.com OR site:espn.com OR site:apnews.com",
     ],
-    requiredKeywords: ["notre dame", "fighting irish"],
+    requiredKeywords: ["notre dame football", "fighting irish football", "notre dame spring football"],
   },
   {
     sportsArea: "tennis",

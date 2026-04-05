@@ -22,6 +22,20 @@ function containsKeyword(text: string, keywords: string[]): boolean {
   return keywords.some((keyword) => haystack.includes(keyword));
 }
 
+function isSportsStoryFresh(story: StoryCandidate, now: Date): boolean {
+  if (!story.publishedAt) {
+    return false;
+  }
+
+  const published = new Date(story.publishedAt).getTime();
+  if (Number.isNaN(published)) {
+    return false;
+  }
+
+  const ageHours = Math.max(0, (now.getTime() - published) / (1000 * 60 * 60));
+  return ageHours <= 24 * 7;
+}
+
 function summarizeWatch(stories: RankedStory[]): string {
   const top = stories.find((story) => story.signalOrNoise === "Signal") ?? stories[0];
   if (!top) {
@@ -132,6 +146,7 @@ async function fetchLiveResearch(): Promise<StoryCandidate[]> {
 }
 
 async function fetchSportsResearch(): Promise<SportsUpdate[]> {
+  const now = new Date();
   const results = await Promise.allSettled(
     SPORTS_CONFIG.flatMap((entry) =>
       entry.queries.map(async (query) => {
@@ -158,7 +173,10 @@ async function fetchSportsResearch(): Promise<SportsUpdate[]> {
       return false;
     }
 
-    return containsKeyword(`${story.title} ${story.summary}`, config.requiredKeywords);
+    return (
+      isSportsStoryFresh(story, now) &&
+      containsKeyword(story.title, config.requiredKeywords)
+    );
   });
 
   const ranked = rankStories(filteredCandidates).map((story) => {
