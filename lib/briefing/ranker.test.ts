@@ -171,4 +171,18 @@ describe("rankStories", () => {
     expect(ranked[0]?.signalOrNoise).toBe("Signal");
     vi.useRealTimers();
   });
+
+  it("filters low-value sports listing stories before ranking", () => {
+    const story: StoryCandidate = {
+      topic: "sports",
+      title: "Open Menorca Centre Court Blanch, Dali - Brancaccio, Raul | Challenger Tour | Challenger TV | ATP Tour | Tennis",
+      summary: "Live scores and centre court coverage from Challenger TV.",
+      source: "ATP Tour",
+      url: "https://example.com/tennis-listing",
+      publishedAt: "2026-04-04T15:00:00Z",
+    };
+
+    expect(isLowSignal(story)).toBe(true);
+    expect(rankStories([story])).toHaveLength(0);
+  });
 });

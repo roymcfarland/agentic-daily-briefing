@@ -30,6 +30,8 @@ const BRIEFING_TOPIC_ORDER: ResearchTopic[] = [
 ];
 
 const MAX_STORIES_PER_TOPIC = 2;
+const SOFT_MAX_STORIES_PER_TOPIC = 2;
+const MIN_SIGNAL_SCORE = 35;
 
 function containsKeyword(text: string, keywords: string[]): boolean {
   const haystack = text.toLowerCase();
@@ -103,7 +105,7 @@ function summarizeContrarian(stories: RankedStory[]): string {
   return `${asymmetric.title} may be early enough that the market is still underpricing the upside.`;
 }
 
-function chooseStories(stories: RankedStory[], maxItems: number): RankedStory[] {
+export function selectStoriesForBriefing(stories: RankedStory[], maxItems: number): RankedStory[] {
   const selected: RankedStory[] = [];
   const seen = new Set<string>();
   const perTopicCount = new Map<ResearchTopic, number>();
@@ -150,8 +152,14 @@ function chooseStories(stories: RankedStory[], maxItems: number): RankedStory[] 
       continue;
     }
 
+    const topicCount = perTopicCount.get(story.topic) ?? 0;
+    if (topicCount >= SOFT_MAX_STORIES_PER_TOPIC && story.score < MIN_SIGNAL_SCORE) {
+      continue;
+    }
+
     selected.push(story);
     seen.add(story.dedupeKey);
+    perTopicCount.set(story.topic, topicCount + 1);
   }
 
   return selected;
@@ -234,7 +242,7 @@ export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
   const allRankedStories = [...rankedStories, ...sportsUpdates].sort(
     (left, right) => right.score - left.score,
   );
-  const stories = chooseStories(allRankedStories, env.briefingMaxItems);
+  const stories = selectStoriesForBriefing(allRankedStories, env.briefingMaxItems);
 
   return {
     dateLabel: getChicagoDateLabel(now),

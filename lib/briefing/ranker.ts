@@ -55,6 +55,13 @@ const LOW_SIGNAL_PATTERNS = [
   /\b(market analysis|forecast|size|trends and insights|news and statistics)\b/i,
 ];
 
+const SPORTS_LISTING_PATTERNS = [
+  /\b(live scores?|live blog|match stats?|draw|order of play|centre court|center court)\b/i,
+  /\b(challenger tv|qualifying|results and highlights|highlights and analysis)\b/i,
+  /\bvs\.?\b/i,
+  /\b[A-Z][a-z]+,\s+[A-Z][a-z]+\s+-\s+[A-Z][a-z]+,\s+[A-Z][a-z]+\b/,
+];
+
 const FRESHNESS_WINDOW_HOURS = 72;
 
 const OPERATIONAL_PATTERNS = [
@@ -161,7 +168,10 @@ function titleSimilarity(left: string, right: string): number {
 
 export function isLowSignal(story: StoryCandidate): boolean {
   const haystack = `${story.title} ${story.summary}`;
-  return LOW_SIGNAL_PATTERNS.some((pattern) => pattern.test(haystack));
+  return (
+    LOW_SIGNAL_PATTERNS.some((pattern) => pattern.test(haystack)) ||
+    (story.topic === "sports" && SPORTS_LISTING_PATTERNS.some((pattern) => pattern.test(haystack)))
+  );
 }
 
 export function isFreshStory(story: StoryCandidate, now = new Date()): boolean {
