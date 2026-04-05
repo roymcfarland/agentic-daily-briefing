@@ -13,15 +13,21 @@ const SOURCE_BONUS: Record<string, number> = {
   Semafor: 13,
   "The Information": 16,
   NVIDIA: 12,
+  OpenAI: 12,
+  Anthropic: 12,
   "MJBizDaily": 16,
   "Marijuana Moment": 14,
   "Green Market Report": 13,
   "Cannabis Business Times": 14,
+  "New Cannabis Ventures": 12,
   "FoodNavigator-USA": 15,
   NutraIngredients: 15,
   BevNET: 14,
   "Fierce Biotech": 15,
-  "Startup CPG": 11,
+  STAT: 14,
+  AgFunderNews: 13,
+  "Food Business News": 13,
+  "New Hope Network": 12,
   ESPN: 14,
   "ATP Tour": 14,
   WTA: 14,
@@ -31,11 +37,11 @@ const SOURCE_BONUS: Record<string, number> = {
 };
 
 const TOPIC_BONUS: Record<ResearchTopic, number> = {
-  ai: 15,
+  ai: 17,
   markets: 14,
   business: 10,
-  "cpg-startups": 15,
-  cannabis: 15,
+  "cpg-startups": 17,
+  cannabis: 17,
   chicago: 12,
   colorado: 12,
   "asymmetric-upside": 14,
@@ -53,6 +59,7 @@ const FRESHNESS_WINDOW_HOURS = 72;
 const OPERATIONAL_PATTERNS = [
   /\b(earnings|forecast|guidance|margin|pricing|demand|supply|inventory|contract|partnership|expansion)\b/i,
   /\b(layoffs|hiring|launch|shipment|distribution|manufacturing|production|automation)\b/i,
+  /\b(deployment|integration|pilot|rollout|throughput|capacity|formulation|clinical|retailer)\b/i,
 ];
 
 const CAPITAL_PATTERNS = [
@@ -69,10 +76,25 @@ const LOCAL_PATTERNS: Partial<Record<ResearchTopic, RegExp[]>> = {
   chicago: [/\b(chicago|cook county|illinois|cta|downtown)\b/i],
   colorado: [/\b(colorado|denver|boulder)\b/i],
   cannabis: [/\b(cannabis|hemp|thc|dispensary|operator)\b/i],
-  ai: [/\b(ai|model|chip|semiconductor|inference|training)\b/i],
-  "cpg-startups": [/\b(cpg|consumer packaged goods|grocery|retail|beverage|snack|shelf)\b/i],
+  ai: [/\b(ai|model|llm|agent|mcp|gpu|chip|semiconductor|inference|training|deployment)\b/i],
+  "cpg-startups": [/\b(cpg|consumer packaged goods|grocery|retail|beverage|snack|shelf|nutrition|wellness|supplement|biotech)\b/i],
   "asymmetric-upside": [/\b(robotics|nuclear|grid|storage|geothermal|humanoid)\b/i],
   sports: [/\b(broncos|buffaloes|notre dame|atp|wta|tennis)\b/i],
+};
+
+const TOPIC_KEYWORD_PATTERNS: Partial<Record<ResearchTopic, RegExp[]>> = {
+  ai: [
+    /\b(mcp|model context protocol|llm|agentic|agents|gpu|inference|reasoning|enterprise ai)\b/i,
+    /\b(openai|anthropic|nvidia|google deepmind|microsoft)\b/i,
+  ],
+  "cpg-startups": [
+    /\b(nutrition|wellness|biotech|supplement|functional beverage|protein|consumer health)\b/i,
+    /\b(startup|founder|funding|distribution|retail launch|clinical)\b/i,
+  ],
+  cannabis: [
+    /\b(cannabis|hemp|dispensary|operator|rescheduling|licensing|cultivation)\b/i,
+    /\b(retail|pricing|wholesale|compliance|enforcement)\b/i,
+  ],
 };
 
 const NOVELTY_PENALTIES = [
@@ -93,6 +115,8 @@ const LOW_TRUST_SOURCE_PENALTIES: Array<[RegExp, number]> = [
   [/\bsports illustrated\b/i, 3],
   [/\bj\.p\. morgan\b/i, 2],
   [/\bhpcwire\b/i, 2],
+  [/\bthe whitebox\b/i, 2],
+  [/\bdaily rundown\b/i, 2],
 ];
 
 function canonicalize(text: string): string {
@@ -202,6 +226,11 @@ function getLocalRelevanceScore(story: StoryCandidate): number {
   return Math.min(10, countPatternMatches(patterns, story));
 }
 
+function getTopicKeywordScore(story: StoryCandidate): number {
+  const patterns = TOPIC_KEYWORD_PATTERNS[story.topic] ?? [];
+  return Math.min(12, countPatternMatches(patterns, story));
+}
+
 function getNoveltyPenalty(story: StoryCandidate): number {
   const haystack = `${story.title} ${story.summary}`;
   return NOVELTY_PENALTIES.reduce(
@@ -235,7 +264,8 @@ function getDecisionRelevanceScore(story: StoryCandidate): number {
     getOperationalScore(story) +
     getCapitalScore(story) +
     getRegulatoryScore(story) +
-    getLocalRelevanceScore(story) -
+    getLocalRelevanceScore(story) +
+    getTopicKeywordScore(story) -
     getNoveltyPenalty(story) -
     getSourcePenalty(story.source)
   );

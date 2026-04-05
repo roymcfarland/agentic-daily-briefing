@@ -98,4 +98,63 @@ describe("rankStories", () => {
     expect(ranked[0]?.source).toBe("Reuters");
     vi.useRealTimers();
   });
+
+  it("prefers decision-relevant AI infrastructure coverage over newsletter-style AI blurbs", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-04T23:00:00Z"));
+
+    const stories: StoryCandidate[] = [
+      {
+        topic: "ai",
+        title: "OpenAI and Anthropic push enterprise MCP deployments onto new GPU stacks",
+        summary: "The rollout affects inference economics, enterprise agent deployments, and model throughput.",
+        source: "Semafor",
+        url: "https://example.com/semafor-ai",
+        publishedAt: "2026-04-04T18:00:00Z",
+      },
+      {
+        topic: "ai",
+        title: "The Daily Rundown recaps this week in AI",
+        summary: "A roundup of headlines and things to know.",
+        source: "The Daily Rundown",
+        url: "https://example.com/rundown-ai",
+        publishedAt: "2026-04-04T19:00:00Z",
+      },
+    ];
+
+    const ranked = rankStories(stories);
+    expect(ranked[0]?.source).toBe("Semafor");
+    expect(ranked[0]?.signalOrNoise).toBe("Signal");
+    vi.useRealTimers();
+  });
+
+  it("gives CPG startup innovation stories more weight than generic market reports", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-04T23:00:00Z"));
+
+    const stories: StoryCandidate[] = [
+      {
+        topic: "cpg-startups",
+        title: "Nutrition startup lands retail launch for biotech protein beverage",
+        summary: "The company secured distribution and clinical validation ahead of a national rollout.",
+        source: "FoodNavigator-USA",
+        url: "https://example.com/cpg-strong",
+        publishedAt: "2026-04-04T15:00:00Z",
+      },
+      {
+        topic: "cpg-startups",
+        title: "CPG market analysis and forecast for 2030",
+        summary: "Trends and insights across consumer packaged goods categories.",
+        source: "IndexBox",
+        url: "https://example.com/cpg-noise",
+        publishedAt: "2026-04-04T14:00:00Z",
+      },
+    ];
+
+    const ranked = rankStories(stories);
+    expect(ranked).toHaveLength(1);
+    expect(ranked[0]?.source).toBe("FoodNavigator-USA");
+    expect(ranked[0]?.signalOrNoise).toBe("Signal");
+    vi.useRealTimers();
+  });
 });

@@ -6,15 +6,28 @@ interface TopicConfig {
   queries: string[];
 }
 
+const AI_QUERIES = [
+  "enterprise AI agents MCP model context protocol inference GPUs site:venturebeat.com OR site:semafor.com",
+  "LLM infrastructure enterprise deployment inference GPUs site:theinformation.com OR site:nvidia.com OR site:techcrunch.com",
+  "OpenAI Anthropic Google Microsoft agents enterprise site:openai.com OR site:anthropic.com OR site:venturebeat.com",
+];
+
+const CPG_STARTUP_QUERIES = [
+  "nutrition startup wellness biotech food tech funding site:foodnavigator-usa.com OR site:nutraingredients.com OR site:agfundernews.com",
+  "beverage snack supplement startup retail launch site:bevnet.com OR site:newhope.com OR site:foodbusinessnews.net",
+  "consumer wellness biotech startup clinical nutrition site:fiercebiotech.com OR site:statnews.com OR site:nutraingredients.com",
+];
+
+const CANNABIS_QUERIES = [
+  "cannabis regulation operators pricing dispensaries site:mjbizdaily.com OR site:greenmarketreport.com OR site:marijuanamoment.net",
+  "cannabis rescheduling hemp retail enforcement site:cannabisbusinesstimes.com OR site:newcannabisventures.com OR site:mjbizdaily.com",
+];
+
 export const TOPIC_CONFIG: TopicConfig[] = [
   {
     topic: "ai",
     label: "AI",
-    queries: [
-      "artificial intelligence MCP LLM GPUs enterprise deployment site:venturebeat.com",
-      "enterprise AI agents MCP inference GPUs site:semafor.com OR site:theinformation.com OR site:venturebeat.com",
-      "OpenAI Anthropic Google Microsoft AI enterprise agents GPUs site:nvidia.com OR site:venturebeat.com",
-    ],
+    queries: AI_QUERIES,
   },
   {
     topic: "markets",
@@ -35,19 +48,12 @@ export const TOPIC_CONFIG: TopicConfig[] = [
   {
     topic: "cpg-startups",
     label: "CPG Startups",
-    queries: [
-      "CPG startups grocery retail beverage snack funding distribution site:foodnavigator-usa.com OR site:nutraingredients.com OR site:bevnet.com",
-      "consumer packaged goods startup wellness nutrition biotech site:foodnavigator-usa.com OR site:nutraingredients.com OR site:fiercebiotech.com",
-      "startup CPG nutrition wellness retail shelf site:startupcpg.com",
-    ],
+    queries: CPG_STARTUP_QUERIES,
   },
   {
     topic: "cannabis",
     label: "Cannabis",
-    queries: [
-      "cannabis regulation operators pricing dispensaries site:mjbizdaily.com OR site:greenmarketreport.com OR site:marijuanamoment.net",
-      "cannabis rescheduling hemp retail enforcement site:cannabisbusinesstimes.com OR site:marijuanamoment.net OR site:mjbizdaily.com",
-    ],
+    queries: CANNABIS_QUERIES,
   },
   {
     topic: "chicago",
