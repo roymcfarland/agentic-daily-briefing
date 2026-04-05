@@ -68,6 +68,7 @@ describe("renderBriefingEmail", () => {
   it("renders the required narrative fields", () => {
     const html = renderBriefingEmail(digest);
 
+    expect(html).toContain("Daily Digest");
     expect(html).toContain("What happened:");
     expect(html).toContain("Why it matters:");
     expect(html).toContain("Signal or noise:");
@@ -82,6 +83,7 @@ describe("renderBriefingEmail", () => {
   it("renders a matching plain-text version", () => {
     const text = renderBriefingText(digest);
 
+    expect(text).toContain("Daily Digest - Thursday, April 2");
     expect(text).toContain("Taskflow Snapshot");
     expect(text).toContain("Briefing Feed");
     expect(text).toContain("[sports] Denver Broncos adjust offseason plan");
@@ -89,5 +91,15 @@ describe("renderBriefingEmail", () => {
     expect(text).toContain("- Confirm insurance call (in-progress)");
     expect(text).toContain("  - Upload supporting paperwork (on-deck)");
     expect(text).toContain("One possible contrarian take:");
+  });
+
+  it("omits the task section entirely when there are no task summaries", () => {
+    const html = renderBriefingEmail({
+      ...digest,
+      taskSummaries: [],
+    });
+
+    expect(html).not.toContain("Taskflow Snapshot");
+    expect(html).toContain("Briefing Feed");
   });
 });

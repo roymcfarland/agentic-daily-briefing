@@ -58,21 +58,26 @@ function renderStory(story: RankedStory): string {
 }
 
 export function renderBriefingEmail(digest: BriefingDigest): string {
+  const hasTaskSummaries = digest.taskSummaries.length > 0;
+
   return `
   <!doctype html>
   <html lang="en">
     <body style="margin:0;padding:24px;background:#f5efe6;color:#111827;font-family:Georgia,serif;">
       <div style="max-width:840px;margin:0 auto;background:#fffdf9;border-radius:24px;padding:28px;border:1px solid #eadfce;">
-        <p style="margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9a3412;">Weekday Morning Brief</p>
+        <p style="margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9a3412;">Daily Digest</p>
         <h1 style="margin:0 0 8px;font-size:34px;line-height:1.1;">${escapeHtml(digest.dateLabel)}</h1>
         <p style="margin:0 0 24px;color:#4b5563;">Taskflow state plus live research filtered for decision relevance.</p>
 
+        ${hasTaskSummaries
+          ? `
         <section>
           <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Taskflow Snapshot</h2>
           <div style="display:grid;gap:14px;">
             ${digest.taskSummaries.map(renderTaskSummary).join("")}
           </div>
-        </section>
+        </section>`
+          : ""}
 
         <section style="margin-top:24px;">
           <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Briefing Feed</h2>
@@ -93,24 +98,26 @@ export function renderBriefingEmail(digest: BriefingDigest): string {
 
 export function renderBriefingText(digest: BriefingDigest): string {
   const lines: string[] = [
-    `Weekday Morning Brief - ${digest.dateLabel}`,
-    "",
-    "Taskflow Snapshot",
+    `Daily Digest - ${digest.dateLabel}`,
   ];
 
-  for (const summary of digest.taskSummaries) {
-    lines.push(`${summary.area}: ${summary.headline}`);
-    lines.push(`Open items: ${summary.openItems}`);
-    lines.push("Active tasks:");
-    if (!summary.tasks.length) {
-      lines.push("- None");
-    } else {
-      appendTaskLines(lines, summary.tasks);
+  if (digest.taskSummaries.length) {
+    lines.push("", "Taskflow Snapshot");
+
+    for (const summary of digest.taskSummaries) {
+      lines.push(`${summary.area}: ${summary.headline}`);
+      lines.push(`Open items: ${summary.openItems}`);
+      lines.push("Active tasks:");
+      if (!summary.tasks.length) {
+        lines.push("- None");
+      } else {
+        appendTaskLines(lines, summary.tasks);
+      }
+      lines.push("");
     }
-    lines.push("");
   }
 
-  lines.push("Briefing Feed");
+  lines.push("", "Briefing Feed");
   for (const story of digest.stories) {
     lines.push(`[${getTopicLabel(story.topic)}] ${story.title} (${story.source})`);
     lines.push(`What happened: ${story.summary || story.title}`);

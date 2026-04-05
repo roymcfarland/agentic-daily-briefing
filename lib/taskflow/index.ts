@@ -28,6 +28,12 @@ function normalizeCategory(category?: string): CoverageArea | null {
 
 function sortTasks(tasks: Task[]): Task[] {
   return [...tasks].sort((left, right) => {
+    const leftStatus = statusOf(left) === "in-progress" ? 0 : 1;
+    const rightStatus = statusOf(right) === "in-progress" ? 0 : 1;
+    if (leftStatus !== rightStatus) {
+      return leftStatus - rightStatus;
+    }
+
     const leftSort = left.sortOrder ?? Number.MAX_SAFE_INTEGER;
     const rightSort = right.sortOrder ?? Number.MAX_SAFE_INTEGER;
     if (leftSort !== rightSort) {
@@ -149,5 +155,5 @@ export async function getTaskSummaries(now: Date): Promise<TaskSummary[]> {
         completionRate: summary.summary?.completionRate,
       }),
     };
-  });
+  }).filter((summary) => summary.openItems > 0 && summary.tasks.length > 0);
 }
