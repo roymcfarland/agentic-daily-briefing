@@ -11,8 +11,9 @@ export const TOPIC_CONFIG: TopicConfig[] = [
     topic: "ai",
     label: "AI",
     queries: [
-      "artificial intelligence frontier models MCP LLM GPUs enterprise deployment",
-      "OpenAI Anthropic Google Microsoft AI enterprise agents inference GPUs",
+      "artificial intelligence MCP LLM GPUs enterprise deployment site:venturebeat.com",
+      "enterprise AI agents MCP inference GPUs site:semafor.com OR site:theinformation.com OR site:venturebeat.com",
+      "OpenAI Anthropic Google Microsoft AI enterprise agents GPUs site:nvidia.com OR site:venturebeat.com",
     ],
   },
   {
@@ -35,16 +36,17 @@ export const TOPIC_CONFIG: TopicConfig[] = [
     topic: "cpg-startups",
     label: "CPG Startups",
     queries: [
-      "CPG startups grocery retail beverage snack funding distribution",
-      "consumer packaged goods startup retail shelf expansion margin brand",
+      "CPG startups grocery retail beverage snack funding distribution site:foodnavigator-usa.com OR site:nutraingredients.com OR site:bevnet.com",
+      "consumer packaged goods startup wellness nutrition biotech site:foodnavigator-usa.com OR site:nutraingredients.com OR site:fiercebiotech.com",
+      "startup CPG nutrition wellness retail shelf site:startupcpg.com",
     ],
   },
   {
     topic: "cannabis",
     label: "Cannabis",
     queries: [
-      "cannabis regulation operators pricing dispensaries",
-      "cannabis rescheduling hemp retail enforcement",
+      "cannabis regulation operators pricing dispensaries site:mjbizdaily.com OR site:greenmarketreport.com OR site:marijuanamoment.net",
+      "cannabis rescheduling hemp retail enforcement site:cannabisbusinesstimes.com OR site:marijuanamoment.net OR site:mjbizdaily.com",
     ],
   },
   {
@@ -84,28 +86,28 @@ export const SPORTS_CONFIG: SportsConfig[] = [
     sportsArea: "denver-broncos",
     label: "Denver Broncos",
     queries: [
-      "\"Denver Broncos\"",
+      "\"Denver Broncos\" site:denverbroncos.com OR site:espn.com OR site:apnews.com",
     ],
   },
   {
     sportsArea: "colorado-buffaloes-football",
     label: "Colorado Buffaloes Football",
     queries: [
-      "\"Colorado Buffaloes\" football",
+      "\"Colorado Buffaloes\" football site:cubuffs.com OR site:espn.com OR site:apnews.com",
     ],
   },
   {
     sportsArea: "notre-dame-football",
     label: "Notre Dame Football",
     queries: [
-      "\"Notre Dame\" football",
+      "\"Notre Dame\" football site:fightingirish.com OR site:espn.com OR site:apnews.com",
     ],
   },
   {
     sportsArea: "tennis",
     label: "ATP + WTA Tennis",
     queries: [
-      "ATP WTA tennis",
+      "ATP WTA tennis site:atptour.com OR site:wtatennis.com OR site:espn.com",
     ],
   },
 ];

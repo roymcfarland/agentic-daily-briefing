@@ -9,6 +9,25 @@ const SOURCE_BONUS: Record<string, number> = {
   CNBC: 13,
   AP: 13,
   TechCrunch: 10,
+  VentureBeat: 15,
+  Semafor: 13,
+  "The Information": 16,
+  NVIDIA: 12,
+  "MJBizDaily": 16,
+  "Marijuana Moment": 14,
+  "Green Market Report": 13,
+  "Cannabis Business Times": 14,
+  "FoodNavigator-USA": 15,
+  NutraIngredients: 15,
+  BevNET: 14,
+  "Fierce Biotech": 15,
+  "Startup CPG": 11,
+  ESPN: 14,
+  "ATP Tour": 14,
+  WTA: 14,
+  "Denver Broncos": 13,
+  "Colorado Buffaloes": 13,
+  "Notre Dame Athletics": 13,
 };
 
 const TOPIC_BONUS: Record<ResearchTopic, number> = {
@@ -66,6 +85,13 @@ const LOW_TRUST_SOURCE_PENALTIES: Array<[RegExp, number]> = [
   [/\bthelec\.net\b/i, 4],
   [/\banalytics india magazine\b/i, 3],
   [/\bamerican enterprise institute\b/i, 3],
+  [/\bindexbox\b/i, 9],
+  [/\bthe tech buzz\b/i, 5],
+  [/\bpredominantlyorange\.com\b/i, 5],
+  [/\bslapthesign\.com\b/i, 5],
+  [/\bsports illustrated\b/i, 3],
+  [/\bj\.p\. morgan\b/i, 2],
+  [/\bhpcwire\b/i, 2],
 ];
 
 function canonicalize(text: string): string {
