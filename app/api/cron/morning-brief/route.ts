@@ -4,7 +4,6 @@ import { timingSafeEqual } from "node:crypto";
 import { buildBriefingDigest } from "@/lib/briefing/pipeline";
 import { getEnv } from "@/lib/env";
 import { sendBriefingEmail } from "@/lib/resend";
-import { isMorningWindow } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -42,15 +41,6 @@ export async function GET(request: Request) {
         { ok: false, error: "Unauthorized" },
         { status: 401, headers: JSON_HEADERS },
       );
-    }
-
-    if (!force && !isMorningWindow(now)) {
-      return NextResponse.json({
-        ok: true,
-        skipped: true,
-        reason: "Outside 6:30 AM America/Chicago send window.",
-        timestamp: now.toISOString(),
-      }, { headers: JSON_HEADERS });
     }
 
     const digest = await buildBriefingDigest(now);

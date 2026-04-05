@@ -2,17 +2,17 @@ const setupSteps = [
   "Set Taskflow and Resend environment variables.",
   "Run the Taskflow client generator after any OpenAPI schema change.",
   "Deploy to Vercel and configure the cron secret.",
-  "Use the included UTC cron pair so Chicago 6:30 AM survives DST transitions.",
+  "Use the included single UTC cron for one delivery per day.",
 ];
 
 export default function HomePage() {
   return (
     <main className="shell">
       <section className="hero">
-        <p className="eyebrow">Weekday Morning Brief</p>
+        <p className="eyebrow">Daily Morning Brief</p>
         <h1>Production-ready Next.js briefing pipeline for Vercel Cron.</h1>
         <p className="lede">
-          Sends a weekday 6:30 AM America/Chicago email using Resend, Taskflow
+          Sends a daily morning email using Resend, Taskflow
           daily summaries, and live research across the sectors you specified.
         </p>
       </section>

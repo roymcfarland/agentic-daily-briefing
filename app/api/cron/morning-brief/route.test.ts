@@ -8,14 +8,6 @@ vi.mock("@/lib/resend", () => ({
   sendBriefingEmail: vi.fn(),
 }));
 
-vi.mock("@/lib/time", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/time")>("@/lib/time");
-  return {
-    ...actual,
-    isWeekdayMorningWindow: vi.fn(() => true),
-  };
-});
-
 import { GET } from "@/app/api/cron/morning-brief/route";
 import { buildBriefingDigest } from "@/lib/briefing/pipeline";
 import { sendBriefingEmail } from "@/lib/resend";
@@ -119,5 +111,29 @@ describe("morning brief route", () => {
     expect(response.status).toBe(200);
     expect(payload.preview).toBe(true);
     expect(mockedSendBriefingEmail).not.toHaveBeenCalled();
+  });
+
+  it("builds the digest on a normal authenticated preview request", async () => {
+    mockedBuildBriefingDigest.mockResolvedValueOnce({
+      dateLabel: "Saturday, April 4",
+      taskSummaries: [],
+      stories: [],
+      oneThingToWatch: "Watch this.",
+      oneThingToIgnore: "Ignore that.",
+      oneContrarianTake: "Contrarian take.",
+    });
+
+    const response = await GET(
+      new Request("https://example.com/api/cron/morning-brief?preview=1", {
+        headers: {
+          authorization: "Bearer secret-value",
+        },
+      }),
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.forced).toBe(false);
+    expect(mockedBuildBriefingDigest).toHaveBeenCalledTimes(1);
   });
 });

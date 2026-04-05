@@ -20,17 +20,17 @@ Next.js App Router project for a daily morning email briefing, designed for Verc
 - `openapi/taskflow.openapi.json`: source schema for the generated client
 - `lib/briefing/pipeline.ts`: data collection, ranking, and digest assembly
 - `lib/briefing/formatter.ts`: HTML and text email rendering
-- `vercel.json`: UTC cron schedule with a Chicago-time runtime guard
+- `vercel.json`: UTC cron schedule for one delivery per day
 
 ## Why one Vercel cron schedule
 
-Vercel Cron uses UTC schedules. This project is configured with one daily cron at `30 11 * * *` and a runtime guard that only sends when the local Chicago time is exactly `6:30 AM`.
+Vercel Cron uses UTC schedules. This project is configured with one daily cron at `0 12 * * *`.
 
 That means:
 
 1. It sends once per day, not twice.
-2. It matches `6:30 AM America/Chicago` during daylight time.
-3. It will drift during standard time unless you reintroduce a second UTC schedule.
+2. On April 4, 2026, that schedule maps to `7:00 AM America/Chicago`.
+3. After daylight saving time ends, it will map to `6:00 AM America/Chicago` unless you reintroduce a second UTC schedule.
 
 ## Environment variables
 
@@ -81,7 +81,7 @@ Manually trigger the cron route in development:
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/morning-brief
 ```
 
-Force a manual send outside the normal 6:30 AM America/Chicago cron window:
+Force a manual send outside the normal cron window:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/morning-brief?force=1"
