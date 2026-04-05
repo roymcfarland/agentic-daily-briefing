@@ -31,7 +31,7 @@ const BRIEFING_TOPIC_ORDER: ResearchTopic[] = [
 
 const MAX_STORIES_PER_TOPIC = 2;
 const SOFT_MAX_STORIES_PER_TOPIC = 2;
-const MIN_SIGNAL_SCORE = 35;
+const EXTRA_TOPIC_STORY_MIN_SCORE = 40;
 
 function containsKeyword(text: string, keywords: string[]): boolean {
   const haystack = text.toLowerCase();
@@ -153,7 +153,7 @@ export function selectStoriesForBriefing(stories: RankedStory[], maxItems: numbe
     }
 
     const topicCount = perTopicCount.get(story.topic) ?? 0;
-    if (topicCount >= SOFT_MAX_STORIES_PER_TOPIC && story.score < MIN_SIGNAL_SCORE) {
+    if (topicCount >= SOFT_MAX_STORIES_PER_TOPIC && story.score < EXTRA_TOPIC_STORY_MIN_SCORE) {
       continue;
     }
 

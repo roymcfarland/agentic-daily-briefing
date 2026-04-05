@@ -36,17 +36,31 @@ describe("selectStoriesForBriefing", () => {
     expect(selected.map((item) => item.title)).toEqual(["AI 1", "Cannabis 1", "Sports 1", "Cannabis 2"]);
   });
 
-  it("still allows an extra same-topic story when it is strong enough to be signal", () => {
+  it("still allows an extra same-topic story when it is unusually strong", () => {
     const selected = selectStoriesForBriefing(
       [
         story({ topic: "cannabis", title: "Cannabis 1", dedupeKey: "c1", score: 44, signalOrNoise: "Signal" }),
         story({ topic: "cannabis", title: "Cannabis 2", dedupeKey: "c2", score: 39, signalOrNoise: "Signal" }),
-        story({ topic: "cannabis", title: "Cannabis 3", dedupeKey: "c3", score: 35, signalOrNoise: "Signal" }),
+        story({ topic: "cannabis", title: "Cannabis 3", dedupeKey: "c3", score: 41, signalOrNoise: "Signal" }),
         story({ topic: "ai", title: "AI 1", dedupeKey: "a1", score: 36, signalOrNoise: "Signal" }),
       ],
       5,
     );
 
     expect(selected.map((item) => item.title)).toEqual(["AI 1", "Cannabis 1", "Cannabis 2", "Cannabis 3"]);
+  });
+
+  it("requires an unusually strong score before allowing a third same-topic story", () => {
+    const selected = selectStoriesForBriefing(
+      [
+        story({ topic: "cannabis", title: "Cannabis 1", dedupeKey: "c1", score: 44, signalOrNoise: "Signal" }),
+        story({ topic: "cannabis", title: "Cannabis 2", dedupeKey: "c2", score: 39, signalOrNoise: "Signal" }),
+        story({ topic: "cannabis", title: "Cannabis 3", dedupeKey: "c3", score: 37, signalOrNoise: "Signal" }),
+        story({ topic: "ai", title: "AI 1", dedupeKey: "a1", score: 36, signalOrNoise: "Signal" }),
+      ],
+      5,
+    );
+
+    expect(selected.map((item) => item.title)).toEqual(["AI 1", "Cannabis 1", "Cannabis 2"]);
   });
 });
