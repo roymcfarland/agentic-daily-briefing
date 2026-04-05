@@ -4,7 +4,7 @@ import { timingSafeEqual } from "node:crypto";
 import { buildBriefingDigest } from "@/lib/briefing/pipeline";
 import { getEnv } from "@/lib/env";
 import { sendBriefingEmail } from "@/lib/resend";
-import { isWeekdayMorningWindow } from "@/lib/time";
+import { isMorningWindow } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       );
     }
 
-    if (!force && !isWeekdayMorningWindow(now)) {
+    if (!force && !isMorningWindow(now)) {
       return NextResponse.json({
         ok: true,
         skipped: true,

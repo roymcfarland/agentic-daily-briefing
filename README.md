@@ -1,10 +1,10 @@
-# Weekday Morning Brief
+# Daily Morning Brief
 
-Next.js App Router project for a weekday morning email briefing, designed for Vercel deployment and Vercel Cron.
+Next.js App Router project for a daily morning email briefing, designed for Vercel deployment and Vercel Cron.
 
 ## What it does
 
-- Sends a weekday morning briefing email with [Resend](https://resend.com/)
+- Sends a daily morning briefing email with [Resend](https://resend.com/)
 - Runs from `/api/cron/morning-brief`
 - Pulls task state from Taskflow via `getDailySummary` only
 - Covers Personal, Elevated Organics, and Brightline Labs
@@ -20,19 +20,17 @@ Next.js App Router project for a weekday morning email briefing, designed for Ve
 - `openapi/taskflow.openapi.json`: source schema for the generated client
 - `lib/briefing/pipeline.ts`: data collection, ranking, and digest assembly
 - `lib/briefing/formatter.ts`: HTML and text email rendering
-- `vercel.json`: UTC cron schedules with a Chicago-time runtime guard
+- `vercel.json`: UTC cron schedule with a Chicago-time runtime guard
 
-## Why two Vercel cron schedules
+## Why one Vercel cron schedule
 
-Vercel Cron uses UTC schedules. America/Chicago moves between CST and CDT, so a single UTC cron cannot stay pinned to 6:30 AM local time year-round.
+Vercel Cron uses UTC schedules. This project is configured with one daily cron at `30 11 * * *` and a runtime guard that only sends when the local Chicago time is exactly `6:30 AM`.
 
-This project solves that by:
+That means:
 
-1. Scheduling both `30 11 * * 1-5` and `30 12 * * 1-5`
-2. Checking the current time in `America/Chicago` inside the route
-3. Only sending when the local time is exactly 6:30 AM on a weekday
-
-That keeps the actual send time aligned with 6:30 AM Chicago through DST changes.
+1. It sends once per day, not twice.
+2. It matches `6:30 AM America/Chicago` during daylight time.
+3. It will drift during standard time unless you reintroduce a second UTC schedule.
 
 ## Environment variables
 
@@ -118,7 +116,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/
 3. Ensure your sender domain is verified in Resend.
 4. Set `CRON_SECRET` in Vercel and call the route with that shared secret.
 5. Point `roymcfarland.news` and `www.roymcfarland.news` at the Vercel project.
-6. Deploy. Vercel will pick up `vercel.json` and create the cron jobs.
+6. Deploy. Vercel will pick up `vercel.json` and create the cron job.
 
 ## Taskflow client generation
 
