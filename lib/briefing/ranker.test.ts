@@ -52,6 +52,20 @@ describe("rankStories", () => {
     expect(rankStories([story])).toHaveLength(0);
   });
 
+  it("filters newsletter-style stories before ranking", () => {
+    const story: StoryCandidate = {
+      topic: "cannabis",
+      title: "Newsletter: cannabis policy headlines for April 4",
+      summary: "A roundup of things to know this week.",
+      source: "Marijuana Moment",
+      url: "https://example.com/newsletter",
+      publishedAt: "2026-04-04T10:00:00Z",
+    };
+
+    expect(isLowSignal(story)).toBe(true);
+    expect(rankStories([story])).toHaveLength(0);
+  });
+
   it("filters stories older than 72 hours", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-04T23:00:00Z"));

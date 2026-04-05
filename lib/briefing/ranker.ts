@@ -50,6 +50,7 @@ const TOPIC_BONUS: Record<ResearchTopic, number> = {
 
 const LOW_SIGNAL_PATTERNS = [
   /\b(opinion|podcast|video|gallery|sponsored|paid post|press release)\b/i,
+  /\b(newsletter|letter from the editor)\b/i,
   /\b(celebrity|lifestyle|roundup|what to know|watch live)\b/i,
   /\b(market analysis|forecast|size|trends and insights|news and statistics)\b/i,
 ];

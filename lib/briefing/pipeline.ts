@@ -90,39 +90,41 @@ function summarizeContrarian(stories: RankedStory[]): string {
 }
 
 function chooseStories(stories: RankedStory[], maxItems: number): RankedStory[] {
-  const guaranteedTopics: ResearchTopic[] = [
-    "ai",
-    "markets",
-    "business",
-    "cpg-startups",
-    "cannabis",
-    "chicago",
-    "colorado",
-    "asymmetric-upside",
-  ];
-
   const selected: RankedStory[] = [];
   const seen = new Set<string>();
+  const perTopicCount = new Map<ResearchTopic, number>();
 
-  for (const topic of guaranteedTopics) {
-    const story = stories.find((candidate) => candidate.topic === topic && !seen.has(candidate.dedupeKey));
-    if (story) {
+  for (let round = 0; selected.length < maxItems; round += 1) {
+    let addedInRound = false;
+
+    for (const topic of BRIEFING_TOPIC_ORDER) {
+      if (selected.length >= maxItems) {
+        break;
+      }
+
+      const topicCount = perTopicCount.get(topic) ?? 0;
+      const topicLimit = round === 0 ? 1 : MAX_STORIES_PER_TOPIC;
+      if (topicCount >= topicLimit) {
+        continue;
+      }
+
+      const story = stories.find(
+        (candidate) => candidate.topic === topic && !seen.has(candidate.dedupeKey),
+      );
+
+      if (!story) {
+        continue;
+      }
+
       selected.push(story);
       seen.add(story.dedupeKey);
+      perTopicCount.set(topic, topicCount + 1);
+      addedInRound = true;
     }
-  }
 
-  for (const story of stories) {
-    if (selected.length >= maxItems) {
+    if (!addedInRound) {
       break;
     }
-
-    if (seen.has(story.dedupeKey)) {
-      continue;
-    }
-
-    selected.push(story);
-    seen.add(story.dedupeKey);
   }
 
   return selected;
@@ -215,3 +217,15 @@ export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
     oneContrarianTake: summarizeContrarian(stories),
   };
 }
+const BRIEFING_TOPIC_ORDER: ResearchTopic[] = [
+  "ai",
+  "markets",
+  "business",
+  "cpg-startups",
+  "cannabis",
+  "chicago",
+  "colorado",
+  "asymmetric-upside",
+];
+
+const MAX_STORIES_PER_TOPIC = 2;
