@@ -116,6 +116,10 @@ export async function fetchGoogleNewsStories(
     throw new Error(`Google News RSS returned malformed XML for ${topic}`);
   }
 
+  if (!parsed.rss?.channel) {
+    throw new Error(`Google News RSS returned malformed XML for ${topic}`);
+  }
+
   return toArray(parsed.rss?.channel?.item)
     .map((item) => {
       const title = cleanText(item.title?.replace(/\s+-\s+[^-]+$/, ""));

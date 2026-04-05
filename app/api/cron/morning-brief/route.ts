@@ -30,28 +30,29 @@ function isAuthorized(request: Request): boolean {
 }
 
 export async function GET(request: Request) {
-  const authorized = isAuthorized(request);
-  if (!authorized && process.env.NODE_ENV === "production") {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401, headers: JSON_HEADERS },
-    );
-  }
-
   const { searchParams } = new URL(request.url);
   const force = searchParams.get("force") === "1";
   const preview = searchParams.get("preview") === "1";
   const now = new Date();
-  if (!force && !isWeekdayMorningWindow(now)) {
-    return NextResponse.json({
-      ok: true,
-      skipped: true,
-      reason: "Outside 6:30 AM America/Chicago send window.",
-      timestamp: now.toISOString(),
-    }, { headers: JSON_HEADERS });
-  }
 
   try {
+    const authorized = isAuthorized(request);
+    if (!authorized && process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        { ok: false, error: "Unauthorized" },
+        { status: 401, headers: JSON_HEADERS },
+      );
+    }
+
+    if (!force && !isWeekdayMorningWindow(now)) {
+      return NextResponse.json({
+        ok: true,
+        skipped: true,
+        reason: "Outside 6:30 AM America/Chicago send window.",
+        timestamp: now.toISOString(),
+      }, { headers: JSON_HEADERS });
+    }
+
     const digest = await buildBriefingDigest(now);
     if (preview) {
       return NextResponse.json({
