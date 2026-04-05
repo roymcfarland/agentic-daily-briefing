@@ -17,6 +17,11 @@ type SportsCandidate = StoryCandidate & {
   sportsLabel: string;
 };
 
+function containsKeyword(text: string, keywords: string[]): boolean {
+  const haystack = text.toLowerCase();
+  return keywords.some((keyword) => haystack.includes(keyword));
+}
+
 function summarizeWatch(stories: RankedStory[]): string {
   const top = stories.find((story) => story.signalOrNoise === "Signal") ?? stories[0];
   if (!top) {
@@ -147,8 +152,17 @@ async function fetchSportsResearch(): Promise<SportsUpdate[]> {
     }
   }
 
-  const ranked = rankStories(candidates).map((story) => {
-    const sportsStory = candidates.find((candidate) => candidate.url === story.url);
+  const filteredCandidates = candidates.filter((story) => {
+    const config = SPORTS_CONFIG.find((entry) => entry.sportsArea === story.sportsArea);
+    if (!config) {
+      return false;
+    }
+
+    return containsKeyword(`${story.title} ${story.summary}`, config.requiredKeywords);
+  });
+
+  const ranked = rankStories(filteredCandidates).map((story) => {
+    const sportsStory = filteredCandidates.find((candidate) => candidate.url === story.url);
     return {
       ...story,
       sportsArea: sportsStory?.sportsArea ?? "tennis",

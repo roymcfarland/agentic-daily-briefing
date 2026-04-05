@@ -79,6 +79,7 @@ interface SportsConfig {
   sportsArea: SportsArea;
   label: string;
   queries: string[];
+  requiredKeywords: string[];
 }
 
 export const SPORTS_CONFIG: SportsConfig[] = [
@@ -88,6 +89,7 @@ export const SPORTS_CONFIG: SportsConfig[] = [
     queries: [
       "\"Denver Broncos\" site:denverbroncos.com OR site:espn.com OR site:apnews.com",
     ],
+    requiredKeywords: ["broncos", "denver broncos"],
   },
   {
     sportsArea: "colorado-buffaloes-football",
@@ -95,6 +97,7 @@ export const SPORTS_CONFIG: SportsConfig[] = [
     queries: [
       "\"Colorado Buffaloes\" football site:cubuffs.com OR site:espn.com OR site:apnews.com",
     ],
+    requiredKeywords: ["colorado buffaloes", "buffaloes", "cu buffs", "cu buffs football"],
   },
   {
     sportsArea: "notre-dame-football",
@@ -102,6 +105,7 @@ export const SPORTS_CONFIG: SportsConfig[] = [
     queries: [
       "\"Notre Dame\" football site:fightingirish.com OR site:espn.com OR site:apnews.com",
     ],
+    requiredKeywords: ["notre dame", "fighting irish"],
   },
   {
     sportsArea: "tennis",
@@ -109,6 +113,7 @@ export const SPORTS_CONFIG: SportsConfig[] = [
     queries: [
       "ATP WTA tennis site:atptour.com OR site:wtatennis.com OR site:espn.com",
     ],
+    requiredKeywords: ["atp", "wta", "tennis", "monte-carlo", "indian wells", "miami open"],
   },
 ];
 
