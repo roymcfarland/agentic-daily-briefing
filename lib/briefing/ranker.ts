@@ -12,13 +12,15 @@ const SOURCE_BONUS: Record<string, number> = {
 };
 
 const TOPIC_BONUS: Record<ResearchTopic, number> = {
-  ai: 13,
+  ai: 15,
   markets: 14,
-  business: 11,
+  business: 10,
+  "cpg-startups": 15,
   cannabis: 15,
   chicago: 12,
   colorado: 12,
   "asymmetric-upside": 14,
+  sports: 8,
 };
 
 const LOW_SIGNAL_PATTERNS = [
@@ -48,7 +50,9 @@ const LOCAL_PATTERNS: Partial<Record<ResearchTopic, RegExp[]>> = {
   colorado: [/\b(colorado|denver|boulder)\b/i],
   cannabis: [/\b(cannabis|hemp|thc|dispensary|operator)\b/i],
   ai: [/\b(ai|model|chip|semiconductor|inference|training)\b/i],
+  "cpg-startups": [/\b(cpg|consumer packaged goods|grocery|retail|beverage|snack|shelf)\b/i],
   "asymmetric-upside": [/\b(robotics|nuclear|grid|storage|geothermal|humanoid)\b/i],
+  sports: [/\b(broncos|buffaloes|notre dame|atp|wta|tennis)\b/i],
 };
 
 const NOVELTY_PENALTIES = [
@@ -226,6 +230,14 @@ function inferWhyItMatters(story: StoryCandidate): string {
     return `This matters if it shifts model economics, distribution power, or enterprise adoption timing. ${summary}`;
   }
 
+  if (story.topic === "cpg-startups") {
+    return `This matters if it changes retail distribution, shelf economics, consumer demand, or brand competition. ${summary}`;
+  }
+
+  if (story.topic === "sports") {
+    return `This is useful context if it changes momentum, fan attention, or the near-term storyline around a team or tournament you track. ${summary}`;
+  }
+
   return `${topicLabel} relevance is mainly in downstream operational or strategic decisions. ${summary}`;
 }
 
@@ -238,6 +250,9 @@ function inferSecondOrderEffect(story: StoryCandidate): string {
   }
   if (story.topic === "asymmetric-upside") {
     return "A small early signal here could become a low-consensus wedge before most operators notice it.";
+  }
+  if (story.topic === "sports") {
+    return "A small shift in form, injury status, or tournament momentum could change how the next few days play out.";
   }
 
   return "The first-order headline may be modest, but the real impact could show up in pricing, partnerships, or execution speed.";

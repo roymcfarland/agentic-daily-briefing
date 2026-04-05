@@ -14,10 +14,18 @@ export type ResearchTopic =
   | "ai"
   | "markets"
   | "business"
+  | "cpg-startups"
   | "cannabis"
   | "chicago"
   | "colorado"
-  | "asymmetric-upside";
+  | "asymmetric-upside"
+  | "sports";
+
+export type SportsArea =
+  | "denver-broncos"
+  | "colorado-buffaloes-football"
+  | "notre-dame-football"
+  | "tennis";
 
 export interface TaskSummary {
   area: CoverageArea;
@@ -44,10 +52,16 @@ export interface RankedStory extends StoryCandidate {
   secondOrderEffect: string;
 }
 
+export interface SportsUpdate extends RankedStory {
+  sportsArea: SportsArea;
+  sportsLabel: string;
+}
+
 export interface BriefingDigest {
   dateLabel: string;
   taskSummaries: TaskSummary[];
   stories: RankedStory[];
+  sportsUpdates: SportsUpdate[];
   oneThingToWatch: string;
   oneThingToIgnore: string;
   oneContrarianTake: string;

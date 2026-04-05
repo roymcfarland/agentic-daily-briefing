@@ -4,12 +4,18 @@ import type {
   RankedStory,
   ResearchTopic,
   StoryCandidate,
+  SportsUpdate,
 } from "@/lib/briefing/types";
 import { rankStories } from "@/lib/briefing/ranker";
 import { getTaskSummaries } from "@/lib/taskflow";
 import { getChicagoDateLabel } from "@/lib/time";
 import { fetchGoogleNewsStories } from "@/lib/research/google-news";
-import { TOPIC_CONFIG } from "@/lib/research/topics";
+import { getSportsLabel, SPORTS_CONFIG, TOPIC_CONFIG } from "@/lib/research/topics";
+
+type SportsCandidate = StoryCandidate & {
+  sportsArea: SportsUpdate["sportsArea"];
+  sportsLabel: string;
+};
 
 function summarizeWatch(stories: RankedStory[]): string {
   const top = stories.find((story) => story.signalOrNoise === "Signal") ?? stories[0];
@@ -69,6 +75,7 @@ function chooseStories(stories: RankedStory[], maxItems: number): RankedStory[] 
     "ai",
     "markets",
     "business",
+    "cpg-startups",
     "cannabis",
     "chicago",
     "colorado",
@@ -119,11 +126,48 @@ async function fetchLiveResearch(): Promise<StoryCandidate[]> {
   return candidates;
 }
 
+async function fetchSportsResearch(): Promise<SportsUpdate[]> {
+  const results = await Promise.allSettled(
+    SPORTS_CONFIG.flatMap((entry) =>
+      entry.queries.map(async (query) => {
+        const stories = await fetchGoogleNewsStories("sports", query);
+        return stories.map((story) => ({
+          ...story,
+          sportsArea: entry.sportsArea,
+          sportsLabel: entry.label,
+        }));
+      }),
+    ),
+  );
+
+  const candidates: SportsCandidate[] = [];
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      candidates.push(...result.value);
+    }
+  }
+
+  const ranked = rankStories(candidates).map((story) => {
+    const sportsStory = candidates.find((candidate) => candidate.url === story.url);
+    return {
+      ...story,
+      sportsArea: sportsStory?.sportsArea ?? "tennis",
+      sportsLabel: sportsStory?.sportsLabel ?? getSportsLabel("tennis"),
+    } satisfies SportsUpdate;
+  });
+
+  return SPORTS_CONFIG.flatMap((entry) => {
+    const story = ranked.find((candidate) => candidate.sportsArea === entry.sportsArea);
+    return story ? [story] : [];
+  });
+}
+
 export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
   const env = getEnv();
-  const [taskSummaries, researchCandidates] = await Promise.all([
+  const [taskSummaries, researchCandidates, sportsUpdates] = await Promise.all([
     getTaskSummaries(now),
     fetchLiveResearch(),
+    fetchSportsResearch(),
   ]);
 
   const rankedStories = rankStories(researchCandidates);
@@ -133,6 +177,7 @@ export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
     dateLabel: getChicagoDateLabel(now),
     taskSummaries,
     stories,
+    sportsUpdates,
     oneThingToWatch: summarizeWatch(stories),
     oneThingToIgnore: summarizeIgnore(stories, rankedStories, now),
     oneContrarianTake: summarizeContrarian(stories),

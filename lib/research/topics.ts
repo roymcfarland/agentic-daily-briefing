@@ -1,4 +1,4 @@
-import type { ResearchTopic } from "@/lib/briefing/types";
+import type { ResearchTopic, SportsArea } from "@/lib/briefing/types";
 
 interface TopicConfig {
   topic: ResearchTopic;
@@ -11,8 +11,8 @@ export const TOPIC_CONFIG: TopicConfig[] = [
     topic: "ai",
     label: "AI",
     queries: [
-      "artificial intelligence frontier models chips regulation",
-      "OpenAI Anthropic Google Microsoft AI enterprise",
+      "artificial intelligence frontier models MCP LLM GPUs enterprise deployment",
+      "OpenAI Anthropic Google Microsoft AI enterprise agents inference GPUs",
     ],
   },
   {
@@ -29,6 +29,14 @@ export const TOPIC_CONFIG: TopicConfig[] = [
     queries: [
       "business strategy M&A enterprise software logistics",
       "CEO layoffs hiring pricing expansion margin",
+    ],
+  },
+  {
+    topic: "cpg-startups",
+    label: "CPG Startups",
+    queries: [
+      "CPG startups grocery retail beverage snack funding distribution",
+      "consumer packaged goods startup retail shelf expansion margin brand",
     ],
   },
   {
@@ -65,6 +73,47 @@ export const TOPIC_CONFIG: TopicConfig[] = [
   },
 ];
 
+interface SportsConfig {
+  sportsArea: SportsArea;
+  label: string;
+  queries: string[];
+}
+
+export const SPORTS_CONFIG: SportsConfig[] = [
+  {
+    sportsArea: "denver-broncos",
+    label: "Denver Broncos",
+    queries: [
+      "\"Denver Broncos\"",
+    ],
+  },
+  {
+    sportsArea: "colorado-buffaloes-football",
+    label: "Colorado Buffaloes Football",
+    queries: [
+      "\"Colorado Buffaloes\" football",
+    ],
+  },
+  {
+    sportsArea: "notre-dame-football",
+    label: "Notre Dame Football",
+    queries: [
+      "\"Notre Dame\" football",
+    ],
+  },
+  {
+    sportsArea: "tennis",
+    label: "ATP + WTA Tennis",
+    queries: [
+      "ATP WTA tennis",
+    ],
+  },
+];
+
 export function getTopicLabel(topic: ResearchTopic): string {
   return TOPIC_CONFIG.find((entry) => entry.topic === topic)?.label ?? topic;
+}
+
+export function getSportsLabel(sportsArea: SportsArea): string {
+  return SPORTS_CONFIG.find((entry) => entry.sportsArea === sportsArea)?.label ?? sportsArea;
 }
