@@ -58,6 +58,17 @@ function cleanText(input: string | undefined): string {
     .trim();
 }
 
+function trimTrailingSource(summary: string, source: string): string {
+  if (!summary || !source) {
+    return summary;
+  }
+
+  const escapedSource = source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return summary
+    .replace(new RegExp(`\\s+${escapedSource}$`, "i"), "")
+    .trim();
+}
+
 function getSourceName(source: RssItem["source"]): string {
   if (!source) {
     return "Google News";
@@ -106,13 +117,19 @@ export async function fetchGoogleNewsStories(
   }
 
   return toArray(parsed.rss?.channel?.item)
-    .map((item) => ({
-      topic,
-      title: cleanText(item.title?.replace(/\s+-\s+[^-]+$/, "")),
-      summary: cleanDescription(item.description),
-      source: cleanText(getSourceName(item.source)),
-      url: cleanText(item.link),
-      publishedAt: item.pubDate,
-    }))
+    .map((item) => {
+      const title = cleanText(item.title?.replace(/\s+-\s+[^-]+$/, ""));
+      const source = cleanText(getSourceName(item.source));
+      const summary = trimTrailingSource(cleanDescription(item.description), source);
+
+      return {
+        topic,
+        title,
+        summary: summary || title,
+        source,
+        url: cleanText(item.link),
+        publishedAt: item.pubDate,
+      };
+    })
     .filter((item) => item.title && item.url.startsWith("https://"));
 }
