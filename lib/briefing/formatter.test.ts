@@ -48,9 +48,9 @@ const digest: BriefingDigest = {
     },
     {
       topic: "sports",
-      title: "Denver Broncos adjust offseason plan",
+      title: "Denver Broncos adjust offseason plan - ap.com",
       summary: "Denver adds depth and resets camp expectations.",
-      source: "AP",
+      source: "ap.com",
       url: "https://example.com/broncos",
       dedupeKey: "denver broncos adjust offseason plan",
       score: 31,
@@ -69,12 +69,14 @@ describe("renderBriefingEmail", () => {
     const html = renderBriefingEmail(digest);
 
     expect(html).toContain("Daily Digest");
-    expect(html).toContain("What happened:");
-    expect(html).toContain("Why it matters:");
-    expect(html).toContain("Signal or noise:");
-    expect(html).toContain("One possible second-order effect:");
+    expect(html).toContain("What happened</strong>");
+    expect(html).toContain("Why it matters</strong>");
+    expect(html).toContain("Second-order effect</strong>");
     expect(html).toContain("Briefing Feed");
+    expect(html).toContain("Denver Broncos adjust offseason plan");
+    expect(html).not.toContain("Denver Broncos adjust offseason plan - ap.com");
     expect(html).toContain("Denver Broncos");
+    expect(html).toContain(">Signal<");
     expect(html).toContain("One thing to watch:");
     expect(html).toContain("One thing to ignore:");
     expect(html).toContain("One possible contrarian take:");
@@ -86,10 +88,11 @@ describe("renderBriefingEmail", () => {
     expect(text).toContain("Daily Digest - Thursday, April 2");
     expect(text).toContain("Taskflow Snapshot");
     expect(text).toContain("Briefing Feed");
-    expect(text).toContain("[sports] Denver Broncos adjust offseason plan");
+    expect(text).toContain("[sports] Denver Broncos adjust offseason plan (AP)");
     expect(text).toContain("[AI] Model vendors cut inference costs");
     expect(text).toContain("- Confirm insurance call (in-progress)");
     expect(text).toContain("  - Upload supporting paperwork (on-deck)");
+    expect(text).toContain("Signal: Noise");
     expect(text).toContain("One possible contrarian take:");
   });
 
@@ -101,5 +104,20 @@ describe("renderBriefingEmail", () => {
 
     expect(html).not.toContain("Taskflow Snapshot");
     expect(html).toContain("Briefing Feed");
+  });
+
+  it("removes redundant title echoes from why-it-matters copy", () => {
+    const html = renderBriefingEmail({
+      ...digest,
+      stories: [
+        {
+          ...digest.stories[0],
+          whyItMatters: "Cheaper inference can reset product margins. Two major providers cut prices for enterprise tiers.",
+        },
+      ],
+    });
+
+    expect(html).toContain("Cheaper inference can reset product margins");
+    expect(html).not.toContain("Cheaper inference can reset product margins. Two major providers cut prices for enterprise tiers.");
   });
 });

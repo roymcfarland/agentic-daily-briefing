@@ -2,6 +2,104 @@ import { escapeHtml } from "@/lib/html";
 import type { BriefingDigest, RankedStory, TaskNode, TaskSummary } from "@/lib/briefing/types";
 import { getTopicLabel } from "@/lib/research/topics";
 
+function normalizeForComparison(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function trimSentence(value: string): string {
+  return value.replace(/\s+/g, " ").trim().replace(/[.\s]+$/, "");
+}
+
+function formatSourceLabel(source: string): string {
+  const trimmed = source.trim();
+  if (!trimmed.includes(".") || trimmed.includes(" ")) {
+    return trimmed;
+  }
+
+  return trimmed
+    .replace(/^www\./i, "")
+    .replace(/\.(com|net|org|co|io)$/i, "")
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((part) => (part.length <= 3 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join(" ");
+}
+
+function stripSourceSuffix(title: string, source: string): string {
+  const trimmedTitle = trimSentence(title);
+  const candidates = [
+    source,
+    source.replace(/^www\./i, ""),
+    formatSourceLabel(source),
+  ]
+    .map(trimSentence)
+    .filter(Boolean);
+
+  for (const candidate of candidates) {
+    const suffixPatterns = [
+      new RegExp(`\\s[-|:]\\s${candidate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+      new RegExp(`\\s[-|:]\\s${candidate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\.com$`, "i"),
+    ];
+
+    for (const pattern of suffixPatterns) {
+      if (pattern.test(trimmedTitle)) {
+        return trimSentence(trimmedTitle.replace(pattern, ""));
+      }
+    }
+  }
+
+  return trimmedTitle;
+}
+
+function removeRedundantTail(value: string, repeated: string[]): string {
+  let next = trimSentence(value);
+
+  for (const item of repeated.map(trimSentence).filter(Boolean)) {
+    const normalizedItem = normalizeForComparison(item);
+    if (!normalizedItem) {
+      continue;
+    }
+
+    const normalizedNext = normalizeForComparison(next);
+    if (normalizedNext === normalizedItem) {
+      continue;
+    }
+
+    if (normalizedNext.endsWith(normalizedItem)) {
+      const plainPattern = new RegExp(`${item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+      next = trimSentence(next.replace(plainPattern, ""));
+    }
+  }
+
+  return next;
+}
+
+function getDisplayTitle(story: RankedStory): string {
+  return stripSourceSuffix(story.title, story.source);
+}
+
+function getWhatHappened(story: RankedStory): string {
+  const title = getDisplayTitle(story);
+  const summary = trimSentence(story.summary || story.title);
+  if (!summary || normalizeForComparison(summary) === normalizeForComparison(title)) {
+    return title;
+  }
+
+  return summary;
+}
+
+function getWhyItMatters(story: RankedStory): string {
+  const title = getDisplayTitle(story);
+  const summary = getWhatHappened(story);
+  const trimmed = removeRedundantTail(story.whyItMatters, [summary, title]);
+  return trimmed || story.whyItMatters;
+}
+
 function renderTaskNodes(tasks: TaskNode[], depth = 0): string {
   if (!tasks.length) {
     return `<p style="margin:0;color:#6b7280;">No active tasks in this list.</p>`;
@@ -43,16 +141,24 @@ function appendTaskLines(lines: string[], tasks: TaskNode[], depth = 0) {
 }
 
 function renderStory(story: RankedStory): string {
+  const displayTitle = getDisplayTitle(story);
+  const sourceLabel = formatSourceLabel(story.source);
+  const signalTone = story.signalOrNoise === "Signal"
+    ? "background:#ecfdf5;color:#166534;border-color:#bbf7d0;"
+    : "background:#f3f4f6;color:#374151;border-color:#e5e7eb;";
+
   return `
     <article style="padding:18px 0;border-top:1px solid #e5e7eb;">
-      <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">${escapeHtml(getTopicLabel(story.topic))} • ${escapeHtml(story.source)}</p>
+      <div style="margin:0 0 6px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+        <p style="margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">${escapeHtml(getTopicLabel(story.topic))} • ${escapeHtml(sourceLabel)}</p>
+        <span style="display:inline-block;padding:4px 10px;border:1px solid;border-radius:999px;font-size:12px;font-weight:700;${signalTone}">${escapeHtml(story.signalOrNoise)}</span>
+      </div>
       <h3 style="margin:0 0 8px;font-size:18px;">
-        <a href="${escapeHtml(story.url)}" style="color:#9a3412;text-decoration:none;">${escapeHtml(story.title)}</a>
+        <a href="${escapeHtml(story.url)}" style="color:#9a3412;text-decoration:none;">${escapeHtml(displayTitle)}</a>
       </h3>
-      <p style="margin:0 0 8px;color:#111827;"><strong>What happened:</strong> ${escapeHtml(story.summary || story.title)}</p>
-      <p style="margin:0 0 8px;color:#111827;"><strong>Why it matters:</strong> ${escapeHtml(story.whyItMatters)}</p>
-      <p style="margin:0 0 8px;color:#111827;"><strong>Signal or noise:</strong> ${escapeHtml(story.signalOrNoise)}</p>
-      <p style="margin:0;color:#111827;"><strong>One possible second-order effect:</strong> ${escapeHtml(story.secondOrderEffect)}</p>
+      <p style="margin:0 0 8px;color:#111827;"><strong>What happened</strong><br />${escapeHtml(getWhatHappened(story))}</p>
+      <p style="margin:0 0 8px;color:#111827;"><strong>Why it matters</strong><br />${escapeHtml(getWhyItMatters(story))}</p>
+      <p style="margin:0;color:#111827;"><strong>Second-order effect</strong><br />${escapeHtml(story.secondOrderEffect)}</p>
     </article>
   `;
 }
@@ -119,10 +225,10 @@ export function renderBriefingText(digest: BriefingDigest): string {
 
   lines.push("", "Briefing Feed");
   for (const story of digest.stories) {
-    lines.push(`[${getTopicLabel(story.topic)}] ${story.title} (${story.source})`);
-    lines.push(`What happened: ${story.summary || story.title}`);
-    lines.push(`Why it matters: ${story.whyItMatters}`);
-    lines.push(`Signal or noise: ${story.signalOrNoise}`);
+    lines.push(`[${getTopicLabel(story.topic)}] ${getDisplayTitle(story)} (${formatSourceLabel(story.source)})`);
+    lines.push(`What happened: ${getWhatHappened(story)}`);
+    lines.push(`Why it matters: ${getWhyItMatters(story)}`);
+    lines.push(`Signal: ${story.signalOrNoise}`);
     lines.push(`Second-order effect: ${story.secondOrderEffect}`);
     lines.push(`Link: ${story.url}`);
     lines.push("");
