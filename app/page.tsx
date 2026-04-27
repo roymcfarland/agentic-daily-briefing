@@ -3,14 +3,14 @@ import type { ReactNode } from "react";
 export const dynamic = "force-dynamic";
 
 const dateline = new Intl.DateTimeFormat("en-US", {
-  timeZone: "America/Chicago",
+  timeZone: "America/Denver",
   weekday: "long",
   month: "long",
   day: "numeric",
   year: "numeric",
 }).format(new Date());
 const currentYear = new Intl.DateTimeFormat("en-US", {
-  timeZone: "America/Chicago",
+  timeZone: "America/Denver",
   year: "numeric",
 }).format(new Date());
 
@@ -137,7 +137,7 @@ const pipeline = [
     title: "Deliver",
     body: (
       <>
-        Sent at 7:00 AM Central via Resend, fail-closed and idempotent so a
+        Sent at 6:00 AM Mountain via Resend, fail-closed and idempotent so a
         retry never doubles a send.
       </>
     ),
@@ -207,7 +207,7 @@ export default function HomePage() {
                 <span>{dateline}</span>
               </div>
               <div className="dateline-right">
-                <span>Chicago · 7:00 AM CT</span>
+                <span>Denver · 6:00 AM MT</span>
                 <span aria-hidden>•</span>
                 <span>One delivery, daily</span>
               </div>
@@ -245,8 +245,8 @@ export default function HomePage() {
                   </div>
                   <div className="hero-meta-divider" aria-hidden />
                   <div>
-                    <strong>7:00</strong>
-                    AM Central, daily
+                    <strong>6:00</strong>
+                    AM Mountain, daily
                   </div>
                   <div className="hero-meta-divider" aria-hidden />
                   <div>
@@ -275,7 +275,7 @@ export default function HomePage() {
                       <h3>
                         Brief for <span className="italic">Monday</span>
                       </h3>
-                      <span className="preview-time">07:00 CT</span>
+                      <span className="preview-time">06:00 MT</span>
                     </div>
                     <div className="preview-meta">
                       Apr 27 · 9 beats · 18 stories ranked · 4 surfaced
@@ -582,7 +582,7 @@ export default function HomePage() {
             <p className="manifesto-quote">
               We <span className="strike">summarize the news.</span>{" "}
               <span className="accent">We rank decisions.</span> One brief, one
-              delivery, one read — every morning at seven.
+              delivery, one read — every morning at six.
             </p>
             <div className="manifesto-meta">
               <span>Written for operators</span>
@@ -608,7 +608,7 @@ export default function HomePage() {
                   </span>
                   <h2 style={{ marginTop: 14 }}>
                     Start tomorrow at{" "}
-                    <span className="accent">seven</span>.
+                    <span className="accent">six</span>.
                   </h2>
                   <p>
                     One opinionated brief. No tracking pixels, no upsell, no
@@ -634,8 +634,8 @@ export default function HomePage() {
 
                 <div className="cta-clock">
                   <div className="cta-clock-label">Next delivery</div>
-                  <div className="cta-clock-time">07:00</div>
-                  <div className="cta-clock-tz">Chicago · America/Chicago</div>
+                  <div className="cta-clock-time">06:00</div>
+                  <div className="cta-clock-tz">Denver · America/Denver</div>
                   <p className="cta-clock-rule">
                     Vercel Cron fires once daily at 12:00 UTC. The brief is
                     idempotent, fail-closed, and skips itself when nothing has
@@ -657,7 +657,12 @@ export default function HomePage() {
             <a href="#anatomy">Anatomy</a>
             <a href="mailto:hello@roymcfarland.news">Contact</a>
           </div>
-          <div>© {currentYear} Roy McFarland · roymcfarland.news</div>
+          <div className="footer-credit">
+            © {currentYear} Roy McFarland · Made by{" "}
+            <a href="https://brightline.io/" target="_blank" rel="noreferrer">
+              Brightline Labs
+            </a>
+          </div>
         </div>
       </footer>
     </div>

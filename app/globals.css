@@ -1219,6 +1219,12 @@ h3 {
   color: var(--ink);
 }
 
+.footer-credit a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* Utility */
 code {
   font-family: var(--font-mono);

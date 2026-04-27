@@ -26,12 +26,12 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Daily Morning Brief — Roy McFarland",
   description:
-    "An autonomous decision-grade briefing delivered to your inbox every morning at 7:00 Central. Built for operators who need signal, not noise.",
+    "An autonomous decision-grade briefing delivered to your inbox every morning at 6:00 Mountain. Built for operators who need signal, not noise.",
   metadataBase: new URL("https://www.roymcfarland.news"),
   openGraph: {
     title: "Daily Morning Brief",
     description:
-      "Decision-grade signal across AI, markets, business, cannabis, Chicago, Colorado, and one asymmetric bet — every morning at 7:00 Central.",
+      "Decision-grade signal across AI, markets, business, cannabis, Chicago, Colorado, and one asymmetric bet — every morning at 6:00 Mountain.",
     type: "website",
   },
 };

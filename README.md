@@ -29,8 +29,8 @@ Vercel Cron uses UTC schedules. This project is configured with one daily cron a
 That means:
 
 1. It sends once per day, not twice.
-2. On April 4, 2026, that schedule maps to `7:00 AM America/Chicago`.
-3. After daylight saving time ends, it will map to `6:00 AM America/Chicago` unless you reintroduce a second UTC schedule.
+2. On April 4, 2026, that schedule maps to `6:00 AM America/Denver`.
+3. After daylight saving time ends, it will map to `5:00 AM America/Denver` unless you adjust the UTC schedule.
 
 ## Environment variables
 
