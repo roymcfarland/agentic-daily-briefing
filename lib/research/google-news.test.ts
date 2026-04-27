@@ -13,6 +13,7 @@ describe("fetchGoogleNewsStories", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
+        headers: new Headers(),
         text: async () => `<?xml version="1.0"?>
           <rss>
             <channel>
@@ -47,6 +48,7 @@ describe("fetchGoogleNewsStories", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
+        headers: new Headers(),
         text: async () => `<?xml version="1.0"?>
           <rss>
             <channel>
@@ -70,6 +72,7 @@ describe("fetchGoogleNewsStories", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
+        headers: new Headers(),
         text: async () => "not actually xml",
       }),
     );

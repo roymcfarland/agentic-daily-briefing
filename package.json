@@ -11,10 +11,10 @@
     "generate:taskflow": "node scripts/generate-taskflow-client.mjs"
   },
   "dependencies": {
-    "fast-xml-parser": "^4.5.3",
-    "next": "^15.2.4",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "fast-xml-parser": "^5.7.2",
+    "next": "^15.5.15",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "resend": "^4.1.2"
   },
   "devDependencies": {
@@ -22,6 +22,9 @@
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.5"
+  },
+  "overrides": {
+    "postcss": "^8.5.12"
   }
 }

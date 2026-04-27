@@ -16,6 +16,11 @@ interface RssItem {
 }
 
 const FETCH_TIMEOUT_MS = 12000;
+const MAX_RSS_BYTES = 1_000_000;
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === "AbortError";
+}
 
 function decodeEntities(input: string): string {
   return input
@@ -90,20 +95,40 @@ export async function fetchGoogleNewsStories(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
-  const response = await fetch(url.toString(), {
-    headers: {
-      "user-agent": "weekday-morning-brief/1.0",
-      accept: "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.1",
-    },
-    next: { revalidate: 0 },
-    signal: controller.signal,
-  }).finally(() => clearTimeout(timeout));
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), {
+      headers: {
+        "user-agent": "weekday-morning-brief/1.0",
+        accept: "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.1",
+      },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw new Error(`Google News RSS timed out for ${topic}`);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     throw new Error(`Google News RSS failed for ${topic}: ${response.status}`);
   }
 
+  const contentLength = Number.parseInt(response.headers.get("content-length") ?? "", 10);
+  if (contentLength > MAX_RSS_BYTES) {
+    throw new Error(`Google News RSS response was too large for ${topic}`);
+  }
+
   const xml = await response.text();
+  if (xml.length > MAX_RSS_BYTES) {
+    throw new Error(`Google News RSS response was too large for ${topic}`);
+  }
+
   let parsed: {
     rss?: { channel?: { item?: RssItem | RssItem[] } };
   };

@@ -47,20 +47,72 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function isTask(value: unknown): value is Task {
+function optionalString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function optionalNullableString(value: unknown): string | null | undefined {
+  return value === null ? null : optionalString(value);
+}
+
+function optionalNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function isTaskStatus(value: unknown): value is Task["status"] {
+  return (
+    value === "ice-box" ||
+    value === "on-deck" ||
+    value === "in-progress" ||
+    value === "done" ||
+    value === "archived"
+  );
+}
+
+function isTaskCategory(value: unknown): value is Task["category"] {
+  return (
+    value === "personal" ||
+    value === "elevated-organics" ||
+    value === "brightline-labs"
+  );
+}
+
+function parseTask(value: unknown): Task | null {
   if (!isObject(value)) {
-    return false;
+    return null;
   }
 
-  if (value.id != null && typeof value.id !== "number") {
-    return false;
+  if (value.id != null && optionalNumber(value.id) === undefined) {
+    return null;
   }
 
-  if (value.parentId != null && typeof value.parentId !== "number") {
-    return false;
+  if (value.parentId != null && optionalNumber(value.parentId) === undefined) {
+    return null;
   }
 
-  return true;
+  if (value.sortOrder != null && optionalNumber(value.sortOrder) === undefined) {
+    return null;
+  }
+
+  if (value.status != null && !isTaskStatus(value.status)) {
+    return null;
+  }
+
+  if (value.category != null && !isTaskCategory(value.category)) {
+    return null;
+  }
+
+  return {
+    id: optionalNumber(value.id),
+    title: optionalString(value.title),
+    description: optionalNullableString(value.description),
+    status: isTaskStatus(value.status) ? value.status : undefined,
+    category: isTaskCategory(value.category) ? value.category : undefined,
+    parentId: value.parentId === null ? null : optionalNumber(value.parentId),
+    sortOrder: optionalNumber(value.sortOrder),
+    createdAt: optionalString(value.createdAt),
+    updatedAt: optionalString(value.updatedAt),
+  };
 }
 
 function toTaskArray(value: unknown): Task[] {
@@ -68,7 +120,14 @@ function toTaskArray(value: unknown): Task[] {
     return [];
   }
 
-  return value.filter(isTask);
+  return value.flatMap((entry) => {
+    const task = parseTask(entry);
+    return task ? [task] : [];
+  });
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === "AbortError";
 }
 
 function parseDailySummaryResponse(value: unknown): DailySummaryResponse {
@@ -101,13 +160,15 @@ export class TaskflowClient {
   constructor(private readonly config: TaskflowClientConfig) {}
 
   async getDailySummary(): Promise<DailySummaryResponse> {
+    const timeoutMs = this.config.timeoutMs ?? 12000;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.config.timeoutMs ?? 12000);
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
       const response = await fetch(`${this.config.baseUrl.replace(/\/$/, "")}/api/external/daily-summary`, {
         method: "GET",
         headers: {
+          accept: "application/json",
           authorization: `Bearer ${this.config.apiKey}`,
         },
         signal: controller.signal,
@@ -122,7 +183,20 @@ export class TaskflowClient {
         throw new Error("Taskflow getDailySummary returned a non-JSON response");
       }
 
-      return parseDailySummaryResponse(await response.json());
+      let body: unknown;
+      try {
+        body = await response.json();
+      } catch {
+        throw new Error("Taskflow getDailySummary returned malformed JSON");
+      }
+
+      return parseDailySummaryResponse(body);
+    } catch (error) {
+      if (isAbortError(error)) {
+        throw new Error(`Taskflow getDailySummary timed out after ${timeoutMs}ms`);
+      }
+
+      throw error;
     } finally {
       clearTimeout(timeout);
     }

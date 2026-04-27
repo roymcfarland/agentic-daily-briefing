@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 
+import { beginBriefingSend } from "@/lib/briefing/idempotency";
 import { buildBriefingDigest } from "@/lib/briefing/pipeline";
-import { getEnv } from "@/lib/env";
+import { getCronSecret } from "@/lib/env";
 import { sendBriefingEmail } from "@/lib/resend";
 
 export const dynamic = "force-dynamic";
@@ -13,14 +14,14 @@ const JSON_HEADERS = {
 } as const;
 
 function isAuthorized(request: Request): boolean {
-  const env = getEnv();
   const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
+  const token = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+  if (!token) {
     return false;
   }
 
-  const provided = Buffer.from(authHeader.slice("Bearer ".length));
-  const expected = Buffer.from(env.cronSecret);
+  const provided = Buffer.from(token);
+  const expected = Buffer.from(getCronSecret());
   if (provided.length !== expected.length) {
     return false;
   }
@@ -33,6 +34,7 @@ export async function GET(request: Request) {
   const force = searchParams.get("force") === "1";
   const preview = searchParams.get("preview") === "1";
   const now = new Date();
+  let sendLock: Awaited<ReturnType<typeof beginBriefingSend>> | null = null;
 
   try {
     const authorized = isAuthorized(request);
@@ -43,8 +45,8 @@ export async function GET(request: Request) {
       );
     }
 
-    const digest = await buildBriefingDigest(now);
     if (preview) {
+      const digest = await buildBriefingDigest(now);
       return NextResponse.json({
         ok: true,
         preview: true,
@@ -53,16 +55,60 @@ export async function GET(request: Request) {
       }, { headers: JSON_HEADERS });
     }
 
-    const email = await sendBriefingEmail(digest);
+    sendLock = await beginBriefingSend(now);
+    if (sendLock.status === "already_sent") {
+      return NextResponse.json({
+        ok: true,
+        sent: false,
+        skipped: true,
+        reason: "already_sent",
+        forced: force,
+        idempotencyKey: sendLock.idempotencyKey,
+        id: sendLock.record.emailId,
+        sentAt: sendLock.record.sentAt,
+        stories: sendLock.record.stories,
+      }, { headers: JSON_HEADERS });
+    }
+
+    if (sendLock.status === "in_progress") {
+      return NextResponse.json({
+        ok: true,
+        sent: false,
+        skipped: true,
+        reason: "send_in_progress",
+        forced: force,
+        idempotencyKey: sendLock.idempotencyKey,
+      }, { status: 202, headers: JSON_HEADERS });
+    }
+
+    const digest = await buildBriefingDigest(now);
+    const emailId = await sendBriefingEmail(digest, {
+      idempotencyKey: sendLock.idempotencyKey,
+    });
+    await sendLock.complete({
+      emailId,
+      dateLabel: digest.dateLabel,
+      stories: digest.stories.length,
+    });
 
     return NextResponse.json({
       ok: true,
       sent: true,
       forced: force,
-      id: email.data?.id ?? null,
+      idempotencyKey: sendLock.idempotencyKey,
+      id: emailId,
       stories: digest.stories.length,
     }, { headers: JSON_HEADERS });
   } catch (error) {
+    if (sendLock?.status === "acquired") {
+      await sendLock.release().catch((releaseError) => {
+        console.error("Failed to release morning brief send lock", {
+          message: releaseError instanceof Error ? releaseError.message : "Unknown error",
+          timestamp: now.toISOString(),
+        });
+      });
+    }
+
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Morning brief failed", {
       message,
