@@ -1,13 +1,18 @@
 import type { ReactNode } from "react";
 
-const TODAY = new Date("2026-04-27T07:00:00-05:00");
+export const dynamic = "force-dynamic";
 
-const dateline = TODAY.toLocaleDateString("en-US", {
+const dateline = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Chicago",
   weekday: "long",
   month: "long",
   day: "numeric",
   year: "numeric",
-});
+}).format(new Date());
+const currentYear = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Chicago",
+  year: "numeric",
+}).format(new Date());
 
 type Topic = {
   id: string;
@@ -652,7 +657,7 @@ export default function HomePage() {
             <a href="#anatomy">Anatomy</a>
             <a href="mailto:hello@roymcfarland.news">Contact</a>
           </div>
-          <div>© {TODAY.getFullYear()} Roy McFarland · roymcfarland.news</div>
+          <div>© {currentYear} Roy McFarland · roymcfarland.news</div>
         </div>
       </footer>
     </div>
