@@ -5,6 +5,7 @@ import type {
   ResearchTopic,
   StoryCandidate,
   SportsUpdate,
+  TaskSummary,
 } from "@/lib/briefing/types";
 import { rankStories } from "@/lib/briefing/ranker";
 import { getTaskSummaries } from "@/lib/taskflow";
@@ -32,6 +33,16 @@ const BRIEFING_TOPIC_ORDER: ResearchTopic[] = [
 const MAX_STORIES_PER_TOPIC = 2;
 const SOFT_MAX_STORIES_PER_TOPIC = 2;
 const EXTRA_TOPIC_STORY_MIN_SCORE = 40;
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown error";
+}
+
+function warnPartialFailure(source: string, error: unknown) {
+  console.warn(`${source} unavailable`, {
+    message: getErrorMessage(error),
+  });
+}
 
 function containsKeyword(text: string, keywords: string[]): boolean {
   const haystack = text.toLowerCase();
@@ -176,6 +187,8 @@ async function fetchLiveResearch(): Promise<StoryCandidate[]> {
   for (const result of results) {
     if (result.status === "fulfilled") {
       candidates.push(...result.value);
+    } else {
+      warnPartialFailure("Google News research feed", result.reason);
     }
   }
 
@@ -200,6 +213,8 @@ async function fetchSportsResearch(now: Date): Promise<SportsUpdate[]> {
   for (const result of results) {
     if (result.status === "fulfilled") {
       candidates.push(...result.value);
+    } else {
+      warnPartialFailure("Google News sports feed", result.reason);
     }
   }
 
@@ -230,10 +245,19 @@ async function fetchSportsResearch(now: Date): Promise<SportsUpdate[]> {
   });
 }
 
+async function getSafeTaskSummaries(now: Date): Promise<TaskSummary[]> {
+  try {
+    return await getTaskSummaries(now);
+  } catch (error) {
+    warnPartialFailure("Taskflow daily summary", error);
+    return [];
+  }
+}
+
 export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
   const env = getEnv();
   const [taskSummaries, researchCandidates, sportsUpdates] = await Promise.all([
-    getTaskSummaries(now),
+    getSafeTaskSummaries(now),
     fetchLiveResearch(),
     fetchSportsResearch(now),
   ]);

@@ -1,5 +1,5 @@
 const setupSteps = [
-  "Set Taskflow and Resend environment variables.",
+  "Set Taskflow, Resend, and idempotency environment variables.",
   "Run the Taskflow client generator after any OpenAPI schema change.",
   "Deploy to Vercel and configure the cron secret.",
   "Use the included single UTC cron for one delivery per day.",

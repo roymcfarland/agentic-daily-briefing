@@ -48,12 +48,18 @@ Required values:
 - `BRIEFING_FROM_EMAIL`
 - `BRIEFING_TO_EMAILS`
 - `CRON_SECRET`
+- `BRIEFING_IDEMPOTENCY_REDIS_REST_URL`
+- `BRIEFING_IDEMPOTENCY_REDIS_REST_TOKEN`
 
 Optional values:
 
 - `TASKFLOW_TIMEOUT_MS`
 - `BRIEFING_SUBJECT_PREFIX`
 - `BRIEFING_MAX_ITEMS`
+- `BRIEFING_IDEMPOTENCY_SENT_TTL_SECONDS`
+- `BRIEFING_IDEMPOTENCY_LOCK_TTL_SECONDS`
+
+The idempotency variables can use either the project-specific names above or Vercel KV's `KV_REST_API_URL` and `KV_REST_API_TOKEN` aliases. Production sends fail closed without a persistent idempotency backend so cron retries cannot double-send.
 
 ## Local development
 
@@ -144,3 +150,4 @@ npm test
 - The route returns JSON so Vercel Cron logs stay readable.
 - `force=1` can be used on an authenticated request for manual testing outside the scheduled send window.
 - `preview=1` can be used on an authenticated request to inspect the assembled digest without sending email.
+- Sent emails use a stable Chicago-date idempotency key in Redis/Upstash and Resend, so duplicate cron retries for the same day return the persisted send record instead of sending again.
