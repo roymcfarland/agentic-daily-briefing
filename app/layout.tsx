@@ -23,22 +23,22 @@ const mono = JetBrains_Mono({
   display: "swap",
 });
 
+const siteDescription =
+  "Decision-grade signal across AI, markets, business, Denver Broncos, Chicago, Colorado, Tennis (ATP & WTA), and one asymmetric bet — every morning at 6:00 Mountain. Built for operators who need signal, not noise.";
+
 export const metadata: Metadata = {
   title: "Daily Morning Brief — Roy McFarland",
-  description:
-    "An autonomous decision-grade briefing delivered to your inbox every morning at 6:00 Mountain. Built for operators who need signal, not noise.",
+  description: siteDescription,
   metadataBase: new URL("https://www.roymcfarland.news"),
   openGraph: {
     title: "Daily Morning Brief",
-    description:
-      "Decision-grade signal across AI, markets, business, cannabis, Chicago, Colorado, and one asymmetric bet — every morning at 6:00 Mountain.",
+    description: siteDescription,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Daily Morning Brief",
-    description:
-      "Decision-grade signal across AI, markets, business, cannabis, Chicago, Colorado, and one asymmetric bet — every morning at 6:00 Mountain.",
+    description: siteDescription,
   },
 };
 

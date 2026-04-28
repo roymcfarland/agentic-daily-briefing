@@ -63,11 +63,11 @@ const topics: Topic[] = [
   {
     id: "cannabis",
     num: "05",
-    title: "Cannabis",
+    title: "Denver Broncos",
     blurb:
-      "Regulatory shifts, capital flows, and category dynamics across the legal market.",
+      "Roster moves, coaching decisions, and the AFC West storylines that set the week.",
     variant: "wide",
-    tag: "Elevated Organics",
+    tag: "Mile High",
   },
   {
     id: "chicago",
@@ -95,8 +95,9 @@ const topics: Topic[] = [
   {
     id: "sports",
     num: "09",
-    title: "Sports",
-    blurb: "Only when the result actually changes the week ahead.",
+    title: "Tennis: ATP & WTA",
+    blurb:
+      "Tour draws, ranking pressure, and the matches that reset expectations overnight.",
     variant: "standard",
   },
 ];
@@ -321,12 +322,12 @@ export default function HomePage() {
 
                     <div className="preview-section">
                       <div className="preview-section-head">
-                        <h4>Cannabis</h4>
-                        <span className="tag tag-accent">Operator</span>
+                        <h4>Denver Broncos</h4>
+                        <span className="tag tag-accent">Game week</span>
                       </div>
                       <p className="preview-story">
-                        Illinois craft license appeals clear — shelf
-                        opportunity opens for regional CPG with distro.
+                        O-line depth chart firms before divisional travel —
+                        run game plan shifts if the rookie tackle is cleared.
                       </p>
                     </div>
 
@@ -380,11 +381,11 @@ export default function HomePage() {
             <span>Markets</span>
             <span>Business</span>
             <span>CPG &amp; Startups</span>
-            <span>Cannabis</span>
+            <span>Denver Broncos</span>
             <span>Chicago</span>
             <span>Colorado</span>
             <span>Asymmetric Upside</span>
-            <span>Sports when it matters</span>
+            <span>Tennis: ATP &amp; WTA news</span>
             <span>One contrarian take</span>
             <span>One thing to watch</span>
             <span>One thing to ignore</span>
@@ -392,11 +393,11 @@ export default function HomePage() {
             <span>Markets</span>
             <span>Business</span>
             <span>CPG &amp; Startups</span>
-            <span>Cannabis</span>
+            <span>Denver Broncos</span>
             <span>Chicago</span>
             <span>Colorado</span>
             <span>Asymmetric Upside</span>
-            <span>Sports when it matters</span>
+            <span>Tennis: ATP &amp; WTA news</span>
             <span>One contrarian take</span>
             <span>One thing to watch</span>
             <span>One thing to ignore</span>
@@ -575,8 +576,8 @@ export default function HomePage() {
                     </div>
                     <p className="preview-story preview-story--spaced">
                       Three calls before noon, one promised draft, and the
-                      Elevated Organics distro check-in moved earlier — start
-                      with the draft.
+                      vendor logistics check-in moved earlier — start with the
+                      draft.
                     </p>
 
                     <div className="preview-section">
