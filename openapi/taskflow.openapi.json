@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://taskflow.center",
+      "url": "https://www.workflowblueprint.io",
       "description": "Production"
     }
   ],

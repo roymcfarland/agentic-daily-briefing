@@ -25,10 +25,11 @@ const digest: BriefingDigest = {
   oneThingToWatch: "Watch this.",
   oneThingToIgnore: "Ignore that.",
   oneContrarianTake: "Contrarian take.",
+  warnings: [],
 };
 
 const ENV = {
-  TASKFLOW_API_BASE_URL: "https://taskflow.center",
+  TASKFLOW_API_BASE_URL: "https://www.workflowblueprint.io",
   TASKFLOW_API_KEY: "taskflow-key",
   RESEND_API_KEY: "resend-key",
   BRIEFING_FROM_EMAIL: "Daily Brief <briefing@example.com>",

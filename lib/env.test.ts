@@ -23,7 +23,7 @@ const ENV_KEYS = [
 ] as const;
 
 const VALID_ENV: Record<(typeof ENV_KEYS)[number], string> = {
-  TASKFLOW_API_BASE_URL: "https://taskflow.center",
+  TASKFLOW_API_BASE_URL: "https://www.workflowblueprint.io",
   TASKFLOW_API_KEY: "taskflow-key",
   TASKFLOW_TIMEOUT_MS: "12000",
   RESEND_API_KEY: "resend-key",
@@ -67,12 +67,12 @@ describe("getEnv", () => {
   });
 
   it("normalizes bounded values and validated email recipients", () => {
-    process.env.TASKFLOW_API_BASE_URL = "https://taskflow.center/";
+    process.env.TASKFLOW_API_BASE_URL = "https://www.workflowblueprint.io/";
     process.env.TASKFLOW_TIMEOUT_MS = "999999";
     process.env.BRIEFING_MAX_ITEMS = "2";
 
     expect(getEnv()).toMatchObject({
-      taskflowApiBaseUrl: "https://taskflow.center",
+      taskflowApiBaseUrl: "https://www.workflowblueprint.io",
       taskflowTimeoutMs: 30000,
       briefingFromEmail: "Daily Brief <briefing@example.com>",
       briefingToEmails: ["roy@example.com", "Ops <ops@example.com>"],
@@ -94,7 +94,7 @@ describe("getEnv", () => {
 
   it("requires https service URLs in production except localhost", () => {
     process.env.NODE_ENV = "production";
-    process.env.TASKFLOW_API_BASE_URL = "http://taskflow.center";
+    process.env.TASKFLOW_API_BASE_URL = "http://www.workflowblueprint.io";
 
     expect(() => getEnv()).toThrow("TASKFLOW_API_BASE_URL must use https in production.");
 

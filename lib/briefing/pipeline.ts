@@ -245,18 +245,37 @@ async function fetchSportsResearch(now: Date): Promise<SportsUpdate[]> {
   });
 }
 
-async function getSafeTaskSummaries(now: Date): Promise<TaskSummary[]> {
+interface TaskSummariesResult {
+  summaries: TaskSummary[];
+  warning?: string;
+}
+
+const MAX_WARNING_DETAIL_LENGTH = 200;
+
+function truncateDetail(message: string, max = MAX_WARNING_DETAIL_LENGTH): string {
+  const collapsed = message.replace(/\s+/g, " ").trim();
+  if (collapsed.length <= max) {
+    return collapsed;
+  }
+
+  return `${collapsed.slice(0, max - 1).trimEnd()}…`;
+}
+
+async function getSafeTaskSummaries(now: Date): Promise<TaskSummariesResult> {
   try {
-    return await getTaskSummaries(now);
+    return { summaries: await getTaskSummaries(now) };
   } catch (error) {
     warnPartialFailure("Taskflow daily summary", error);
-    return [];
+    return {
+      summaries: [],
+      warning: `Tasks unavailable today: ${truncateDetail(getErrorMessage(error))}`,
+    };
   }
 }
 
 export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
   const env = getEnv();
-  const [taskSummaries, researchCandidates, sportsUpdates] = await Promise.all([
+  const [taskResult, researchCandidates, sportsUpdates] = await Promise.all([
     getSafeTaskSummaries(now),
     fetchLiveResearch(),
     fetchSportsResearch(now),
@@ -268,12 +287,18 @@ export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
   );
   const stories = selectStoriesForBriefing(allRankedStories, env.briefingMaxItems);
 
+  const warnings: string[] = [];
+  if (taskResult.warning) {
+    warnings.push(taskResult.warning);
+  }
+
   return {
     dateLabel: getChicagoDateLabel(now),
-    taskSummaries,
+    taskSummaries: taskResult.summaries,
     stories,
     oneThingToWatch: summarizeWatch(stories),
     oneThingToIgnore: summarizeIgnore(stories, allRankedStories, now),
     oneContrarianTake: summarizeContrarian(stories),
+    warnings,
   };
 }

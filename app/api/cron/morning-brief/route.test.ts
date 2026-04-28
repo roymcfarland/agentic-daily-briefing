@@ -22,7 +22,7 @@ const mockedBuildBriefingDigest = vi.mocked(buildBriefingDigest);
 const mockedSendBriefingEmail = vi.mocked(sendBriefingEmail);
 
 const VALID_ENV = {
-  TASKFLOW_API_BASE_URL: "https://taskflow.center",
+  TASKFLOW_API_BASE_URL: "https://www.workflowblueprint.io",
   TASKFLOW_API_KEY: "taskflow-key",
   RESEND_API_KEY: "resend-key",
   BRIEFING_FROM_EMAIL: "briefing@example.com",
@@ -40,7 +40,7 @@ function applyEnv(overrides: Record<string, string | undefined> = {}) {
   }
 }
 
-function digest() {
+function digest(overrides: { warnings?: string[] } = {}) {
   return {
     dateLabel: "Saturday, April 4",
     taskSummaries: [],
@@ -48,6 +48,7 @@ function digest() {
     oneThingToWatch: "Watch this.",
     oneThingToIgnore: "Ignore that.",
     oneContrarianTake: "Contrarian take.",
+    warnings: overrides.warnings ?? [],
   };
 }
 
@@ -185,6 +186,44 @@ describe("morning brief route", () => {
       stories: 0,
     });
     expect(lock.release).not.toHaveBeenCalled();
+  });
+
+  it("surfaces digest warnings on the JSON response after a successful send", async () => {
+    const lock = mockAcquiredSendLock();
+    const warnings = ["Tasks unavailable today: Taskflow getDailySummary failed with 404"];
+    mockedBuildBriefingDigest.mockResolvedValueOnce(digest({ warnings }));
+    mockedSendBriefingEmail.mockResolvedValueOnce("email-id");
+
+    const response = await GET(
+      new Request("https://example.com/api/cron/morning-brief?force=1", {
+        headers: {
+          authorization: "Bearer secret-value-long",
+        },
+      }),
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.warnings).toEqual(warnings);
+    expect(lock.complete).toHaveBeenCalledTimes(1);
+  });
+
+  it("surfaces digest warnings on the JSON response in preview mode", async () => {
+    const warnings = ["Tasks unavailable today: Taskflow getDailySummary failed with 404"];
+    mockedBuildBriefingDigest.mockResolvedValueOnce(digest({ warnings }));
+
+    const response = await GET(
+      new Request("https://example.com/api/cron/morning-brief?force=1&preview=1", {
+        headers: {
+          authorization: "Bearer secret-value-long",
+        },
+      }),
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.preview).toBe(true);
+    expect(payload.digest.warnings).toEqual(warnings);
   });
 
   it("treats Resend failures as sanitized production failures", async () => {

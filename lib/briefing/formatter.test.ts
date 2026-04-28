@@ -62,6 +62,7 @@ const digest: BriefingDigest = {
   oneThingToWatch: "Watch margin compression in AI software.",
   oneThingToIgnore: "Ignore thin commentary around hype cycles.",
   oneContrarianTake: "Infra providers may benefit more than app-layer winners.",
+  warnings: [],
 };
 
 describe("renderBriefingEmail", () => {
@@ -119,5 +120,33 @@ describe("renderBriefingEmail", () => {
 
     expect(html).toContain("Cheaper inference can reset product margins");
     expect(html).not.toContain("Cheaper inference can reset product margins. Two major providers cut prices for enterprise tiers.");
+  });
+
+  it("renders a Briefing notes banner in HTML when warnings are present", () => {
+    const html = renderBriefingEmail({
+      ...digest,
+      warnings: ["Tasks unavailable today: Taskflow getDailySummary failed with 404"],
+    });
+
+    expect(html).toContain("Briefing notes");
+    expect(html).toContain("Tasks unavailable today: Taskflow getDailySummary failed with 404");
+  });
+
+  it("includes a Briefing notes section in the plain text body when warnings are present", () => {
+    const text = renderBriefingText({
+      ...digest,
+      warnings: ["Tasks unavailable today: Taskflow getDailySummary failed with 404"],
+    });
+
+    expect(text).toContain("Briefing notes:");
+    expect(text).toContain("- Tasks unavailable today: Taskflow getDailySummary failed with 404");
+  });
+
+  it("omits the Briefing notes section entirely when there are no warnings", () => {
+    const html = renderBriefingEmail(digest);
+    const text = renderBriefingText(digest);
+
+    expect(html).not.toContain("Briefing notes");
+    expect(text).not.toContain("Briefing notes:");
   });
 });

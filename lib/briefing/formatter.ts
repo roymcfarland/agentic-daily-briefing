@@ -163,6 +163,22 @@ function renderStory(story: RankedStory): string {
   `;
 }
 
+function renderWarningsBanner(warnings: string[]): string {
+  if (!warnings.length) {
+    return "";
+  }
+
+  const items = warnings
+    .map((warning) => `<li style="margin:0 0 4px;">${escapeHtml(warning)}</li>`)
+    .join("");
+
+  return `
+        <section style="margin:0 0 20px;padding:14px 16px;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;">
+          <p style="margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#92400e;">Briefing notes</p>
+          <ul style="margin:0;padding-left:18px;color:#78350f;">${items}</ul>
+        </section>`;
+}
+
 export function renderBriefingEmail(digest: BriefingDigest): string {
   const hasTaskSummaries = digest.taskSummaries.length > 0;
 
@@ -174,6 +190,8 @@ export function renderBriefingEmail(digest: BriefingDigest): string {
         <p style="margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9a3412;">Daily Digest</p>
         <h1 style="margin:0 0 8px;font-size:34px;line-height:1.1;">${escapeHtml(digest.dateLabel)}</h1>
         <p style="margin:0 0 24px;color:#4b5563;">Taskflow state plus live research filtered for decision relevance.</p>
+
+        ${renderWarningsBanner(digest.warnings)}
 
         ${hasTaskSummaries
           ? `
@@ -206,6 +224,13 @@ export function renderBriefingText(digest: BriefingDigest): string {
   const lines: string[] = [
     `Daily Digest - ${digest.dateLabel}`,
   ];
+
+  if (digest.warnings.length) {
+    lines.push("", "Briefing notes:");
+    for (const warning of digest.warnings) {
+      lines.push(`- ${warning}`);
+    }
+  }
 
   if (digest.taskSummaries.length) {
     lines.push("", "Taskflow Snapshot");

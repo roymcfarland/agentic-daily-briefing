@@ -40,14 +40,14 @@ describe("TaskflowClient", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const client = new TaskflowClient({
-      baseUrl: "https://taskflow.center/",
+      baseUrl: "https://www.workflowblueprint.io/",
       apiKey: "taskflow-key",
       timeoutMs: 5000,
     });
     const summary = await client.getDailySummary();
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://taskflow.center/api/external/daily-summary",
+      "https://www.workflowblueprint.io/api/external/daily-summary",
       expect.objectContaining({
         headers: {
           accept: "application/json",
@@ -83,7 +83,7 @@ describe("TaskflowClient", () => {
     );
 
     const client = new TaskflowClient({
-      baseUrl: "https://taskflow.center",
+      baseUrl: "https://www.workflowblueprint.io",
       apiKey: "taskflow-key",
     });
 

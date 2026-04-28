@@ -82,6 +82,14 @@ export async function GET(request: Request) {
     }
 
     const digest = await buildBriefingDigest(now);
+
+    if (digest.warnings.length > 0) {
+      console.warn("Morning brief partial failure", {
+        warnings: digest.warnings,
+        timestamp: now.toISOString(),
+      });
+    }
+
     const emailId = await sendBriefingEmail(digest, {
       idempotencyKey: sendLock.idempotencyKey,
     });
@@ -98,6 +106,7 @@ export async function GET(request: Request) {
       idempotencyKey: sendLock.idempotencyKey,
       id: emailId,
       stories: digest.stories.length,
+      warnings: digest.warnings,
     }, { headers: JSON_HEADERS });
   } catch (error) {
     if (sendLock?.status === "acquired") {

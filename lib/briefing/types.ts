@@ -64,4 +64,5 @@ export interface BriefingDigest {
   oneThingToWatch: string;
   oneThingToIgnore: string;
   oneContrarianTake: string;
+  warnings: string[];
 }
