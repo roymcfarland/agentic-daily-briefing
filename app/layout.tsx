@@ -1,5 +1,5 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 
@@ -34,6 +34,17 @@ export const metadata: Metadata = {
       "Decision-grade signal across AI, markets, business, cannabis, Chicago, Colorado, and one asymmetric bet — every morning at 6:00 Mountain.",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Daily Morning Brief",
+    description:
+      "Decision-grade signal across AI, markets, business, cannabis, Chicago, Colorado, and one asymmetric bet — every morning at 6:00 Mountain.",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f5efe2",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

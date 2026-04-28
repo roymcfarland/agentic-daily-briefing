@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 
 import LiveCountdown from "@/app/components/LiveCountdown";
+import PrimaryNavLinks from "@/app/components/PrimaryNavLinks";
+import SkipToContent from "@/app/components/SkipToContent";
 
 export const dynamic = "force-dynamic";
 
@@ -176,6 +178,7 @@ function Logo({ children }: { children: ReactNode }) {
 export default function HomePage() {
   return (
     <div className="page">
+      <SkipToContent />
       <header className="nav">
         <div className="container nav-inner">
           <a href="/" className="brand" aria-label="Daily Morning Brief">
@@ -185,10 +188,7 @@ export default function HomePage() {
             </span>
           </a>
           <nav className="nav-links" aria-label="Primary">
-            <a href="#beats">Beats</a>
-            <a href="#how">How it works</a>
-            <a href="#anatomy">Anatomy</a>
-            <a href="#manifesto">Manifesto</a>
+            <PrimaryNavLinks />
           </nav>
           <a href="#subscribe" className="nav-cta">
             Get the brief
@@ -197,7 +197,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main>
+      <main id="main" tabIndex={-1}>
         {/* HERO */}
         <section className="hero">
           <div className="hero-sunrise" aria-hidden />
@@ -551,7 +551,7 @@ export default function HomePage() {
               <ol className="anatomy-list">
                 {anatomy.map((item) => (
                   <li className="anatomy-item" key={item.num}>
-                    <div className="num">§ {item.num}</div>
+                    <div className="num">Part {item.num}</div>
                     <div>
                       <h3>{item.title}</h3>
                       <p>{item.body}</p>
@@ -578,7 +578,7 @@ export default function HomePage() {
                       <h3>
                         On the <span className="italic">desk</span>
                       </h3>
-                      <span className="preview-time">§ I</span>
+                      <span className="preview-time">Part I</span>
                     </div>
                     <p className="preview-story" style={{ marginBottom: 14 }}>
                       Three calls before noon, one promised draft, and the
@@ -601,7 +601,7 @@ export default function HomePage() {
                     <div className="preview-section">
                       <div className="preview-section-head">
                         <h4>Contrarian take</h4>
-                        <span className="tag tag-accent">§ IV</span>
+                        <span className="tag tag-accent">Part IV</span>
                       </div>
                       <p className="preview-story">
                         The flight to &ldquo;agents&rdquo; is mostly a flight
@@ -718,7 +718,11 @@ export default function HomePage() {
           </div>
           <div className="footer-credit">
             © {currentYear} Roy McFarland · Made by{" "}
-            <a href="https://brightline.io/" target="_blank" rel="noreferrer">
+            <a
+              href="https://brightline.io/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Brightline Labs
             </a>
           </div>
