@@ -250,17 +250,17 @@ export default function HomePage() {
                 </div>
 
                 <div className="hero-meta">
-                  <div>
+                  <div className="hero-stat">
                     <strong>9</strong>
                     Beats covered
                   </div>
                   <div className="hero-meta-divider" aria-hidden />
-                  <div>
+                  <div className="hero-stat">
                     <strong>6:00</strong>
                     AM Mountain, daily
                   </div>
                   <div className="hero-meta-divider" aria-hidden />
-                  <div>
+                  <div className="hero-stat">
                     <strong>~4 min</strong>
                     Read time
                   </div>
