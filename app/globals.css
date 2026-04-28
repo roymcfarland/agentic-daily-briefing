@@ -665,7 +665,7 @@ h3 {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0.06em;
+  bottom: -0.08em;
   height: 0.14em;
   background: linear-gradient(
     90deg,
