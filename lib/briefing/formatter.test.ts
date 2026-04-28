@@ -149,4 +149,102 @@ describe("renderBriefingEmail", () => {
     expect(html).not.toContain("Briefing notes");
     expect(text).not.toContain("Briefing notes:");
   });
+
+  it("renders the Decision Lens hero card in HTML before the briefing feed", () => {
+    const html = renderBriefingEmail(digest);
+
+    expect(html).toContain("Decision Lens");
+    const lensIndex = html.indexOf("Decision Lens");
+    const feedIndex = html.indexOf("Briefing Feed");
+    expect(lensIndex).toBeGreaterThan(-1);
+    expect(feedIndex).toBeGreaterThan(-1);
+    expect(lensIndex).toBeLessThan(feedIndex);
+  });
+
+  it("renders the Decision Lens block in plain text before the briefing feed", () => {
+    const text = renderBriefingText(digest);
+
+    const lensIndex = text.indexOf("Decision Lens");
+    const feedIndex = text.indexOf("Briefing Feed");
+    expect(lensIndex).toBeGreaterThan(-1);
+    expect(feedIndex).toBeGreaterThan(-1);
+    expect(lensIndex).toBeLessThan(feedIndex);
+  });
+
+  it("gives only the first story the Lead Story treatment in HTML", () => {
+    const html = renderBriefingEmail(digest);
+    const matches = html.match(/Lead Story/g) ?? [];
+
+    expect(matches.length).toBe(1);
+    const leadIndex = html.indexOf("Lead Story");
+    const firstStoryIndex = html.indexOf("Model vendors cut inference costs");
+    const secondStoryIndex = html.indexOf("Denver Broncos");
+    expect(leadIndex).toBeLessThan(firstStoryIndex);
+    expect(leadIndex).toBeLessThan(secondStoryIndex);
+  });
+
+  it("marks the lead story with [LEAD] in plain text and only on the first story", () => {
+    const text = renderBriefingText(digest);
+    const leadMatches = text.match(/\[LEAD\]/g) ?? [];
+
+    expect(leadMatches.length).toBe(1);
+    expect(text).toContain("[LEAD] [AI] Model vendors cut inference costs");
+    expect(text).not.toContain("[LEAD] [sports]");
+  });
+
+  it("renders a footer with story count and date label in HTML and text", () => {
+    const html = renderBriefingEmail(digest);
+    const text = renderBriefingText(digest);
+
+    expect(html).toContain("2 stories");
+    expect(html).toContain("1 task area");
+    expect(html).toContain("Thursday, April 2");
+    expect(text).toContain("2 stories · 1 task area · Thursday, April 2");
+  });
+
+  it("uses singular pluralization in the footer when only one story is present", () => {
+    const html = renderBriefingEmail({
+      ...digest,
+      stories: [digest.stories[0]],
+    });
+
+    expect(html).toContain("1 story");
+    expect(html).not.toContain("1 stories");
+  });
+
+  it("does not include task counts in the footer when there are no task summaries", () => {
+    const html = renderBriefingEmail({
+      ...digest,
+      taskSummaries: [],
+    });
+
+    expect(html).not.toContain("task area");
+  });
+
+  it("renders a graceful fallback when the briefing has no stories", () => {
+    const html = renderBriefingEmail({
+      ...digest,
+      stories: [],
+    });
+    const text = renderBriefingText({
+      ...digest,
+      stories: [],
+    });
+
+    expect(html).toContain("No stories cleared the relevance threshold today.");
+    expect(text).toContain("No stories cleared the relevance threshold today.");
+  });
+
+  it("places the warnings banner above the Decision Lens for visibility", () => {
+    const html = renderBriefingEmail({
+      ...digest,
+      warnings: ["Tasks unavailable today: Taskflow getDailySummary failed with 404"],
+    });
+
+    const warningsIndex = html.indexOf("Briefing notes");
+    const lensIndex = html.indexOf("Decision Lens");
+    expect(warningsIndex).toBeGreaterThan(-1);
+    expect(lensIndex).toBeGreaterThan(-1);
+    expect(warningsIndex).toBeLessThan(lensIndex);
+  });
 });

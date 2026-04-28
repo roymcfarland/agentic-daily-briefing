@@ -2,6 +2,10 @@ import { escapeHtml } from "@/lib/html";
 import type { BriefingDigest, RankedStory, TaskNode, TaskSummary } from "@/lib/briefing/types";
 import { getTopicLabel } from "@/lib/research/topics";
 
+// ============================================================
+// Helpers
+// ============================================================
+
 function normalizeForComparison(value: string): string {
   return value
     .toLowerCase()
@@ -100,6 +104,61 @@ function getWhyItMatters(story: RankedStory): string {
   return trimmed || story.whyItMatters;
 }
 
+function pluralize(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+// ============================================================
+// HTML section renderers
+// ============================================================
+
+function renderHeader(digest: BriefingDigest): string {
+  return `
+        <p style="margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9a3412;">Daily Digest</p>
+        <h1 style="margin:0 0 8px;font-size:34px;line-height:1.1;color:#111827;">${escapeHtml(digest.dateLabel)}</h1>
+        <p style="margin:0 0 24px;color:#4b5563;font-style:italic;">Taskflow state plus live research filtered for decision relevance.</p>`;
+}
+
+function renderDecisionLens(digest: BriefingDigest): string {
+  const rows: Array<{ label: string; value: string }> = [
+    { label: "One thing to watch:", value: digest.oneThingToWatch },
+    { label: "One thing to ignore:", value: digest.oneThingToIgnore },
+    { label: "One possible contrarian take:", value: digest.oneContrarianTake },
+  ];
+
+  const items = rows
+    .map(
+      (row) => `
+            <p style="margin:0 0 12px;line-height:1.45;">
+              <strong style="color:#9a3412;">${escapeHtml(row.label)}</strong>
+              <span style="color:#1f2937;">${escapeHtml(row.value)}</span>
+            </p>`,
+    )
+    .join("");
+
+  return `
+        <section style="margin:0 0 24px;padding:20px 22px;border:1px solid #eadfce;border-left:4px solid #9a3412;background:#fff7ec;border-radius:14px;">
+          <p style="margin:0 0 12px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9a3412;font-weight:700;">Decision Lens</p>
+          ${items}
+        </section>`;
+}
+
+function renderWarningsBanner(warnings: string[]): string {
+  if (!warnings.length) {
+    return "";
+  }
+
+  const items = warnings
+    .map((warning) => `<li style="margin:0 0 4px;line-height:1.5;">${escapeHtml(warning)}</li>`)
+    .join("");
+
+  return `
+        <section style="margin:0 0 20px;padding:14px 16px;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#92400e;font-weight:700;">Briefing notes</p>
+          <ul style="margin:0;padding-left:18px;color:#78350f;">${items}</ul>
+        </section>`;
+}
+
 function renderTaskNodes(tasks: TaskNode[], depth = 0): string {
   if (!tasks.length) {
     return `<p style="margin:0;color:#6b7280;">No active tasks in this list.</p>`;
@@ -131,6 +190,84 @@ function renderTaskSummary(summary: TaskSummary): string {
   `;
 }
 
+function renderTaskSection(taskSummaries: TaskSummary[]): string {
+  if (!taskSummaries.length) {
+    return "";
+  }
+
+  return `
+        <section style="margin:0 0 24px;">
+          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Taskflow Snapshot</h2>
+          <div style="display:grid;gap:14px;">
+            ${taskSummaries.map(renderTaskSummary).join("")}
+          </div>
+        </section>`;
+}
+
+function renderStory(story: RankedStory, options: { isLead: boolean }): string {
+  const displayTitle = getDisplayTitle(story);
+  const sourceLabel = formatSourceLabel(story.source);
+  const signalTone = story.signalOrNoise === "Signal"
+    ? "background:#ecfdf5;color:#166534;border-color:#bbf7d0;"
+    : "background:#f3f4f6;color:#374151;border-color:#e5e7eb;";
+
+  const borderTop = options.isLead
+    ? "border-top:3px solid #9a3412;"
+    : "border-top:1px solid #e5e7eb;";
+  const titleSize = options.isLead ? 22 : 18;
+  const padding = options.isLead ? "22px 0 18px" : "18px 0";
+  const leadEyebrow = options.isLead
+    ? `<p style="margin:0 0 6px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9a3412;font-weight:700;">Lead Story</p>`
+    : "";
+
+  return `
+    <article style="padding:${padding};${borderTop}">
+      ${leadEyebrow}
+      <div style="margin:0 0 6px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+        <p style="margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">${escapeHtml(getTopicLabel(story.topic))} • ${escapeHtml(sourceLabel)}</p>
+        <span style="display:inline-block;padding:4px 10px;border:1px solid;border-radius:999px;font-size:12px;font-weight:700;${signalTone}">${escapeHtml(story.signalOrNoise)}</span>
+      </div>
+      <h3 style="margin:0 0 8px;font-size:${titleSize}px;line-height:1.25;">
+        <a href="${escapeHtml(story.url)}" style="color:#9a3412;text-decoration:none;">${escapeHtml(displayTitle)}</a>
+      </h3>
+      <p style="margin:0 0 8px;color:#111827;line-height:1.5;"><strong>What happened</strong><br />${escapeHtml(getWhatHappened(story))}</p>
+      <p style="margin:0 0 8px;color:#111827;line-height:1.5;"><strong>Why it matters</strong><br />${escapeHtml(getWhyItMatters(story))}</p>
+      <p style="margin:0;color:#111827;line-height:1.5;"><strong>Second-order effect</strong><br />${escapeHtml(story.secondOrderEffect)}</p>
+    </article>`;
+}
+
+function renderStoriesSection(stories: RankedStory[]): string {
+  if (!stories.length) {
+    return `
+        <section>
+          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Briefing Feed</h2>
+          <p style="margin:0;color:#6b7280;">No stories cleared the relevance threshold today.</p>
+        </section>`;
+  }
+
+  return `
+        <section>
+          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Briefing Feed</h2>
+          ${stories.map((story, index) => renderStory(story, { isLead: index === 0 })).join("")}
+        </section>`;
+}
+
+function renderFooter(digest: BriefingDigest): string {
+  const storyLine = pluralize(digest.stories.length, "story", "stories");
+  const taskLine = digest.taskSummaries.length
+    ? ` · ${pluralize(digest.taskSummaries.length, "task area", "task areas")}`
+    : "";
+
+  return `
+        <footer style="margin-top:28px;padding-top:16px;border-top:1px solid #eadfce;">
+          <p style="margin:0;color:#6b7280;font-size:12px;letter-spacing:.04em;">${escapeHtml(storyLine)}${escapeHtml(taskLine)} · ${escapeHtml(digest.dateLabel)}</p>
+        </footer>`;
+}
+
+// ============================================================
+// Plain-text section helpers
+// ============================================================
+
 function appendTaskLines(lines: string[], tasks: TaskNode[], depth = 0) {
   const prefix = `${"  ".repeat(depth)}- `;
 
@@ -140,80 +277,22 @@ function appendTaskLines(lines: string[], tasks: TaskNode[], depth = 0) {
   }
 }
 
-function renderStory(story: RankedStory): string {
-  const displayTitle = getDisplayTitle(story);
-  const sourceLabel = formatSourceLabel(story.source);
-  const signalTone = story.signalOrNoise === "Signal"
-    ? "background:#ecfdf5;color:#166534;border-color:#bbf7d0;"
-    : "background:#f3f4f6;color:#374151;border-color:#e5e7eb;";
-
-  return `
-    <article style="padding:18px 0;border-top:1px solid #e5e7eb;">
-      <div style="margin:0 0 6px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
-        <p style="margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">${escapeHtml(getTopicLabel(story.topic))} • ${escapeHtml(sourceLabel)}</p>
-        <span style="display:inline-block;padding:4px 10px;border:1px solid;border-radius:999px;font-size:12px;font-weight:700;${signalTone}">${escapeHtml(story.signalOrNoise)}</span>
-      </div>
-      <h3 style="margin:0 0 8px;font-size:18px;">
-        <a href="${escapeHtml(story.url)}" style="color:#9a3412;text-decoration:none;">${escapeHtml(displayTitle)}</a>
-      </h3>
-      <p style="margin:0 0 8px;color:#111827;"><strong>What happened</strong><br />${escapeHtml(getWhatHappened(story))}</p>
-      <p style="margin:0 0 8px;color:#111827;"><strong>Why it matters</strong><br />${escapeHtml(getWhyItMatters(story))}</p>
-      <p style="margin:0;color:#111827;"><strong>Second-order effect</strong><br />${escapeHtml(story.secondOrderEffect)}</p>
-    </article>
-  `;
-}
-
-function renderWarningsBanner(warnings: string[]): string {
-  if (!warnings.length) {
-    return "";
-  }
-
-  const items = warnings
-    .map((warning) => `<li style="margin:0 0 4px;">${escapeHtml(warning)}</li>`)
-    .join("");
-
-  return `
-        <section style="margin:0 0 20px;padding:14px 16px;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;">
-          <p style="margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#92400e;">Briefing notes</p>
-          <ul style="margin:0;padding-left:18px;color:#78350f;">${items}</ul>
-        </section>`;
-}
+// ============================================================
+// Public API
+// ============================================================
 
 export function renderBriefingEmail(digest: BriefingDigest): string {
-  const hasTaskSummaries = digest.taskSummaries.length > 0;
-
   return `
   <!doctype html>
   <html lang="en">
     <body style="margin:0;padding:24px;background:#f5efe6;color:#111827;font-family:Georgia,serif;">
       <div style="max-width:840px;margin:0 auto;background:#fffdf9;border-radius:24px;padding:28px;border:1px solid #eadfce;">
-        <p style="margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9a3412;">Daily Digest</p>
-        <h1 style="margin:0 0 8px;font-size:34px;line-height:1.1;">${escapeHtml(digest.dateLabel)}</h1>
-        <p style="margin:0 0 24px;color:#4b5563;">Taskflow state plus live research filtered for decision relevance.</p>
-
+        ${renderHeader(digest)}
         ${renderWarningsBanner(digest.warnings)}
-
-        ${hasTaskSummaries
-          ? `
-        <section>
-          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Taskflow Snapshot</h2>
-          <div style="display:grid;gap:14px;">
-            ${digest.taskSummaries.map(renderTaskSummary).join("")}
-          </div>
-        </section>`
-          : ""}
-
-        <section style="margin-top:24px;">
-          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Briefing Feed</h2>
-          ${digest.stories.map(renderStory).join("")}
-        </section>
-
-        <section style="margin-top:28px;padding-top:20px;border-top:2px solid #eadfce;">
-          <h2 style="margin:0 0 12px;font-size:22px;">Closing View</h2>
-          <p style="margin:0 0 10px;"><strong>One thing to watch:</strong> ${escapeHtml(digest.oneThingToWatch)}</p>
-          <p style="margin:0 0 10px;"><strong>One thing to ignore:</strong> ${escapeHtml(digest.oneThingToIgnore)}</p>
-          <p style="margin:0;"><strong>One possible contrarian take:</strong> ${escapeHtml(digest.oneContrarianTake)}</p>
-        </section>
+        ${renderDecisionLens(digest)}
+        ${renderTaskSection(digest.taskSummaries)}
+        ${renderStoriesSection(digest.stories)}
+        ${renderFooter(digest)}
       </div>
     </body>
   </html>
@@ -232,6 +311,11 @@ export function renderBriefingText(digest: BriefingDigest): string {
     }
   }
 
+  lines.push("", "Decision Lens");
+  lines.push(`One thing to watch: ${digest.oneThingToWatch}`);
+  lines.push(`One thing to ignore: ${digest.oneThingToIgnore}`);
+  lines.push(`One possible contrarian take: ${digest.oneContrarianTake}`);
+
   if (digest.taskSummaries.length) {
     lines.push("", "Taskflow Snapshot");
 
@@ -249,19 +333,28 @@ export function renderBriefingText(digest: BriefingDigest): string {
   }
 
   lines.push("", "Briefing Feed");
-  for (const story of digest.stories) {
-    lines.push(`[${getTopicLabel(story.topic)}] ${getDisplayTitle(story)} (${formatSourceLabel(story.source)})`);
-    lines.push(`What happened: ${getWhatHappened(story)}`);
-    lines.push(`Why it matters: ${getWhyItMatters(story)}`);
-    lines.push(`Signal: ${story.signalOrNoise}`);
-    lines.push(`Second-order effect: ${story.secondOrderEffect}`);
-    lines.push(`Link: ${story.url}`);
-    lines.push("");
+  if (!digest.stories.length) {
+    lines.push("No stories cleared the relevance threshold today.");
+  } else {
+    digest.stories.forEach((story, index) => {
+      const leadPrefix = index === 0 ? "[LEAD] " : "";
+      lines.push(
+        `${leadPrefix}[${getTopicLabel(story.topic)}] ${getDisplayTitle(story)} (${formatSourceLabel(story.source)})`,
+      );
+      lines.push(`What happened: ${getWhatHappened(story)}`);
+      lines.push(`Why it matters: ${getWhyItMatters(story)}`);
+      lines.push(`Signal: ${story.signalOrNoise}`);
+      lines.push(`Second-order effect: ${story.secondOrderEffect}`);
+      lines.push(`Link: ${story.url}`);
+      lines.push("");
+    });
   }
 
-  lines.push(`One thing to watch: ${digest.oneThingToWatch}`);
-  lines.push(`One thing to ignore: ${digest.oneThingToIgnore}`);
-  lines.push(`One possible contrarian take: ${digest.oneContrarianTake}`);
+  const storyLine = pluralize(digest.stories.length, "story", "stories");
+  const taskLine = digest.taskSummaries.length
+    ? ` · ${pluralize(digest.taskSummaries.length, "task area", "task areas")}`
+    : "";
+  lines.push(`${storyLine}${taskLine} · ${digest.dateLabel}`);
 
   return lines.join("\n");
 }
