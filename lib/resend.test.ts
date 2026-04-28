@@ -34,6 +34,7 @@ const ENV = {
   RESEND_API_KEY: "resend-key",
   BRIEFING_FROM_EMAIL: "Daily Brief <briefing@example.com>",
   BRIEFING_TO_EMAILS: "roy@example.com",
+  BRIEFING_SUBJECT_PREFIX: "Morning Brief",
   CRON_SECRET: "secret-value-long",
 };
 

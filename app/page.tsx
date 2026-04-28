@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import LiveCountdown from "@/app/components/LiveCountdown";
+
 export const dynamic = "force-dynamic";
 
 const dateline = new Intl.DateTimeFormat("en-US", {
@@ -198,10 +200,17 @@ export default function HomePage() {
       <main>
         {/* HERO */}
         <section className="hero">
+          <div className="hero-sunrise" aria-hidden />
+          <div className="hero-numeral" aria-hidden>
+            <span>06</span>
+          </div>
           <div className="container">
             <div className="dateline">
               <div className="dateline-left">
-                <span className="live-dot" aria-hidden />
+                <span className="live-pill" aria-label="Live wire">
+                  <span className="live-dot" aria-hidden />
+                  <span className="live-pill-text">Live · on the wire</span>
+                </span>
                 <span>Vol. 02 · Issue 117</span>
                 <span aria-hidden>•</span>
                 <span>{dateline}</span>
@@ -209,12 +218,14 @@ export default function HomePage() {
               <div className="dateline-right">
                 <span>Denver · 6:00 AM MT</span>
                 <span aria-hidden>•</span>
-                <span>One delivery, daily</span>
+                <span className="dateline-countdown">
+                  <LiveCountdown />
+                </span>
               </div>
             </div>
 
             <div className="hero-grid">
-              <div>
+              <div className="hero-copy fade-up">
                 <span className="eyebrow">A daily decision brief</span>
                 <h1>
                   Wake up
@@ -222,7 +233,7 @@ export default function HomePage() {
                   <span className="accent italic">already</span>{" "}
                   <span className="underline">briefed.</span>
                 </h1>
-                <p className="hero-lede">
+                <p className="hero-lede has-dropcap">
                   An autonomous morning brief that pulls live signal from nine
                   beats, drains the noise, and lands one decision-grade email
                   in your inbox before the first meeting.
@@ -257,7 +268,11 @@ export default function HomePage() {
               </div>
 
               {/* Email preview */}
-              <div className="preview" aria-hidden>
+              <div className="preview fade-up fade-up-delay" aria-hidden>
+                <div className="postmark">
+                  <span className="postmark-arc">06:00 · Mountain</span>
+                  <span className="postmark-stamp">Issue 117</span>
+                </div>
                 <div className="preview-stack">
                   <article className="preview-card">
                     <div className="preview-window">
@@ -387,6 +402,37 @@ export default function HomePage() {
             <span>One thing to ignore</span>
           </div>
         </div>
+
+        {/* BY THE NUMBERS */}
+        <section className="numbers-band" aria-label="By the numbers">
+          <div className="container">
+            <div className="numbers-grid">
+              <div className="numbers-item">
+                <span className="numbers-eyebrow">Delivery</span>
+                <strong>06:00</strong>
+                <span className="numbers-label">Mountain Time, daily</span>
+              </div>
+              <div className="numbers-divider" aria-hidden />
+              <div className="numbers-item">
+                <span className="numbers-eyebrow">Coverage</span>
+                <strong>9</strong>
+                <span className="numbers-label">Beats, ranked</span>
+              </div>
+              <div className="numbers-divider" aria-hidden />
+              <div className="numbers-item">
+                <span className="numbers-eyebrow">Signal pass</span>
+                <strong>1,200<span className="numbers-plus">+</span></strong>
+                <span className="numbers-label">Stories scanned daily</span>
+              </div>
+              <div className="numbers-divider" aria-hidden />
+              <div className="numbers-item">
+                <span className="numbers-eyebrow">Read time</span>
+                <strong>~4</strong>
+                <span className="numbers-label">Minutes, on average</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* BEATS */}
         <section className="section" id="beats">
@@ -580,10 +626,23 @@ export default function HomePage() {
           <div className="container">
             <span className="eyebrow">House rules</span>
             <p className="manifesto-quote">
+              <span className="manifesto-mark" aria-hidden>
+                &ldquo;
+              </span>
               We <span className="strike">summarize the news.</span>{" "}
               <span className="accent">We rank decisions.</span> One brief, one
               delivery, one read — every morning at six.
             </p>
+            <div className="manifesto-signoff">
+              <div className="manifesto-signature" aria-hidden>
+                Roy McFarland
+              </div>
+              <div className="manifesto-signature-meta">
+                <span>Editor &amp; sole subscriber-of-record</span>
+                <span aria-hidden>·</span>
+                <span>Brightline Labs · Denver</span>
+              </div>
+            </div>
             <div className="manifesto-meta">
               <span>Written for operators</span>
               <span aria-hidden>·</span>
