@@ -443,9 +443,7 @@ export default function HomePage() {
                 <h2>
                   Nine threads,
                   <br />
-                  <span className="italic" style={{ color: "var(--accent)" }}>
-                    one coherent
-                  </span>{" "}
+                  <span className="title-accent">one coherent</span>{" "}
                   morning.
                 </h2>
               </div>
@@ -532,12 +530,7 @@ export default function HomePage() {
                 <h2>
                   Four sections.
                   <br />
-                  <span
-                    className="italic"
-                    style={{ color: "var(--accent)" }}
-                  >
-                    Every morning.
-                  </span>
+                  <span className="title-accent">Every morning.</span>
                 </h2>
               </div>
               <p className="desc">
@@ -561,7 +554,7 @@ export default function HomePage() {
               </ol>
 
               <aside className="preview" aria-hidden>
-                <div className="preview-stack" style={{ transform: "rotate(-1.5deg)" }}>
+                <div className="preview-stack preview-stack--tilt-left">
                   <article className="preview-card">
                     <div className="preview-window">
                       <div className="preview-dots">
@@ -580,7 +573,7 @@ export default function HomePage() {
                       </h3>
                       <span className="preview-time">Part I</span>
                     </div>
-                    <p className="preview-story" style={{ marginBottom: 14 }}>
+                    <p className="preview-story preview-story--spaced">
                       Three calls before noon, one promised draft, and the
                       Elevated Organics distro check-in moved earlier — start
                       with the draft.
@@ -659,13 +652,8 @@ export default function HomePage() {
             <div className="cta">
               <div className="cta-inner">
                 <div>
-                  <span
-                    className="eyebrow"
-                    style={{ color: "#ffb380" }}
-                  >
-                    Subscribe
-                  </span>
-                  <h2 style={{ marginTop: 14 }}>
+                  <span className="eyebrow">Subscribe</span>
+                  <h2 className="cta-title">
                     Start tomorrow at{" "}
                     <span className="accent">six</span>.
                   </h2>
@@ -674,7 +662,7 @@ export default function HomePage() {
                     second send. If a morning has nothing worth your time,
                     you&apos;ll hear that too.
                   </p>
-                  <div className="cta-actions" style={{ marginTop: 28 }}>
+                  <div className="cta-actions">
                     <a
                       className="btn btn-on-dark-primary"
                       href="mailto:hello@roymcfarland.news?subject=Subscribe%20me%20to%20the%20brief"
@@ -726,6 +714,9 @@ export default function HomePage() {
               Brightline Labs
             </a>
           </div>
+          <p className="footer-tagline">
+            Decision-grade signal · 6:00 AM Mountain · Idempotent delivery
+          </p>
         </div>
       </footer>
     </div>
