@@ -29,7 +29,7 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 ## Architecture & Stack
 
 - **Framework:** Next.js 15.5.x App Router, React 19.
-- **Runtime:** Node.js 22.11.x, declared in `package.json` `engines.node` and pinned in `.nvmrc`.
+- **Runtime:** Node.js 22.12.x, declared in `package.json` `engines.node` and pinned in `.nvmrc` (see Verifier Rule 4 for the authoritative pin and rationale).
 - **Deployment:** Vercel (Serverless Functions + static landing page) triggered by Vercel Cron for the briefing job.
 - **Email:** Resend.
 - **Idempotency:** Upstash Redis / Vercel KV REST API, with fail-closed behavior in production.
@@ -70,5 +70,5 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 
 | PR | Scope | Status |
 |---|---|---|
-| **PR 1 (Install + Harness)** | PROJECT.md, LICENSE, AGENTS.md, CLAUDE.md, GitHub Actions CI (`lint`, `test`, `smoke`), Node pinning (`22.11.x`), `test:smoke` script, smoke test for the preview endpoint, README scrub for naming neutrality. | This PR |
+| **PR 1 (Install + Harness)** | PROJECT.md, LICENSE, AGENTS.md, CLAUDE.md, GitHub Actions CI (`lint`, `test`, `smoke`), Node pinning (`22.12.x`), `test:smoke` script, smoke test for the preview endpoint, README scrub for naming neutrality. | This PR |
 | **PR 2 (Migration)** | Rename all `Taskflow` references to `Blueprint` (directories, env vars, OpenAPI spec, generated client, user-facing strings). Update OpenAPI spec to match Workflow Blueprint's v1 API contract. Regenerate client. Migrate consumer to use `EXTERNAL_API_KEY` and the new v1 endpoints. Coordinate with the corresponding deprecation work in the `workflow-blueprint` repo. | Planned |
