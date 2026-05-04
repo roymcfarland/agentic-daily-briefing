@@ -23,7 +23,7 @@ const mockedSendBriefingEmail = vi.mocked(sendBriefingEmail);
 
 const VALID_ENV = {
   TASKFLOW_API_BASE_URL: "https://www.workflowblueprint.io",
-  TASKFLOW_API_KEY: "taskflow-key",
+  READ_ONLY_API_KEY: "taskflow-key",
   RESEND_API_KEY: "resend-key",
   BRIEFING_FROM_EMAIL: "briefing@example.com",
   BRIEFING_TO_EMAILS: "roy@example.com",

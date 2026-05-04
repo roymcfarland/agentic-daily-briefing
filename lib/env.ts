@@ -1,6 +1,6 @@
 type EnvKey =
   | "TASKFLOW_API_BASE_URL"
-  | "TASKFLOW_API_KEY"
+  | "READ_ONLY_API_KEY"
   | "RESEND_API_KEY"
   | "BRIEFING_FROM_EMAIL"
   | "BRIEFING_TO_EMAILS"
@@ -153,7 +153,7 @@ export function getEnv() {
 
   return {
     taskflowApiBaseUrl,
-    taskflowApiKey: getRequiredEnv("TASKFLOW_API_KEY"),
+    taskflowApiKey: getRequiredEnv("READ_ONLY_API_KEY"),
     taskflowTimeoutMs: parseBoundedInteger(process.env.TASKFLOW_TIMEOUT_MS, 12000, 1000, 30000),
     resendApiKey: getRequiredEnv("RESEND_API_KEY"),
     briefingFromEmail: assertEmail("BRIEFING_FROM_EMAIL", getRequiredEnv("BRIEFING_FROM_EMAIL")),

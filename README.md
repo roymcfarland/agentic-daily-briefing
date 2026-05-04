@@ -43,7 +43,7 @@ cp .env.example .env.local
 Required values:
 
 - `TASKFLOW_API_BASE_URL`
-- `TASKFLOW_API_KEY`
+- `READ_ONLY_API_KEY`
 - `RESEND_API_KEY`
 - `BRIEFING_FROM_EMAIL`
 - `BRIEFING_TO_EMAILS`

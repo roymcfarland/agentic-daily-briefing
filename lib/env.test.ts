@@ -4,7 +4,7 @@ import { getEnv, getIdempotencyEnv } from "@/lib/env";
 
 const ENV_KEYS = [
   "TASKFLOW_API_BASE_URL",
-  "TASKFLOW_API_KEY",
+  "READ_ONLY_API_KEY",
   "TASKFLOW_TIMEOUT_MS",
   "RESEND_API_KEY",
   "BRIEFING_FROM_EMAIL",
@@ -24,7 +24,7 @@ const ENV_KEYS = [
 
 const VALID_ENV: Record<(typeof ENV_KEYS)[number], string> = {
   TASKFLOW_API_BASE_URL: "https://www.workflowblueprint.io",
-  TASKFLOW_API_KEY: "taskflow-key",
+  READ_ONLY_API_KEY: "taskflow-key",
   TASKFLOW_TIMEOUT_MS: "12000",
   RESEND_API_KEY: "resend-key",
   BRIEFING_FROM_EMAIL: "Daily Brief <briefing@example.com>",
