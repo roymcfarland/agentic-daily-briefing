@@ -51,13 +51,14 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 - **Hard-fail** any PR that adds a new email-send code path that bypasses `beginBriefingSend()`.
 
 ### 4. Node Version Pinning
-- The project pins Node.js to **major.minor `22.11`** (any patch). This is enforced at three sites, each using the syntax appropriate to its tool:
-  - `package.json` `engines.node`: `22.11.x` (npm/pnpm semver-range form).
-  - `.nvmrc`: `22.11` (nvm form; nvm does not support `.x`).
+- The project pins Node.js to **major.minor `22.12`** (any patch). This is enforced at three sites, each using the syntax appropriate to its tool:
+  - `package.json` `engines.node`: `22.12.x` (npm/pnpm semver-range form).
+  - `.nvmrc`: `22.12.0` (nvm form; nvm does not support `.x`, so a concrete patch is pinned).
   - `.github/workflows/ci.yml`: must use `node-version-file: .nvmrc` (so CI reads the same source of truth as local development).
-- **Hard-fail** any PR that changes the pinned Node major.minor at any of the three sites without updating all three.
+- **Why 22.12 and not 22.11:** Node 22.11 was the original pin, but Vitest 4 / rolldown 1.0.0-rc.17 prebuilt Linux native bindings require a runtime >= 22.12 to load on `ubuntu-latest` GitHub Actions runners. Lower than 22.12 produces "Cannot find native binding" errors (npm/cli#4828 surfaces this). Do not roll back to 22.11 without verifying rolldown bindings still work; if a future Vitest/rolldown release relaxes this requirement, the pin can move back via a documented PR.
+- **Hard-fail** any PR that changes the pinned Node major.minor at any of the three sites without updating all three sites and this rule.
 - **Hard-fail** any PR that removes any of those three pin sites.
-- **Hard-fail** any PR that introduces a literal Node version in `ci.yml` (e.g. `node-version: 22.11`) instead of `node-version-file: .nvmrc`.
+- **Hard-fail** any PR that introduces a literal Node version in `ci.yml` (e.g. `node-version: 22.12`) instead of `node-version-file: .nvmrc`.
 
 ### 5. OpenAPI Client Generation
 - **Hard-fail** any PR that manually edits `lib/taskflow/generated/client.ts` (or the future Blueprint equivalent) without updating the source OpenAPI spec (`openapi/*.json`) and running the generation script. The OpenAPI spec is the source of truth for the external contract.
