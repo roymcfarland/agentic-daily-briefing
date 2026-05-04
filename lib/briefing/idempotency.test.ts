@@ -17,8 +17,6 @@ function redisResponse(result: unknown) {
 }
 
 describe("briefing idempotency", () => {
-  const originalNodeEnv = process.env.NODE_ENV;
-
   beforeEach(() => {
     for (const [key, value] of Object.entries(ENV)) {
       process.env[key] = value;
@@ -31,7 +29,7 @@ describe("briefing idempotency", () => {
     for (const key of Object.keys(ENV)) {
       delete process.env[key];
     }
-    process.env.NODE_ENV = originalNodeEnv;
+    vi.unstubAllEnvs();
   });
 
   it("builds a stable Chicago-date idempotency key", () => {
@@ -121,7 +119,7 @@ describe("briefing idempotency", () => {
     for (const key of Object.keys(ENV)) {
       delete process.env[key];
     }
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
 
     await expect(beginBriefingSend(new Date("2026-04-04T12:00:00Z"))).rejects.toThrow(
       "Missing idempotency store configuration.",

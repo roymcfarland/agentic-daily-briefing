@@ -67,16 +67,14 @@ function mockAcquiredSendLock() {
 }
 
 describe("morning brief route", () => {
-  const originalNodeEnv = process.env.NODE_ENV;
-
   beforeEach(() => {
     vi.resetAllMocks();
     applyEnv();
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
   });
 
   afterEach(() => {
-    process.env.NODE_ENV = originalNodeEnv;
+    vi.unstubAllEnvs();
   });
 
   it("returns 401 when the bearer token is missing in production", async () => {

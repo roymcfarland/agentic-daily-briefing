@@ -2,12 +2,18 @@
   "name": "weekday-morning-brief",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "22.11.x"
+  },
+  "license": "PolyForm-Noncommercial-1.0.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "test": "vitest run --exclude \"tests/smoke/**\"",
     "test:watch": "vitest",
+    "test:smoke": "vitest run --dir tests/smoke",
     "generate:taskflow": "node scripts/generate-taskflow-client.mjs"
   },
   "dependencies": {
