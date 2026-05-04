@@ -115,6 +115,10 @@ curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/
 curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/cron/morning-brief?force=1"
 ```
 
+## License
+
+This project is licensed under the PolyForm Noncommercial License 1.0.0. See the [LICENSE](LICENSE) file for details. Commercial use is strictly prohibited without express written permission from Roy McFarland.
+
 ## Deploy to Vercel
 
 1. Import the repo into Vercel.
