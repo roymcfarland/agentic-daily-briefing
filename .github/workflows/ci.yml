@@ -24,9 +24,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-      - run: npm ci
-      - name: Repair native optional deps (npm/cli#4828)
-        run: npm install --no-save --no-audit --no-fund
+      - name: Install dependencies (clean install)
+        run: npm ci
+      - name: Force-install rolldown Linux binding (npm/cli#4828 workaround)
+        run: npm install --no-save --force @rolldown/binding-linux-x64-gnu
       - run: npm run test
 
   smoke:
@@ -36,7 +37,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-      - run: npm ci
-      - name: Repair native optional deps (npm/cli#4828)
-        run: npm install --no-save --no-audit --no-fund
+      - name: Install dependencies (clean install)
+        run: npm ci
+      - name: Force-install rolldown Linux binding (npm/cli#4828 workaround)
+        run: npm install --no-save --force @rolldown/binding-linux-x64-gnu
       - run: npm run test:smoke
