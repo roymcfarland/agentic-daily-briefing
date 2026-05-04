@@ -8,7 +8,7 @@ import type {
   TaskSummary,
 } from "@/lib/briefing/types";
 import { rankStories } from "@/lib/briefing/ranker";
-import { getTaskSummaries } from "@/lib/taskflow";
+import { getTaskSummaries } from "@/lib/blueprint";
 import { getChicagoDateLabel } from "@/lib/time";
 import { fetchGoogleNewsStories } from "@/lib/research/google-news";
 import { getSportsLabel, SPORTS_CONFIG, TOPIC_CONFIG } from "@/lib/research/topics";
@@ -265,7 +265,7 @@ async function getSafeTaskSummaries(now: Date): Promise<TaskSummariesResult> {
   try {
     return { summaries: await getTaskSummaries(now) };
   } catch (error) {
-    warnPartialFailure("Taskflow daily summary", error);
+    warnPartialFailure("Blueprint daily summary", error);
     return {
       summaries: [],
       warning: `Tasks unavailable today: ${truncateDetail(getErrorMessage(error))}`,

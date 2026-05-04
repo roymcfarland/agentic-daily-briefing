@@ -14,7 +14,7 @@
     "test": "vitest run --exclude \"tests/smoke/**\"",
     "test:watch": "vitest",
     "test:smoke": "vitest run --dir tests/smoke",
-    "generate:taskflow": "node scripts/generate-taskflow-client.mjs"
+    "generate:blueprint": "node scripts/generate-blueprint-client.mjs"
   },
   "dependencies": {
     "fast-xml-parser": "^5.7.2",

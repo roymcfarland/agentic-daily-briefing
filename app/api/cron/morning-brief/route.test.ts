@@ -22,8 +22,9 @@ const mockedBuildBriefingDigest = vi.mocked(buildBriefingDigest);
 const mockedSendBriefingEmail = vi.mocked(sendBriefingEmail);
 
 const VALID_ENV = {
-  TASKFLOW_API_BASE_URL: "https://www.workflowblueprint.io",
-  READ_ONLY_API_KEY: "taskflow-key",
+  BLUEPRINT_API_BASE_URL: "https://www.workflowblueprint.io",
+  EXTERNAL_API_KEY: "blueprint-key",
+  BLUEPRINT_TIMEOUT_MS: "12000",
   RESEND_API_KEY: "resend-key",
   BRIEFING_FROM_EMAIL: "briefing@example.com",
   BRIEFING_TO_EMAILS: "roy@example.com",
@@ -87,7 +88,7 @@ describe("morning brief route", () => {
   });
 
   it("sanitizes production failures and keeps no-store headers", async () => {
-    mockedBuildBriefingDigest.mockRejectedValueOnce(new Error("Taskflow timeout details"));
+    mockedBuildBriefingDigest.mockRejectedValueOnce(new Error("Blueprint timeout details"));
 
     const response = await GET(
       new Request("https://example.com/api/cron/morning-brief?force=1&preview=1", {
@@ -188,7 +189,7 @@ describe("morning brief route", () => {
 
   it("surfaces digest warnings on the JSON response after a successful send", async () => {
     const lock = mockAcquiredSendLock();
-    const warnings = ["Tasks unavailable today: Taskflow getDailySummary failed with 404"];
+    const warnings = ["Tasks unavailable today: Blueprint getDailySummary failed with 404"];
     mockedBuildBriefingDigest.mockResolvedValueOnce(digest({ warnings }));
     mockedSendBriefingEmail.mockResolvedValueOnce("email-id");
 
@@ -207,7 +208,7 @@ describe("morning brief route", () => {
   });
 
   it("surfaces digest warnings on the JSON response in preview mode", async () => {
-    const warnings = ["Tasks unavailable today: Taskflow getDailySummary failed with 404"];
+    const warnings = ["Tasks unavailable today: Blueprint getDailySummary failed with 404"];
     mockedBuildBriefingDigest.mockResolvedValueOnce(digest({ warnings }));
 
     const response = await GET(

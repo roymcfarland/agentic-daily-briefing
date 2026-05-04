@@ -6,7 +6,7 @@ This file contains tactical instructions for AI agents (Cursor, Claude Code, etc
 ## Environment Setup
 
 1. Copy `.env.example` to `.env.local`.
-2. The app requires a valid `TASKFLOW_API_BASE_URL` (soon to be renamed to Blueprint) and `READ_ONLY_API_KEY` to fetch task data.
+2. The app requires a valid `BLUEPRINT_API_BASE_URL` and `EXTERNAL_API_KEY` to fetch task data.
 3. The app requires a valid `RESEND_API_KEY` to send emails.
 4. Idempotency requires Upstash Redis or Vercel KV. If you are testing locally and do not have a Redis instance, you must either provide mock credentials or bypass the idempotency check for local dev only (do not commit bypasses).
 
@@ -14,7 +14,7 @@ This file contains tactical instructions for AI agents (Cursor, Claude Code, etc
 
 - `npm run dev` — Start the Next.js dev server.
 - `npm run test` — Run the Vitest suite.
-- `npm run generate:taskflow` — Regenerate the API client from the OpenAPI spec.
+- `npm run generate:blueprint` — Regenerate the API client from the OpenAPI spec.
 
 ## Gotchas
 
