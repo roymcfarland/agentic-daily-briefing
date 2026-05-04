@@ -25,6 +25,8 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: npm ci
+      - name: Repair native optional deps (npm/cli#4828)
+        run: npm install --no-save --no-audit --no-fund
       - run: npm run test
 
   smoke:
@@ -35,4 +37,6 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: npm ci
+      - name: Repair native optional deps (npm/cli#4828)
+        run: npm install --no-save --no-audit --no-fund
       - run: npm run test:smoke
