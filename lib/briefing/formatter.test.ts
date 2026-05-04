@@ -87,7 +87,7 @@ describe("renderBriefingEmail", () => {
     const text = renderBriefingText(digest);
 
     expect(text).toContain("Daily Digest - Thursday, April 2");
-    expect(text).toContain("Taskflow Snapshot");
+    expect(text).toContain("Blueprint Snapshot");
     expect(text).toContain("Briefing Feed");
     expect(text).toContain("[sports] Denver Broncos adjust offseason plan (AP)");
     expect(text).toContain("[AI] Model vendors cut inference costs");
@@ -103,7 +103,7 @@ describe("renderBriefingEmail", () => {
       taskSummaries: [],
     });
 
-    expect(html).not.toContain("Taskflow Snapshot");
+    expect(html).not.toContain("Blueprint Snapshot");
     expect(html).toContain("Briefing Feed");
   });
 
@@ -125,21 +125,21 @@ describe("renderBriefingEmail", () => {
   it("renders a Briefing notes banner in HTML when warnings are present", () => {
     const html = renderBriefingEmail({
       ...digest,
-      warnings: ["Tasks unavailable today: Taskflow getDailySummary failed with 404"],
+      warnings: ["Tasks unavailable today: Blueprint getDailySummary failed with 404"],
     });
 
     expect(html).toContain("Briefing notes");
-    expect(html).toContain("Tasks unavailable today: Taskflow getDailySummary failed with 404");
+    expect(html).toContain("Tasks unavailable today: Blueprint getDailySummary failed with 404");
   });
 
   it("includes a Briefing notes section in the plain text body when warnings are present", () => {
     const text = renderBriefingText({
       ...digest,
-      warnings: ["Tasks unavailable today: Taskflow getDailySummary failed with 404"],
+      warnings: ["Tasks unavailable today: Blueprint getDailySummary failed with 404"],
     });
 
     expect(text).toContain("Briefing notes:");
-    expect(text).toContain("- Tasks unavailable today: Taskflow getDailySummary failed with 404");
+    expect(text).toContain("- Tasks unavailable today: Blueprint getDailySummary failed with 404");
   });
 
   it("omits the Briefing notes section entirely when there are no warnings", () => {
@@ -238,7 +238,7 @@ describe("renderBriefingEmail", () => {
   it("places the warnings banner above the Decision Lens for visibility", () => {
     const html = renderBriefingEmail({
       ...digest,
-      warnings: ["Tasks unavailable today: Taskflow getDailySummary failed with 404"],
+      warnings: ["Tasks unavailable today: Blueprint getDailySummary failed with 404"],
     });
 
     const warningsIndex = html.indexOf("Briefing notes");

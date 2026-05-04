@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getEnv, getIdempotencyEnv } from "@/lib/env";
 
 const ENV_KEYS = [
-  "TASKFLOW_API_BASE_URL",
-  "READ_ONLY_API_KEY",
-  "TASKFLOW_TIMEOUT_MS",
+  "BLUEPRINT_API_BASE_URL",
+  "EXTERNAL_API_KEY",
+  "BLUEPRINT_TIMEOUT_MS",
   "RESEND_API_KEY",
   "BRIEFING_FROM_EMAIL",
   "BRIEFING_TO_EMAILS",
@@ -23,9 +23,9 @@ const ENV_KEYS = [
 ] as const;
 
 const VALID_ENV: Record<(typeof ENV_KEYS)[number], string> = {
-  TASKFLOW_API_BASE_URL: "https://www.workflowblueprint.io",
-  READ_ONLY_API_KEY: "taskflow-key",
-  TASKFLOW_TIMEOUT_MS: "12000",
+  BLUEPRINT_API_BASE_URL: "https://www.workflowblueprint.io",
+  EXTERNAL_API_KEY: "blueprint-key",
+  BLUEPRINT_TIMEOUT_MS: "12000",
   RESEND_API_KEY: "resend-key",
   BRIEFING_FROM_EMAIL: "Daily Brief <briefing@example.com>",
   BRIEFING_TO_EMAILS: "roy@example.com, Ops <ops@example.com>",
@@ -66,13 +66,13 @@ describe("getEnv", () => {
   });
 
   it("normalizes bounded values and validated email recipients", () => {
-    process.env.TASKFLOW_API_BASE_URL = "https://www.workflowblueprint.io/";
-    process.env.TASKFLOW_TIMEOUT_MS = "999999";
+    process.env.BLUEPRINT_API_BASE_URL = "https://www.workflowblueprint.io/";
+    process.env.BLUEPRINT_TIMEOUT_MS = "999999";
     process.env.BRIEFING_MAX_ITEMS = "2";
 
     expect(getEnv()).toMatchObject({
-      taskflowApiBaseUrl: "https://www.workflowblueprint.io",
-      taskflowTimeoutMs: 30000,
+      blueprintApiBaseUrl: "https://www.workflowblueprint.io",
+      blueprintTimeoutMs: 30000,
       briefingFromEmail: "Daily Brief <briefing@example.com>",
       briefingToEmails: ["roy@example.com", "Ops <ops@example.com>"],
       briefingMaxItems: 10,
@@ -93,12 +93,12 @@ describe("getEnv", () => {
 
   it("requires https service URLs in production except localhost", () => {
     vi.stubEnv("NODE_ENV", "production");
-    process.env.TASKFLOW_API_BASE_URL = "http://www.workflowblueprint.io";
+    process.env.BLUEPRINT_API_BASE_URL = "http://www.workflowblueprint.io";
 
-    expect(() => getEnv()).toThrow("TASKFLOW_API_BASE_URL must use https in production.");
+    expect(() => getEnv()).toThrow("BLUEPRINT_API_BASE_URL must use https in production.");
 
-    process.env.TASKFLOW_API_BASE_URL = "http://localhost:3000";
-    expect(getEnv().taskflowApiBaseUrl).toBe("http://localhost:3000");
+    process.env.BLUEPRINT_API_BASE_URL = "http://localhost:3000";
+    expect(getEnv().blueprintApiBaseUrl).toBe("http://localhost:3000");
   });
 
   it("reads idempotency store configuration with bounded TTLs", () => {

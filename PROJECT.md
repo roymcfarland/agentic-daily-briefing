@@ -16,7 +16,7 @@
 
 Agentic Daily Briefing is a proprietary Next.js application with two distinct surfaces:
 
-1. **Primary product surface — daily briefing cron job.** A Vercel Cron job that aggregates live research (via Google News RSS) and task state (via the upstream task-management API, currently exposed under the legacy `Taskflow` naming pending PR 2 (Migration) to Workflow Blueprint), ranks the items for decision relevance, and sends a daily morning email briefing to the founder. It is designed for extreme reliability, idempotency, and graceful degradation. This is where the active development work happens.
+1. **Primary product surface — daily briefing cron job.** A Vercel Cron job that aggregates live research (via Google News RSS) and task state (via the Workflow Blueprint v1 API), ranks the items for decision relevance, and sends a daily morning email briefing to the founder. It is designed for extreme reliability, idempotency, and graceful degradation. This is where the active development work happens.
 2. **Secondary surface — public landing page.** A static marketing landing page served at `roymcfarland.news` and `www.roymcfarland.news`. This page exists deliberately and is preserved, but is intentionally minimal. No new pages, components, or interactive features should be added to this surface without an explicit PROJECT.md update.
 
 ## Non-goals
@@ -33,12 +33,12 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 - **Deployment:** Vercel (Serverless Functions + static landing page) triggered by Vercel Cron for the briefing job.
 - **Email:** Resend.
 - **Idempotency:** Upstash Redis / Vercel KV REST API, with fail-closed behavior in production.
-- **External API Consumption:** Consumes a task-management API (currently the legacy Taskflow surface, pending PR 2 (Migration) to the Workflow Blueprint v1 API) via a generated TypeScript client driven by an OpenAPI spec.
+- **External API Consumption:** Consumes the Workflow Blueprint v1 task-management API via a generated TypeScript client driven by an OpenAPI spec.
 
 ## Verifier Rules (Enforced on every PR)
 
 ### 1. Test Coverage
-- **Hard-fail** any PR that adds or modifies business logic in `lib/briefing/`, `lib/taskflow/`, or `app/api/cron/` without accompanying tests.
+- **Hard-fail** any PR that adds or modifies business logic in `lib/briefing/`, `lib/blueprint/`, or `app/api/cron/` without accompanying tests.
 - **Hard-fail** any PR that removes the `test`, `test:smoke`, or `lint` scripts from `package.json`.
 
 ### 2. Continuous Integration
@@ -61,7 +61,7 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 - **Hard-fail** any PR that introduces a literal Node version in `ci.yml` (e.g. `node-version: 22.12`) instead of `node-version-file: .nvmrc`.
 
 ### 5. OpenAPI Client Generation
-- **Hard-fail** any PR that manually edits `lib/taskflow/generated/client.ts` (or the future Blueprint equivalent) without updating the source OpenAPI spec (`openapi/*.json`) and running the generation script. The OpenAPI spec is the source of truth for the external contract.
+- **Hard-fail** any PR that manually edits `lib/blueprint/generated/client.ts` without updating the source OpenAPI spec (`openapi/*.json`) and running the generation script. The OpenAPI spec is the source of truth for the external contract.
 
 ### 6. Landing Page Surface Lock
 - **Hard-fail** any PR that adds new pages under `app/` (other than the existing `app/page.tsx`, `app/layout.tsx`, and image generators), new interactive components under `app/components/`, signup forms, analytics scripts, or third-party tracking pixels, without an explicit PROJECT.md update authorizing the change.
@@ -70,5 +70,5 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 
 | PR | Scope | Status |
 |---|---|---|
-| **PR 1 (Install + Harness)** | PROJECT.md, LICENSE, AGENTS.md, CLAUDE.md, GitHub Actions CI (`lint`, `test`, `smoke`), Node pinning (`22.12.x`), `test:smoke` script, smoke test for the preview endpoint, README scrub for naming neutrality. | This PR |
-| **PR 2 (Migration)** | Rename all `Taskflow` references to `Blueprint` (directories, env vars, OpenAPI spec, generated client, user-facing strings). Update OpenAPI spec to match Workflow Blueprint's v1 API contract. Regenerate client. Migrate consumer to use `EXTERNAL_API_KEY` and the new v1 endpoints. Coordinate with the corresponding deprecation work in the `workflow-blueprint` repo. | Planned |
+| **PR 1 (Install + Harness)** | PROJECT.md, LICENSE, AGENTS.md, CLAUDE.md, GitHub Actions CI (`lint`, `test`, `smoke`), Node pinning (`22.12.x`), `test:smoke` script, smoke test for the preview endpoint, README scrub for naming neutrality. | Shipped |
+| **PR 2 (Migration)** | Rename all legacy upstream references to `Blueprint` (directories, env vars, OpenAPI spec, generated client, user-facing strings). Update OpenAPI spec to match Workflow Blueprint's v1 API contract. Regenerate client. Migrate consumer to use `EXTERNAL_API_KEY` and the new v1 endpoints. Coordinate with the corresponding deprecation work in the `workflow-blueprint` repo. | In Progress |

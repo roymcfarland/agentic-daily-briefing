@@ -1,6 +1,6 @@
 type EnvKey =
-  | "TASKFLOW_API_BASE_URL"
-  | "READ_ONLY_API_KEY"
+  | "BLUEPRINT_API_BASE_URL"
+  | "EXTERNAL_API_KEY"
   | "RESEND_API_KEY"
   | "BRIEFING_FROM_EMAIL"
   | "BRIEFING_TO_EMAILS"
@@ -146,15 +146,15 @@ export function getIdempotencyEnv() {
 }
 
 export function getEnv() {
-  const taskflowApiBaseUrl = assertHttpUrl(
-    "TASKFLOW_API_BASE_URL",
-    getRequiredEnv("TASKFLOW_API_BASE_URL"),
+  const blueprintApiBaseUrl = assertHttpUrl(
+    "BLUEPRINT_API_BASE_URL",
+    getRequiredEnv("BLUEPRINT_API_BASE_URL"),
   );
 
   return {
-    taskflowApiBaseUrl,
-    taskflowApiKey: getRequiredEnv("READ_ONLY_API_KEY"),
-    taskflowTimeoutMs: parseBoundedInteger(process.env.TASKFLOW_TIMEOUT_MS, 12000, 1000, 30000),
+    blueprintApiBaseUrl,
+    blueprintApiKey: getRequiredEnv("EXTERNAL_API_KEY"),
+    blueprintTimeoutMs: parseBoundedInteger(process.env.BLUEPRINT_TIMEOUT_MS, 12000, 1000, 30000),
     resendApiKey: getRequiredEnv("RESEND_API_KEY"),
     briefingFromEmail: assertEmail("BRIEFING_FROM_EMAIL", getRequiredEnv("BRIEFING_FROM_EMAIL")),
     briefingToEmails: parseEmailList(getRequiredEnv("BRIEFING_TO_EMAILS")),

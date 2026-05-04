@@ -1,6 +1,6 @@
 import { getEnv } from "@/lib/env";
 import type { CoverageArea, TaskNode, TaskSummary } from "@/lib/briefing/types";
-import { TaskflowClient, type Task } from "@/lib/taskflow/generated/client";
+import { BlueprintClient, type Task } from "@/lib/blueprint/generated/client";
 
 const AREAS: CoverageArea[] = [
   "personal",
@@ -129,10 +129,10 @@ function createHeadline(area: CoverageArea, openItems: number, parentItems: numb
 
 export async function getTaskSummaries(now: Date): Promise<TaskSummary[]> {
   const env = getEnv();
-  const client = new TaskflowClient({
-    baseUrl: env.taskflowApiBaseUrl,
-    apiKey: env.taskflowApiKey,
-    timeoutMs: env.taskflowTimeoutMs,
+  const client = new BlueprintClient({
+    baseUrl: env.blueprintApiBaseUrl,
+    apiKey: env.blueprintApiKey,
+    timeoutMs: env.blueprintTimeoutMs,
   });
   void now;
 

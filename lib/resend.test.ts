@@ -29,8 +29,8 @@ const digest: BriefingDigest = {
 };
 
 const ENV = {
-  TASKFLOW_API_BASE_URL: "https://www.workflowblueprint.io",
-  READ_ONLY_API_KEY: "taskflow-key",
+  BLUEPRINT_API_BASE_URL: "https://www.workflowblueprint.io",
+  EXTERNAL_API_KEY: "blueprint-key",
   RESEND_API_KEY: "resend-key",
   BRIEFING_FROM_EMAIL: "Daily Brief <briefing@example.com>",
   BRIEFING_TO_EMAILS: "roy@example.com",

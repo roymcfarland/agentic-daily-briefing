@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { TaskflowClient } from "@/lib/taskflow/generated/client";
+import { BlueprintClient } from "@/lib/blueprint/generated/client";
 
-describe("TaskflowClient", () => {
+describe("BlueprintClient", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
@@ -39,19 +39,19 @@ describe("TaskflowClient", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const client = new TaskflowClient({
+    const client = new BlueprintClient({
       baseUrl: "https://www.workflowblueprint.io/",
-      apiKey: "taskflow-key",
+      apiKey: "blueprint-key",
       timeoutMs: 5000,
     });
     const summary = await client.getDailySummary();
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://www.workflowblueprint.io/api/external/daily-summary",
+      "https://www.workflowblueprint.io/api/external/v1/daily-summary",
       expect.objectContaining({
         headers: {
           accept: "application/json",
-          authorization: "Bearer taskflow-key",
+          authorization: "Bearer blueprint-key",
         },
       }),
     );
@@ -82,13 +82,13 @@ describe("TaskflowClient", () => {
       }),
     );
 
-    const client = new TaskflowClient({
+    const client = new BlueprintClient({
       baseUrl: "https://www.workflowblueprint.io",
-      apiKey: "taskflow-key",
+      apiKey: "blueprint-key",
     });
 
     await expect(client.getDailySummary()).rejects.toThrow(
-      "Taskflow getDailySummary returned malformed JSON",
+      "Blueprint getDailySummary returned malformed JSON",
     );
   });
 });

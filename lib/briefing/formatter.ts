@@ -116,7 +116,7 @@ function renderHeader(digest: BriefingDigest): string {
   return `
         <p style="margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9a3412;">Daily Digest</p>
         <h1 style="margin:0 0 8px;font-size:34px;line-height:1.1;color:#111827;">${escapeHtml(digest.dateLabel)}</h1>
-        <p style="margin:0 0 24px;color:#4b5563;font-style:italic;">Taskflow state plus live research filtered for decision relevance.</p>`;
+        <p style="margin:0 0 24px;color:#4b5563;font-style:italic;">Blueprint state plus live research filtered for decision relevance.</p>`;
 }
 
 function renderDecisionLens(digest: BriefingDigest): string {
@@ -197,7 +197,7 @@ function renderTaskSection(taskSummaries: TaskSummary[]): string {
 
   return `
         <section style="margin:0 0 24px;">
-          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Taskflow Snapshot</h2>
+          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Blueprint Snapshot</h2>
           <div style="display:grid;gap:14px;">
             ${taskSummaries.map(renderTaskSummary).join("")}
           </div>
@@ -317,7 +317,7 @@ export function renderBriefingText(digest: BriefingDigest): string {
   lines.push(`One possible contrarian take: ${digest.oneContrarianTake}`);
 
   if (digest.taskSummaries.length) {
-    lines.push("", "Taskflow Snapshot");
+    lines.push("", "Blueprint Snapshot");
 
     for (const summary of digest.taskSummaries) {
       lines.push(`${summary.area}: ${summary.headline}`);

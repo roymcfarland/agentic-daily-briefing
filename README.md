@@ -6,7 +6,7 @@ Next.js App Router project for a daily morning email briefing, designed for Verc
 
 - Sends a daily morning briefing email with [Resend](https://resend.com/)
 - Runs from `/api/cron/morning-brief`
-- Pulls task state from the upstream task-management API (currently exposed under the legacy `Taskflow` naming, pending PR 2 migration to the Workflow Blueprint v1 API) via `getDailySummary` only
+- Pulls task state from the Workflow Blueprint v1 API via `getDailySummary` only
 - Covers Personal, Elevated Organics, and Brightline Labs
 - Pulls live research from Google News RSS across AI, Markets, Business, Cannabis, Chicago, Colorado, and one asymmetric-upside area
 - Removes duplicates and low-signal items
@@ -16,8 +16,8 @@ Next.js App Router project for a daily morning email briefing, designed for Verc
 ## Project structure
 
 - `app/api/cron/morning-brief/route.ts`: cron entrypoint and authorization
-- `lib/taskflow/generated/client.ts`: generated upstream API client (current legacy path; will be renamed in PR 2)
-- `openapi/taskflow.openapi.json`: source schema for the generated client (current legacy path; will be renamed in PR 2)
+- `lib/blueprint/generated/client.ts`: generated Workflow Blueprint API client
+- `openapi/blueprint.openapi.json`: source schema for the generated client
 - `lib/briefing/pipeline.ts`: data collection, ranking, and digest assembly
 - `lib/briefing/formatter.ts`: HTML and text email rendering
 - `vercel.json`: UTC cron schedule for one delivery per day
@@ -42,8 +42,8 @@ cp .env.example .env.local
 
 Required values:
 
-- `TASKFLOW_API_BASE_URL`
-- `READ_ONLY_API_KEY`
+- `BLUEPRINT_API_BASE_URL`
+- `EXTERNAL_API_KEY`
 - `RESEND_API_KEY`
 - `BRIEFING_FROM_EMAIL`
 - `BRIEFING_TO_EMAILS`
@@ -53,7 +53,7 @@ Required values:
 
 Optional values:
 
-- `TASKFLOW_TIMEOUT_MS`
+- `BLUEPRINT_TIMEOUT_MS`
 - `BRIEFING_SUBJECT_PREFIX`
 - `BRIEFING_MAX_ITEMS`
 - `BRIEFING_IDEMPOTENCY_SENT_TTL_SECONDS`
@@ -72,7 +72,7 @@ npm install
 Generate the upstream API client from the OpenAPI schema:
 
 ```bash
-npm run generate:taskflow
+npm run generate:blueprint
 ```
 
 Start the app:
@@ -134,9 +134,9 @@ The generated client is intentionally scoped to `getDailySummary`, which is the 
 
 If the upstream schema changes:
 
-1. Update `openapi/taskflow.openapi.json` (path will be renamed in PR 2)
-2. Run `npm run generate:taskflow` (script will be renamed in PR 2)
-3. Commit the regenerated `lib/taskflow/generated/client.ts` (path will be renamed in PR 2)
+1. Update `openapi/blueprint.openapi.json`
+2. Run `npm run generate:blueprint`
+3. Commit the regenerated `lib/blueprint/generated/client.ts`
 
 ## Testing
 
