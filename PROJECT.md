@@ -16,7 +16,7 @@
 
 Agentic Daily Briefing is a proprietary Next.js application with two distinct surfaces:
 
-1. **Primary product surface — daily briefing cron job.** A Vercel Cron job that aggregates live research (via Google News RSS) and task state (via the upstream task-management API, currently exposed under the legacy `Taskflow` naming pending PR 3 migration to Workflow Blueprint), ranks the items for decision relevance, and sends a daily morning email briefing to the founder. It is designed for extreme reliability, idempotency, and graceful degradation. This is where the active development work happens.
+1. **Primary product surface — daily briefing cron job.** A Vercel Cron job that aggregates live research (via Google News RSS) and task state (via the upstream task-management API, currently exposed under the legacy `Taskflow` naming pending PR 2 (Migration) to Workflow Blueprint), ranks the items for decision relevance, and sends a daily morning email briefing to the founder. It is designed for extreme reliability, idempotency, and graceful degradation. This is where the active development work happens.
 2. **Secondary surface — public landing page.** A static marketing landing page served at `roymcfarland.news` and `www.roymcfarland.news`. This page exists deliberately and is preserved, but is intentionally minimal. No new pages, components, or interactive features should be added to this surface without an explicit PROJECT.md update.
 
 ## Non-goals
@@ -33,7 +33,7 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 - **Deployment:** Vercel (Serverless Functions + static landing page) triggered by Vercel Cron for the briefing job.
 - **Email:** Resend.
 - **Idempotency:** Upstash Redis / Vercel KV REST API, with fail-closed behavior in production.
-- **External API Consumption:** Consumes a task-management API (currently the legacy Taskflow surface, pending PR 3 migration to the Workflow Blueprint v1 API) via a generated TypeScript client driven by an OpenAPI spec.
+- **External API Consumption:** Consumes a task-management API (currently the legacy Taskflow surface, pending PR 2 (Migration) to the Workflow Blueprint v1 API) via a generated TypeScript client driven by an OpenAPI spec.
 
 ## Verifier Rules (Enforced on every PR)
 
@@ -51,8 +51,13 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 - **Hard-fail** any PR that adds a new email-send code path that bypasses `beginBriefingSend()`.
 
 ### 4. Node Version Pinning
-- **Hard-fail** any PR where `package.json` `engines.node`, `.nvmrc`, and `.github/workflows/ci.yml` `node-version-file` are not perfectly consistent.
+- The project pins Node.js to **major.minor `22.11`** (any patch). This is enforced at three sites, each using the syntax appropriate to its tool:
+  - `package.json` `engines.node`: `22.11.x` (npm/pnpm semver-range form).
+  - `.nvmrc`: `22.11` (nvm form; nvm does not support `.x`).
+  - `.github/workflows/ci.yml`: must use `node-version-file: .nvmrc` (so CI reads the same source of truth as local development).
+- **Hard-fail** any PR that changes the pinned Node major.minor at any of the three sites without updating all three.
 - **Hard-fail** any PR that removes any of those three pin sites.
+- **Hard-fail** any PR that introduces a literal Node version in `ci.yml` (e.g. `node-version: 22.11`) instead of `node-version-file: .nvmrc`.
 
 ### 5. OpenAPI Client Generation
 - **Hard-fail** any PR that manually edits `lib/taskflow/generated/client.ts` (or the future Blueprint equivalent) without updating the source OpenAPI spec (`openapi/*.json`) and running the generation script. The OpenAPI spec is the source of truth for the external contract.
