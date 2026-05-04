@@ -6,7 +6,7 @@ Next.js App Router project for a daily morning email briefing, designed for Verc
 
 - Sends a daily morning briefing email with [Resend](https://resend.com/)
 - Runs from `/api/cron/morning-brief`
-- Pulls task state from Taskflow via `getDailySummary` only
+- Pulls task state from the upstream task-management API (currently exposed under the legacy `Taskflow` naming, pending PR 2 migration to the Workflow Blueprint v1 API) via `getDailySummary` only
 - Covers Personal, Elevated Organics, and Brightline Labs
 - Pulls live research from Google News RSS across AI, Markets, Business, Cannabis, Chicago, Colorado, and one asymmetric-upside area
 - Removes duplicates and low-signal items
@@ -16,8 +16,8 @@ Next.js App Router project for a daily morning email briefing, designed for Verc
 ## Project structure
 
 - `app/api/cron/morning-brief/route.ts`: cron entrypoint and authorization
-- `lib/taskflow/generated/client.ts`: generated Taskflow API client
-- `openapi/taskflow.openapi.json`: source schema for the generated client
+- `lib/taskflow/generated/client.ts`: generated upstream API client (current legacy path; will be renamed in PR 2)
+- `openapi/taskflow.openapi.json`: source schema for the generated client (current legacy path; will be renamed in PR 2)
 - `lib/briefing/pipeline.ts`: data collection, ranking, and digest assembly
 - `lib/briefing/formatter.ts`: HTML and text email rendering
 - `vercel.json`: UTC cron schedule for one delivery per day
@@ -69,7 +69,7 @@ Install dependencies:
 npm install
 ```
 
-Generate the Taskflow client from the OpenAPI schema:
+Generate the upstream API client from the OpenAPI schema:
 
 ```bash
 npm run generate:taskflow
@@ -115,6 +115,10 @@ curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/
 curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/cron/morning-brief?force=1"
 ```
 
+## License
+
+This project is licensed under the PolyForm Noncommercial License 1.0.0. See the [LICENSE](LICENSE) file for details. Commercial use is strictly prohibited without express written permission from Roy McFarland.
+
 ## Deploy to Vercel
 
 1. Import the repo into Vercel.
@@ -124,15 +128,15 @@ curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/
 5. Point `roymcfarland.news` and `www.roymcfarland.news` at the Vercel project.
 6. Deploy. Vercel will pick up `vercel.json` and create the cron job.
 
-## Taskflow client generation
+## Upstream API client generation
 
-The generated client is intentionally scoped to `getDailySummary`, which is the only Taskflow method used by this app.
+The generated client is intentionally scoped to `getDailySummary`, which is the only upstream API method used by this app today.
 
-If the Taskflow schema changes:
+If the upstream schema changes:
 
-1. Update `openapi/taskflow.openapi.json`
-2. Run `npm run generate:taskflow`
-3. Commit the regenerated `lib/taskflow/generated/client.ts`
+1. Update `openapi/taskflow.openapi.json` (path will be renamed in PR 2)
+2. Run `npm run generate:taskflow` (script will be renamed in PR 2)
+3. Commit the regenerated `lib/taskflow/generated/client.ts` (path will be renamed in PR 2)
 
 ## Testing
 
@@ -144,7 +148,7 @@ npm test
 
 ## Production notes
 
-- The route uses `getDailySummary` only and does not rely on any Taskflow dashboard behavior.
+- The route uses `getDailySummary` only and does not rely on any upstream dashboard behavior.
 - Research is gathered live at send time from public RSS search results, then deduped and ranked.
 - If a feed fails, the pipeline continues with the remaining sources.
 - The route returns JSON so Vercel Cron logs stay readable.

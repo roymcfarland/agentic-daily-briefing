@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Install dependencies (clean install)
+        run: npm ci
+      - name: Force-install rolldown Linux binding (npm/cli#4828 workaround)
+        run: npm install --no-save --force @rolldown/binding-linux-x64-gnu
+      - run: npm run test
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Install dependencies (clean install)
+        run: npm ci
+      - name: Force-install rolldown Linux binding (npm/cli#4828 workaround)
+        run: npm install --no-save --force @rolldown/binding-linux-x64-gnu
+      - run: npm run test:smoke

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getEnv, getIdempotencyEnv } from "@/lib/env";
 
@@ -43,7 +43,6 @@ const VALID_ENV: Record<(typeof ENV_KEYS)[number], string> = {
 };
 
 describe("getEnv", () => {
-  const originalNodeEnv = process.env.NODE_ENV;
   const originalValues = new Map<string, string | undefined>();
 
   beforeEach(() => {
@@ -62,7 +61,7 @@ describe("getEnv", () => {
         process.env[key] = original;
       }
     }
-    process.env.NODE_ENV = originalNodeEnv;
+    vi.unstubAllEnvs();
     originalValues.clear();
   });
 
@@ -93,7 +92,7 @@ describe("getEnv", () => {
   });
 
   it("requires https service URLs in production except localhost", () => {
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
     process.env.TASKFLOW_API_BASE_URL = "http://www.workflowblueprint.io";
 
     expect(() => getEnv()).toThrow("TASKFLOW_API_BASE_URL must use https in production.");
