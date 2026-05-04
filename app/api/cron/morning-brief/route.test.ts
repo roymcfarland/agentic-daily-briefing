@@ -24,6 +24,7 @@ const mockedSendBriefingEmail = vi.mocked(sendBriefingEmail);
 const VALID_ENV = {
   BLUEPRINT_API_BASE_URL: "https://www.workflowblueprint.io",
   EXTERNAL_API_KEY: "blueprint-key",
+  BLUEPRINT_TIMEOUT_MS: "12000",
   RESEND_API_KEY: "resend-key",
   BRIEFING_FROM_EMAIL: "briefing@example.com",
   BRIEFING_TO_EMAILS: "roy@example.com",

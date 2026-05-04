@@ -61,7 +61,7 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 - **Hard-fail** any PR that introduces a literal Node version in `ci.yml` (e.g. `node-version: 22.12`) instead of `node-version-file: .nvmrc`.
 
 ### 5. OpenAPI Client Generation
-- **Hard-fail** any PR that manually edits `lib/blueprint/generated/client.ts` without updating the source OpenAPI spec (`openapi/*.json`) and running the generation script. The OpenAPI spec is the source of truth for the external contract.
+- **Hard-fail** any PR that manually edits `lib/blueprint/generated/client.ts` without updating the source OpenAPI spec at `openapi/blueprint.openapi.json` and re-running the generation script. The OpenAPI spec is the source of truth for the external contract.
 
 ### 6. Landing Page Surface Lock
 - **Hard-fail** any PR that adds new pages under `app/` (other than the existing `app/page.tsx`, `app/layout.tsx`, and image generators), new interactive components under `app/components/`, signup forms, analytics scripts, or third-party tracking pixels, without an explicit PROJECT.md update authorizing the change.
