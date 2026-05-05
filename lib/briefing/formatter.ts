@@ -10,47 +10,47 @@ const PALETTE = {
   light: {
     canvas: "#f5efe6",
     surface: "#fffdf9",
-    surfaceElevated: "#ffffff",
-    ink: "#111827",
-    inkMuted: "#4b5563",
-    inkSubtle: "#6b7280",
-    accent: "#9a3412",
-    accentSoft: "#fff7ec",
-    signalBg: "#ecfdf5",
-    signalFg: "#166534",
-    signalBorder: "#bbf7d0",
-    noiseBg: "#f3f4f6",
-    noiseFg: "#374151",
-    noiseBorder: "#e5e7eb",
-    divider: "#eadfce",
-    warningBg: "#fffbeb",
-    warningFg: "#78350f",
-    warningBorder: "#fcd34d",
-    freshnessGreen: "#15803d",
-    freshnessAmber: "#d97706",
-    freshnessGray: "#9ca3af",
+    surfaceElevated: "#faf8f4",
+    ink: "#1c1917",
+    inkMuted: "#57534e",
+    inkSubtle: "#78716c",
+    accent: "#7c331c",
+    accentSoft: "#f6f1ea",
+    signalBg: "#eef4f0",
+    signalFg: "#3f5249",
+    signalBorder: "#c9d9cf",
+    noiseBg: "#f3f1ee",
+    noiseFg: "#57534e",
+    noiseBorder: "#ddd9d4",
+    divider: "#e8dfd2",
+    warningBg: "#faf6ee",
+    warningFg: "#624c34",
+    warningBorder: "#e8d4b8",
+    freshnessGreen: "#5a8069",
+    freshnessAmber: "#a67c52",
+    freshnessGray: "#a8a29e",
   },
   dark: {
     canvas: "#1c1917",
     surface: "#292524",
-    surfaceElevated: "#3f3a36",
+    surfaceElevated: "#34302c",
     ink: "#f5f5f4",
     inkMuted: "#a8a29e",
-    inkSubtle: "#78716c",
-    accent: "#fb923c",
-    accentSoft: "#431407",
-    signalBg: "#14532d",
-    signalFg: "#bbf7d0",
-    signalBorder: "#166534",
-    noiseBg: "#374151",
-    noiseFg: "#e5e7eb",
-    noiseBorder: "#4b5563",
+    inkSubtle: "#948f89",
+    accent: "#c4956c",
+    accentSoft: "#3d3029",
+    signalBg: "#2a3530",
+    signalFg: "#b8cbc0",
+    signalBorder: "#3d4f44",
+    noiseBg: "#363330",
+    noiseFg: "#d6d3cd",
+    noiseBorder: "#57534e",
     divider: "#44403c",
-    warningBg: "#422006",
-    warningFg: "#fcd34d",
-    warningBorder: "#b45309",
-    freshnessGreen: "#22c55e",
-    freshnessAmber: "#fbbf24",
+    warningBg: "#3a3128",
+    warningFg: "#d6c4a8",
+    warningBorder: "#6b5344",
+    freshnessGreen: "#7daa8f",
+    freshnessAmber: "#c9a87a",
     freshnessGray: "#78716c",
   },
 } as const;
@@ -204,6 +204,121 @@ function sumOpenItems(summaries: TaskSummary[]): number {
   return summaries.reduce((acc, s) => acc + s.openItems, 0);
 }
 
+function countTaskNodes(tasks: TaskNode[]): number {
+  let total = 0;
+  for (const task of tasks) {
+    total += 1 + countTaskNodes(task.subtasks);
+  }
+  return total;
+}
+
+interface DigestDerived {
+  signalCount: number;
+  noiseCount: number;
+  storyCount: number;
+  beatCount: number;
+  maxScore: number;
+  avgScore: number;
+  fresh12Count: number;
+  unpublishedCount: number;
+  blueprintTaskNodes: number;
+  blueprintAreas: number;
+  pulseSentence: string;
+}
+
+function buildDigestDerived(digest: BriefingDigest): DigestDerived {
+  const stories = digest.stories;
+  const signalCount = stories.filter((s) => s.signalOrNoise === "Signal").length;
+  const noiseCount = stories.filter((s) => s.signalOrNoise === "Noise").length;
+  const storyCount = stories.length;
+  const beatCount = new Set(stories.map((s) => s.topic)).size;
+  const scores = stories.map((s) => s.score);
+  const maxScore = scores.length ? Math.max(...scores) : 0;
+  const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+
+  const now = Date.now();
+  let fresh12Count = 0;
+  let unpublishedCount = 0;
+  for (const story of stories) {
+    if (!story.publishedAt) {
+      unpublishedCount += 1;
+      continue;
+    }
+    const t = Date.parse(story.publishedAt);
+    if (Number.isNaN(t)) {
+      unpublishedCount += 1;
+      continue;
+    }
+    if ((now - t) / (1000 * 60 * 60) <= 12) {
+      fresh12Count += 1;
+    }
+  }
+
+  let blueprintTaskNodes = 0;
+  for (const summary of digest.taskSummaries) {
+    blueprintTaskNodes += countTaskNodes(summary.tasks);
+  }
+
+  let pulseSentence: string;
+  if (!storyCount) {
+    pulseSentence =
+      "No ranked stories cleared the bar today — lean on Blueprint and the Decision Lens to orient the morning.";
+  } else if (noiseCount === 0 && signalCount > 0) {
+    pulseSentence =
+      "Everything here reads as Signal — treat each item as decision-bearing until something proves otherwise.";
+  } else if (signalCount > noiseCount) {
+    pulseSentence =
+      "Skews Signal-heavy — anchor on the lead, then skim Noise items when you want peripheral context.";
+  } else if (noiseCount > signalCount) {
+    pulseSentence =
+      "Skews Noise-heavy — scan headlines first; depth-read where relevance score or freshness pulls you in.";
+  } else {
+    pulseSentence =
+      "Balanced Signal and Noise — read for calibration and texture rather than urgency.";
+  }
+
+  return {
+    signalCount,
+    noiseCount,
+    storyCount,
+    beatCount,
+    maxScore,
+    avgScore,
+    fresh12Count,
+    unpublishedCount,
+    blueprintTaskNodes,
+    blueprintAreas: digest.taskSummaries.length,
+    pulseSentence,
+  };
+}
+
+function renderDeskFactsLinePlain(d: DigestDerived): string {
+  const parts: string[] = [];
+  if (d.storyCount > 0) {
+    parts.push(`${d.beatCount} beat${d.beatCount === 1 ? "" : "s"} represented`);
+    parts.push(`peak relevance ${d.maxScore}`);
+    parts.push(`avg ${d.avgScore}`);
+    parts.push(`${d.fresh12Count} fresh (<12h)`);
+    if (d.unpublishedCount > 0) {
+      parts.push(`${d.unpublishedCount} no timestamp`);
+    }
+  }
+  if (d.blueprintAreas > 0) {
+    parts.push(`${d.blueprintTaskNodes} blueprint task${d.blueprintTaskNodes === 1 ? "" : "s"} tracked`);
+  }
+  return parts.join(" · ");
+}
+
+function renderDeskReading(digest: BriefingDigest): string {
+  const d = buildDigestDerived(digest);
+
+  return `
+        <aside data-role="canvas" style="margin:0 0 20px;padding:16px 18px;border:1px solid ${L.divider};border-radius:14px;background-color:${L.canvas};">
+          <p style="margin:0 0 8px;"><span data-role="accent" style="display:inline-block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:${L.accent};font-weight:600;">Desk reading</span></p>
+          <p data-role="ink-muted" style="margin:0;font-size:15px;line-height:1.55;color:${L.inkMuted};font-style:italic;">${escapeHtml(d.pulseSentence)}</p>
+        </aside>`;
+}
+
 // ============================================================
 // HTML section renderers
 // ============================================================
@@ -218,6 +333,7 @@ function renderHeader(digest: BriefingDigest): string {
 }
 
 function renderScoreboard(digest: BriefingDigest): string {
+  const derived = buildDigestDerived(digest);
   const storyCount = digest.stories.length;
   const signalCount = digest.stories.filter((s) => s.signalOrNoise === "Signal").length;
   const noiseCount = digest.stories.filter((s) => s.signalOrNoise === "Noise").length;
@@ -245,11 +361,22 @@ function renderScoreboard(digest: BriefingDigest): string {
           : "";
       return `
             <td style="padding:14px 12px;text-align:center;vertical-align:top;">
-              <div data-role="ink" style="margin:0 0 4px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:30px;line-height:1.1;font-weight:600;color:${L.ink};">${escapeHtml(tile.value)}</div>
+              <div data-role="ink" style="margin:0 0 4px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:26px;line-height:1.1;font-weight:600;color:${L.ink};">${escapeHtml(tile.value)}</div>
               <div data-role="ink-muted" style="margin:0;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};">${escapeHtml(tile.label)}</div>
             </td>${divider}`;
     })
     .join("");
+
+  const metricsPlain = renderDeskFactsLinePlain(derived);
+  const metricsRow =
+    metricsPlain !== ""
+      ? `
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;width:100%;border-top:1px solid ${L.divider};">
+            <tr>
+              <td data-role="ink-muted" style="padding:12px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:12px;line-height:1.65;color:${L.inkMuted};">${escapeHtml(metricsPlain)}</td>
+            </tr>
+          </table>`
+      : "";
 
   return `
         <div data-role="surface" style="margin:0 0 20px;padding:0;border:1px solid ${L.divider};border-radius:14px;background-color:${L.surfaceElevated};overflow:hidden;">
@@ -258,6 +385,7 @@ function renderScoreboard(digest: BriefingDigest): string {
               ${cells}
             </tr>
           </table>
+          ${metricsRow}
         </div>`;
 }
 
@@ -279,7 +407,7 @@ function renderDecisionLens(digest: BriefingDigest): string {
             <tr>
               <td style="width:140px;padding:12px 14px 12px 0;vertical-align:top;">
                 <div data-role="accent" style="display:inline-block;padding:6px 10px;border:1px solid ${L.accent};border-radius:999px;background-color:${L.accentSoft};color:${L.accent};">
-                  <strong style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;">${escapeHtml(row.label)}</strong>
+                  <strong style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;">${escapeHtml(row.label)}</strong>
                 </div>
               </td>
               <td data-role="ink" style="padding:12px 0;vertical-align:top;font-size:16px;line-height:1.5;color:${L.ink};">${escapeHtml(row.value)}</td>
@@ -289,7 +417,7 @@ function renderDecisionLens(digest: BriefingDigest): string {
 
   return `
         <section data-role="surface" style="margin:0 0 24px;padding:28px 22px 22px;border:1px solid ${L.divider};border-left:4px solid ${L.accent};background-color:${L.accentSoft};border-radius:14px;">
-          <p style="margin:0 0 18px;"><span data-role="accent" style="display:inline-block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:${L.accent};font-weight:700;">Decision Lens</span></p>
+          <p style="margin:0 0 18px;"><span data-role="accent" style="display:inline-block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:${L.accent};font-weight:600;">Decision Lens</span></p>
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;width:100%;">
             ${items}
           </table>
@@ -307,7 +435,7 @@ function renderWarningsBanner(warnings: string[]): string {
 
   return `
         <section data-role="warning" style="margin:0 0 20px;padding:14px 16px;border:1px solid ${L.warningBorder};background-color:${L.warningBg};border-radius:12px;color:${L.warningFg};">
-          <p style="margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${L.warningFg};font-weight:700;">Briefing notes</p>
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${L.warningFg};font-weight:600;">Briefing notes</p>
           <ul style="margin:0;padding-left:18px;color:${L.warningFg};">${items}</ul>
         </section>`;
 }
@@ -378,7 +506,7 @@ function renderStory(story: RankedStory, options: { isLead: boolean }): string {
   const fresh = freshnessDotColor(story.publishedAt);
 
   const leadChip = options.isLead
-    ? `<div data-role="accent" style="margin:0 0 10px;display:inline-block;padding:6px 12px;border-radius:999px;background-color:${L.accentSoft};border:1px solid ${L.accent};color:${L.accent};font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;">Lead Story</div>`
+    ? `<div data-role="accent" style="margin:0 0 10px;display:inline-block;padding:6px 12px;border-radius:999px;background-color:${L.accentSoft};border:1px solid ${L.accent};color:${L.accent};font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;">Lead Story</div>`
     : "";
 
   const storyBodyBlocks = `
@@ -421,8 +549,13 @@ function renderStory(story: RankedStory, options: { isLead: boolean }): string {
             <p data-role="ink-muted" style="margin:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:${L.inkMuted};">${escapeHtml(getTopicLabel(story.topic))} · ${escapeHtml(sourceLabel)}</p>
           </td>
           <td style="vertical-align:middle;text-align:right;white-space:nowrap;">
-            <span data-role="${chipRole}" style="display:inline-block;margin-right:8px;padding:5px 11px;border:1px solid ${chipBorder};border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.04em;background-color:${chipBg};color:${chipFg};">${escapeHtml(story.signalOrNoise)}</span>
+            <span data-role="${chipRole}" style="display:inline-block;margin-right:8px;padding:4px 10px;border:1px solid ${chipBorder};border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.05em;background-color:${chipBg};color:${chipFg};">${escapeHtml(story.signalOrNoise)}</span>
             <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background-color:${fresh};vertical-align:middle;"></span>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style="padding:10px 0 0;">
+            <p style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:11px;line-height:1.45;color:${L.inkMuted};">Relevance score ${escapeHtml(String(story.score))}${story.publishedAt ? "" : " · timestamp pending"}</p>
           </td>
         </tr>
       </table>
@@ -494,6 +627,7 @@ export function renderBriefingEmail(digest: BriefingDigest): string {
         ${renderHeader(digest)}
         ${renderScoreboard(digest)}
         ${renderWarningsBanner(digest.warnings)}
+        ${renderDeskReading(digest)}
         ${renderDecisionLens(digest)}
         ${renderTaskSection(digest.taskSummaries)}
         ${renderStoriesSection(digest.stories)}
@@ -514,6 +648,14 @@ export function renderBriefingText(digest: BriefingDigest): string {
     for (const warning of digest.warnings) {
       lines.push(`- ${warning}`);
     }
+  }
+
+  const derivedBlock = buildDigestDerived(digest);
+  lines.push("", "Desk reading:");
+  lines.push(derivedBlock.pulseSentence);
+  const metricsPlain = renderDeskFactsLinePlain(derivedBlock);
+  if (metricsPlain) {
+    lines.push(metricsPlain);
   }
 
   lines.push("", "Decision Lens");
@@ -546,6 +688,7 @@ export function renderBriefingText(digest: BriefingDigest): string {
       lines.push(
         `${leadPrefix}[${getTopicLabel(story.topic)}] ${getDisplayTitle(story)} (${formatSourceLabel(story.source)})`,
       );
+      lines.push(`Relevance score: ${story.score}`);
       lines.push(`What happened: ${getWhatHappened(story)}`);
       lines.push(`Why it matters: ${getWhyItMatters(story)}`);
       lines.push(`Signal: ${story.signalOrNoise}`);

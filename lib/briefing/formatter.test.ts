@@ -94,6 +94,10 @@ describe("renderBriefingEmail", () => {
     expect(text).toContain("- Confirm insurance call (in-progress)");
     expect(text).toContain("  - Upload supporting paperwork (on-deck)");
     expect(text).toContain("Signal: Noise");
+    expect(text).toContain("Desk reading");
+    expect(text).toContain("Balanced Signal and Noise");
+    expect(text).toContain("peak relevance 42");
+    expect(text).toContain("Relevance score: 42");
     expect(text).toContain("One possible contrarian take:");
   });
 
@@ -254,11 +258,14 @@ describe("renderBriefingEmail", () => {
     expect(html).toContain("prefers-color-scheme: dark");
     expect(html).toContain('data-role="canvas"');
     expect(html).toContain('data-role="surface"');
-    // Scoreboard shows the digest story total in the lead monospace tile (30px numerals).
-    expect(html).toMatch(/font-size:30px[^>]*>\s*2\s*</);
+    // Scoreboard shows the digest story total in the lead monospace tile (26px numerals).
+    expect(html).toMatch(/font-size:26px[^>]*>\s*2\s*</);
     expect(html).toContain("Stories");
     expect(html).toContain("Task areas");
     expect(html).toContain("Open items");
+    expect(html).toContain("Desk reading");
+    expect(html).toContain("peak relevance 42");
+    expect(html).toContain("Balanced Signal and Noise");
   });
 
   it("omits Task areas and Open items scoreboard tiles when task summaries are empty", () => {
@@ -286,6 +293,6 @@ describe("renderBriefingEmail", () => {
     });
     vi.useRealTimers();
 
-    expect(html).toContain("background-color:#15803d");
+    expect(html).toContain("background-color:#5a8069");
   });
 });
