@@ -8,6 +8,18 @@ type EnvKey =
 
 const MIN_CRON_SECRET_LENGTH = 16;
 const EMAIL_PATTERN = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+const BLUEPRINT_API_BASE_URL_KEYS = [
+  "BLUEPRINT_API_BASE_URL",
+  "TASKFLOW_API_BASE_URL",
+] as const;
+const BLUEPRINT_API_KEY_KEYS = [
+  "EXTERNAL_API_KEY",
+  "READ_ONLY_API_KEY",
+] as const;
+const BLUEPRINT_TIMEOUT_MS_KEYS = [
+  "BLUEPRINT_TIMEOUT_MS",
+  "TASKFLOW_TIMEOUT_MS",
+] as const;
 const IDEMPOTENCY_REDIS_URL_KEYS = [
   "BRIEFING_IDEMPOTENCY_REDIS_REST_URL",
   "KV_REST_API_URL",
@@ -35,6 +47,26 @@ function getRequiredEnv(key: EnvKey): string {
 
 function getFirstOptionalEnv(keys: readonly string[]): string | undefined {
   return keys.map(getOptionalEnv).find(Boolean);
+}
+
+function getFirstConfiguredEnv(keys: readonly string[]): { key: string; value: string } | undefined {
+  for (const key of keys) {
+    const value = getOptionalEnv(key);
+    if (value) {
+      return { key, value };
+    }
+  }
+
+  return undefined;
+}
+
+function getRequiredFirstEnv(keys: readonly string[]): { key: string; value: string } {
+  const match = getFirstConfiguredEnv(keys);
+  if (!match) {
+    throw new Error(`Missing required environment variable: ${keys.join(" or ")}`);
+  }
+
+  return match;
 }
 
 function parseBoundedInteger(value: string | undefined, fallback: number, min: number, max: number): number {
@@ -146,15 +178,17 @@ export function getIdempotencyEnv() {
 }
 
 export function getEnv() {
+  const blueprintApiBase = getRequiredFirstEnv(BLUEPRINT_API_BASE_URL_KEYS);
+  const blueprintTimeout = getFirstConfiguredEnv(BLUEPRINT_TIMEOUT_MS_KEYS);
   const blueprintApiBaseUrl = assertHttpUrl(
-    "BLUEPRINT_API_BASE_URL",
-    getRequiredEnv("BLUEPRINT_API_BASE_URL"),
+    blueprintApiBase.key,
+    blueprintApiBase.value,
   );
 
   return {
     blueprintApiBaseUrl,
-    blueprintApiKey: getRequiredEnv("EXTERNAL_API_KEY"),
-    blueprintTimeoutMs: parseBoundedInteger(process.env.BLUEPRINT_TIMEOUT_MS, 12000, 1000, 30000),
+    blueprintApiKey: getRequiredFirstEnv(BLUEPRINT_API_KEY_KEYS).value,
+    blueprintTimeoutMs: parseBoundedInteger(blueprintTimeout?.value, 12000, 1000, 30000),
     resendApiKey: getRequiredEnv("RESEND_API_KEY"),
     briefingFromEmail: assertEmail("BRIEFING_FROM_EMAIL", getRequiredEnv("BRIEFING_FROM_EMAIL")),
     briefingToEmails: parseEmailList(getRequiredEnv("BRIEFING_TO_EMAILS")),
