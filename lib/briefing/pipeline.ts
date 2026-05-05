@@ -23,7 +23,6 @@ const BRIEFING_TOPIC_ORDER: ResearchTopic[] = [
   "markets",
   "business",
   "cpg-startups",
-  "cannabis",
   "chicago",
   "colorado",
   "asymmetric-upside",

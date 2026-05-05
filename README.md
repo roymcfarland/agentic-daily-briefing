@@ -2,13 +2,21 @@
 
 Next.js App Router project for a daily morning email briefing, designed for Vercel deployment and Vercel Cron.
 
+## About this repo
+
+This is the source of a personal production system I use every morning. It runs on Vercel Cron, fetches my open tasks from a separate internal API I built ([Workflow Blueprint](https://www.workflowblueprint.io)), pulls live news from a curated set of Google News RSS feeds, ranks everything for decision relevance, and emails me one digest at 6:00 AM Mountain. It is intentionally hardcoded for one reader and one set of beats; it is not a multi-user product.
+
+The public landing page lives at [roymcfarland.news](https://www.roymcfarland.news).
+
+If you want to understand the architectural reasoning, the constraints, and the rules a code-review agent enforces on every PR, read [`PROJECT.md`](./PROJECT.md) before the code itself. It is the authoritative source of truth for the project and gives more context than the code does on its own.
+
 ## What it does
 
 - Sends a daily morning briefing email with [Resend](https://resend.com/)
 - Runs from `/api/cron/morning-brief`
 - Pulls task state from the Workflow Blueprint v1 API via `getDailySummary` only
-- Covers Personal, Elevated Organics, and Brightline Labs
-- Pulls live research from Google News RSS across AI, Markets, Business, Cannabis, Chicago, Colorado, and one asymmetric-upside area
+- Covers Personal and Brightline Labs as the two task areas
+- Pulls live research from Google News RSS across AI, Markets, Business, CPG & Startups, Chicago, Colorado, and one asymmetric-upside area
 - Removes duplicates and low-signal items
 - Ranks for implication and decision relevance
 - Ends with one thing to watch, one thing to ignore, and one contrarian take
@@ -114,6 +122,16 @@ curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/cron/morning-brief?force=1"
 ```
+
+## What I'd do differently if I started over
+
+A few things I would change with the benefit of hindsight, kept here for honesty rather than polish:
+
+1. **The ranker is mostly hand-tuned regex and source weights.** It works well enough that I read the brief every morning, but it is fragile to topic drift. A small evaluation harness — a few dozen labeled stories per beat, scored against the current ranker — would make changes safer and let me swap the heuristic layer for a small LLM judge without guessing whether quality regressed.
+2. **Idempotency lives in two places.** The route uses Redis/Upstash to lock the day, and Resend's own idempotency key is passed as a backstop. That belt-and-suspenders design has saved me from double sends, but it also means the truth about "did today's brief send" is split across two systems. A single durable record with a clear state machine would be cleaner.
+3. **No structured observability.** Failures show up in Vercel function logs and (sometimes) in the email itself as a warning banner. For a tool I depend on daily, I should have a tiny `/api/health` summary plus a once-a-week digest of partial failures, rather than relying on me noticing a missing brief.
+4. **The landing page and the cron job share a Next.js app for convenience.** That is fine today, but if the briefing logic ever needed a heavier runtime (e.g., a real LLM judge), the right move would be to split the cron into its own service so the marketing site stays static and cheap.
+5. **`PROJECT.md` was added late.** The verifier rules and non-goals would have prevented at least three of the dumber refactors I made early on. If I were starting again, I would write `PROJECT.md` before the first commit, not after the tenth.
 
 ## License
 

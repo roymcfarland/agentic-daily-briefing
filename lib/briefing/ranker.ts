@@ -15,11 +15,6 @@ const SOURCE_BONUS: Record<string, number> = {
   NVIDIA: 12,
   OpenAI: 12,
   Anthropic: 12,
-  "MJBizDaily": 16,
-  "Marijuana Moment": 14,
-  "Green Market Report": 13,
-  "Cannabis Business Times": 14,
-  "New Cannabis Ventures": 12,
   "FoodNavigator-USA": 15,
   NutraIngredients: 15,
   BevNET: 14,
@@ -41,7 +36,6 @@ const TOPIC_BONUS: Record<ResearchTopic, number> = {
   markets: 14,
   business: 10,
   "cpg-startups": 17,
-  cannabis: 17,
   chicago: 12,
   colorado: 12,
   "asymmetric-upside": 14,
@@ -83,7 +77,6 @@ const REGULATORY_PATTERNS = [
 const LOCAL_PATTERNS: Partial<Record<ResearchTopic, RegExp[]>> = {
   chicago: [/\b(chicago|cook county|illinois|cta|downtown)\b/i],
   colorado: [/\b(colorado|denver|boulder)\b/i],
-  cannabis: [/\b(cannabis|hemp|thc|dispensary|operator)\b/i],
   ai: [/\b(ai|model|llm|agent|mcp|gpu|chip|semiconductor|inference|training|deployment)\b/i],
   "cpg-startups": [/\b(cpg|consumer packaged goods|grocery|retail|beverage|snack|shelf|nutrition|wellness|supplement|biotech)\b/i],
   "asymmetric-upside": [/\b(robotics|nuclear|grid|storage|geothermal|humanoid)\b/i],
@@ -98,10 +91,6 @@ const TOPIC_KEYWORD_PATTERNS: Partial<Record<ResearchTopic, RegExp[]>> = {
   "cpg-startups": [
     /\b(nutrition|wellness|biotech|supplement|functional beverage|protein|consumer health)\b/i,
     /\b(startup|founder|funding|distribution|retail launch|clinical)\b/i,
-  ],
-  cannabis: [
-    /\b(cannabis|hemp|dispensary|operator|rescheduling|licensing|cultivation)\b/i,
-    /\b(retail|pricing|wholesale|compliance|enforcement)\b/i,
   ],
 };
 
@@ -288,10 +277,6 @@ function inferWhyItMatters(story: StoryCandidate): string {
 
   if (story.topic === "markets") {
     return `This may change near-term capital costs, risk appetite, or pricing assumptions. ${summary}`;
-  }
-
-  if (story.topic === "cannabis") {
-    return `This can affect operator margins, compliance exposure, and channel strategy. ${summary}`;
   }
 
   if (story.topic === "ai") {

@@ -22,7 +22,7 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 ## Non-goals
 
 1. **Not a multi-user SaaS product** — The app is hardcoded to send to a specific list of recipients (`BRIEFING_TO_EMAILS`). There is no user management, no database of preferences, and no authenticated UI.
-2. **Not a generic newsletter tool** — The research topics, ranking logic, and email formatting are highly specific to the founder's operational needs (Personal, Elevated Organics, Brightline Labs, etc.).
+2. **Not a generic newsletter tool** — The research topics, ranking logic, and email formatting are highly specific to the founder's operational needs (Personal and Brightline Labs task areas, plus a fixed set of research beats).
 3. **Not a stateful application** — The app has no primary database. It uses Vercel KV / Upstash Redis exclusively for idempotency locks to prevent double-sends.
 4. **Not an expanded marketing site** — The public landing page surface is deliberately minimal. New pages, interactive features, blog posts, signup forms, or analytics integrations are forbidden without an explicit PROJECT.md update authorizing them.
 

@@ -1,7 +1,6 @@
 export type CoverageArea =
   | "personal"
-  | "brightline-labs"
-  | "elevated-organics";
+  | "brightline-labs";
 
 export interface TaskNode {
   id: number | string;
@@ -15,7 +14,6 @@ export type ResearchTopic =
   | "markets"
   | "business"
   | "cpg-startups"
-  | "cannabis"
   | "chicago"
   | "colorado"
   | "asymmetric-upside"

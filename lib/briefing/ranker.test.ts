@@ -54,10 +54,10 @@ describe("rankStories", () => {
 
   it("filters newsletter-style stories before ranking", () => {
     const story: StoryCandidate = {
-      topic: "cannabis",
-      title: "Newsletter: cannabis policy headlines for April 4",
+      topic: "cpg-startups",
+      title: "Newsletter: CPG funding headlines for April 4",
       summary: "A roundup of things to know this week.",
-      source: "Marijuana Moment",
+      source: "BevNET",
       url: "https://example.com/newsletter",
       publishedAt: "2026-04-04T10:00:00Z",
     };

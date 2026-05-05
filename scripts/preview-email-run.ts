@@ -49,18 +49,18 @@ const fixture: BriefingDigest = {
       ],
     },
     {
-      area: "elevated-organics",
-      headline: "Retail expansion: shelf resets and Denver pilot",
+      area: "brightline-labs",
+      headline: "Beta program: triage incoming bug reports and sync release notes",
       openItems: 5,
       tasks: [
         {
           id: 10,
-          title: "Ship week-one display units",
+          title: "Cut beta build for testers",
           status: "in-progress",
           subtasks: [
             {
               id: 11,
-              title: "Confirm back-stock at DC-2",
+              title: "Confirm crash report ingestion is healthy",
               status: "on-deck",
               subtasks: [],
             },
@@ -125,16 +125,16 @@ const fixture: BriefingDigest = {
       publishedAt: hoursAgo(2),
     },
     {
-      topic: "cannabis",
-      title: "Colorado wholesale spot steadies after tax holiday",
-      summary: "Inventory clears at the front range without discounting flower.",
-      source: "mjbizdaily.com",
-      url: "https://example.com/cannabis",
-      dedupeKey: "colorado wholesale spot steadies",
+      topic: "asymmetric-upside",
+      title: "Small-modular reactor pilot clears another permitting hurdle",
+      summary: "A regional utility moves to the construction phase on schedule.",
+      source: "apnews.com",
+      url: "https://example.com/smr",
+      dedupeKey: "smr pilot clears permitting hurdle",
       score: 29,
-      whyItMatters: "Stable wholesale underwrites your next procurement print.",
+      whyItMatters: "A working SMR template would reset baseload economics for data-center-heavy regions.",
       signalOrNoise: "Signal",
-      secondOrderEffect: "Retailers can hold promos flat for another cycle.",
+      secondOrderEffect: "Cheaper, denser baseload changes where the next AI buildout actually lands.",
     },
   ],
 };

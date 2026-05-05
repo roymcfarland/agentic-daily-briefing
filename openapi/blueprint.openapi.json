@@ -75,9 +75,6 @@
                             "personal": {
                               "type": "integer"
                             },
-                            "elevatedOrganics": {
-                              "type": "integer"
-                            },
                             "brightlineLabs": {
                               "type": "integer"
                             }
@@ -153,7 +150,6 @@
             "type": "string",
             "enum": [
               "personal",
-              "elevated-organics",
               "brightline-labs"
             ]
           },

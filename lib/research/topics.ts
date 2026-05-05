@@ -18,11 +18,6 @@ const CPG_STARTUP_QUERIES = [
   "consumer wellness biotech startup clinical nutrition site:fiercebiotech.com OR site:statnews.com OR site:nutraingredients.com",
 ];
 
-const CANNABIS_QUERIES = [
-  "cannabis regulation operators pricing dispensaries site:mjbizdaily.com OR site:greenmarketreport.com OR site:marijuanamoment.net",
-  "cannabis rescheduling hemp retail enforcement site:cannabisbusinesstimes.com OR site:newcannabisventures.com OR site:mjbizdaily.com",
-];
-
 export const TOPIC_CONFIG: TopicConfig[] = [
   {
     topic: "ai",
@@ -51,11 +46,6 @@ export const TOPIC_CONFIG: TopicConfig[] = [
     queries: CPG_STARTUP_QUERIES,
   },
   {
-    topic: "cannabis",
-    label: "Cannabis",
-    queries: CANNABIS_QUERIES,
-  },
-  {
     topic: "chicago",
     label: "Chicago",
     queries: [
@@ -67,7 +57,7 @@ export const TOPIC_CONFIG: TopicConfig[] = [
     topic: "colorado",
     label: "Colorado",
     queries: [
-      "Colorado business policy energy startups cannabis",
+      "Colorado business policy energy startups",
       "Denver Boulder Colorado economy regulation",
     ],
   },

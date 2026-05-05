@@ -5,7 +5,6 @@ import { BlueprintClient, type Task } from "@/lib/blueprint/generated/client";
 const AREAS: CoverageArea[] = [
   "personal",
   "brightline-labs",
-  "elevated-organics",
 ];
 
 const EXCLUDED_TASK_TITLES = new Set([
@@ -17,7 +16,6 @@ const EXCLUDED_TASK_TITLES = new Set([
 function normalizeCategory(category?: string): CoverageArea | null {
   if (
     category === "personal" ||
-    category === "elevated-organics" ||
     category === "brightline-labs"
   ) {
     return category;
@@ -47,7 +45,6 @@ function sortTasks(tasks: Task[]): Task[] {
 function byArea(tasks: Task[] | undefined): Record<CoverageArea, Task[]> {
   const grouped: Record<CoverageArea, Task[]> = {
     personal: [],
-    "elevated-organics": [],
     "brightline-labs": [],
   };
 
@@ -117,12 +114,7 @@ function buildTaskTree(tasks: Task[]): TaskNode[] {
 }
 
 function createHeadline(area: CoverageArea, openItems: number, parentItems: number): string {
-  const label =
-    area === "personal"
-      ? "Personal"
-      : area === "brightline-labs"
-        ? "Brightline Labs"
-        : "Elevated Organics";
+  const label = area === "personal" ? "Personal" : "Brightline Labs";
 
   return `${label}: ${openItems} active tasks across ${parentItems} parent items`;
 }

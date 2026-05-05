@@ -61,7 +61,7 @@ const topics: Topic[] = [
     variant: "standard",
   },
   {
-    id: "cannabis",
+    id: "broncos",
     num: "05",
     title: "Denver Broncos",
     blurb:

@@ -6,7 +6,7 @@ export type Task = {
   title?: string;
   description?: string | null;
   status?: "ice-box" | "on-deck" | "in-progress" | "done" | "archived";
-  category?: "personal" | "elevated-organics" | "brightline-labs";
+  category?: "personal" | "brightline-labs";
   parentId?: number | null;
   sortOrder?: number;
   createdAt?: string;
@@ -27,7 +27,6 @@ export type DailySummaryResponse = {
     };
     byCategory?: {
       personal?: number;
-      elevatedOrganics?: number;
       brightlineLabs?: number;
     };
   };
@@ -71,9 +70,8 @@ function isTaskStatus(value: unknown): value is Task["status"] {
 
 function isTaskCategory(value: unknown): value is Task["category"] {
   return (
-    value === "personal" ||
-    value === "elevated-organics" ||
-    value === "brightline-labs"
+    value === "personal"
+    || value === "brightline-labs"
   );
 }
 
