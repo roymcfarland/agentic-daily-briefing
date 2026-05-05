@@ -1,4 +1,4 @@
-import type { BriefingDigest, TaskNode } from "@/lib/briefing/types";
+import type { BriefingDigest, RankedStory, TaskNode } from "@/lib/briefing/types";
 
 export function countTaskNodes(tasks: TaskNode[]): number {
   let total = 0;
@@ -6,6 +6,11 @@ export function countTaskNodes(tasks: TaskNode[]): number {
     total += 1 + countTaskNodes(task.subtasks);
   }
   return total;
+}
+
+export interface TopStoryPointer {
+  story: RankedStory;
+  framing: string;
 }
 
 export interface DigestDerived {
@@ -20,6 +25,7 @@ export interface DigestDerived {
   blueprintTaskNodes: number;
   blueprintAreas: number;
   pulseSentence: string;
+  topStoryPointer: TopStoryPointer | null;
 }
 
 export function buildDigestDerived(digest: BriefingDigest): DigestDerived {
@@ -73,6 +79,24 @@ export function buildDigestDerived(digest: BriefingDigest): DigestDerived {
       "Balanced Signal and Noise — read for calibration and texture rather than urgency.";
   }
 
+  // Do NOT assume digest.stories is score-sorted. selectStoriesForBriefing
+  // (lib/briefing/pipeline.ts:119) produces topic-balanced round-robin output,
+  // not score-sorted output. Compute the highest-scored Signal explicitly,
+  // falling back to the highest-scored story overall when no Signal exists.
+  // We sort a copy because digest.stories is shared with the HTML/text
+  // renderers and must not be reordered.
+  let topStoryPointer: TopStoryPointer | null = null;
+  if (storyCount > 0) {
+    const sortedByScoreDesc = [...stories].sort((a, b) => b.score - a.score);
+    const chosen =
+      sortedByScoreDesc.find((s) => s.signalOrNoise === "Signal") ??
+      sortedByScoreDesc[0];
+    topStoryPointer = {
+      story: chosen,
+      framing: chosen.secondOrderEffect,
+    };
+  }
+
   return {
     signalCount,
     noiseCount,
@@ -85,6 +109,7 @@ export function buildDigestDerived(digest: BriefingDigest): DigestDerived {
     blueprintTaskNodes,
     blueprintAreas: digest.taskSummaries.length,
     pulseSentence,
+    topStoryPointer,
   };
 }
 

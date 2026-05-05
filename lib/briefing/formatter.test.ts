@@ -78,9 +78,12 @@ describe("renderBriefingEmail", () => {
     expect(html).not.toContain("Denver Broncos adjust offseason plan - ap.com");
     expect(html).toContain("Denver Broncos");
     expect(html).toContain(">Signal<");
-    expect(html).toContain("One thing to watch:");
-    expect(html).toContain("One thing to ignore:");
-    expect(html).toContain("One possible contrarian take:");
+    expect(html).toContain(">One thing to watch<");
+    expect(html).toContain(">One thing to ignore<");
+    expect(html).toContain(">One possible contrarian take<");
+    expect(html).not.toContain(">One thing to watch:<");
+    expect(html).not.toContain(">One thing to ignore:<");
+    expect(html).not.toContain(">One possible contrarian take:<");
   });
 
   it("renders a matching plain-text version", () => {
@@ -94,8 +97,7 @@ describe("renderBriefingEmail", () => {
     expect(text).toContain("- Confirm insurance call (in-progress)");
     expect(text).toContain("  - Upload supporting paperwork (on-deck)");
     expect(text).toContain("Signal: Noise");
-    expect(text).toContain("Desk reading");
-    expect(text).toContain("Balanced Signal and Noise");
+    expect(text).toContain("If you only read one thing:");
     expect(text).toContain("peak relevance 42");
     expect(text).toContain("Relevance score: 42");
     expect(text).toContain("One possible contrarian take:");
@@ -180,9 +182,15 @@ describe("renderBriefingEmail", () => {
     const matches = html.match(/Lead Story/g) ?? [];
 
     expect(matches.length).toBe(1);
-    const leadIndex = html.indexOf("Lead Story");
-    const firstStoryIndex = html.indexOf("Model vendors cut inference costs");
-    const secondStoryIndex = html.indexOf("Denver Broncos");
+    // Search within the Briefing Feed section so the early "If you only read
+    // one thing" pointer (which echoes the lead title) doesn't trip the order assertion.
+    const feedIndex = html.indexOf("Briefing Feed");
+    expect(feedIndex).toBeGreaterThan(-1);
+    const feedHtml = html.slice(feedIndex);
+    const leadIndex = feedHtml.indexOf("Lead Story");
+    const firstStoryIndex = feedHtml.indexOf("Model vendors cut inference costs");
+    const secondStoryIndex = feedHtml.indexOf("Denver Broncos");
+    expect(leadIndex).toBeGreaterThan(-1);
     expect(leadIndex).toBeLessThan(firstStoryIndex);
     expect(leadIndex).toBeLessThan(secondStoryIndex);
   });
@@ -258,14 +266,13 @@ describe("renderBriefingEmail", () => {
     expect(html).toContain("prefers-color-scheme: dark");
     expect(html).toContain('data-role="canvas"');
     expect(html).toContain('data-role="surface"');
-    // Scoreboard shows the digest story total in the lead monospace tile (26px numerals).
-    expect(html).toMatch(/font-size:26px[^>]*>\s*2\s*</);
+    // Scoreboard anchors the masthead with display-weight tile values (40px numerals).
+    expect(html).toMatch(/font-size:40px[^>]*>\s*2\s*</);
     expect(html).toContain("Stories");
     expect(html).toContain("Task areas");
     expect(html).toContain("Open items");
-    expect(html).toContain("Desk reading");
+    expect(html).toContain("If you only read one thing");
     expect(html).toContain("peak relevance 42");
-    expect(html).toContain("Balanced Signal and Noise");
   });
 
   it("omits Task areas and Open items scoreboard tiles when task summaries are empty", () => {
@@ -294,5 +301,153 @@ describe("renderBriefingEmail", () => {
     vi.useRealTimers();
 
     expect(html).toContain("background-color:#5a8069");
+  });
+
+  it('places the highest-scored Signal story inside the "If you only read one thing" aside in HTML', () => {
+    const html = renderBriefingEmail({
+      ...digest,
+      stories: [
+        {
+          topic: "ai",
+          title: "Signal headline of the day",
+          summary: "A signal-bearing development.",
+          source: "Reuters",
+          url: "https://example.com/signal",
+          dedupeKey: "signal-headline-of-the-day",
+          score: 60,
+          whyItMatters: "Could shift product roadmaps.",
+          signalOrNoise: "Signal",
+          secondOrderEffect: "Teams accelerate ship cycles to capture the move.",
+        },
+        {
+          topic: "markets",
+          title: "Noise headline that ranked lower",
+          summary: "Background market chatter.",
+          source: "ap.com",
+          url: "https://example.com/noise",
+          dedupeKey: "noise-headline-that-ranked-lower",
+          score: 40,
+          whyItMatters: "Texture, not a decision driver.",
+          signalOrNoise: "Noise",
+          secondOrderEffect: "Marginal effect on positioning.",
+        },
+      ],
+    });
+
+    const asideLabelIndex = html.indexOf("If you only read one thing");
+    expect(asideLabelIndex).toBeGreaterThan(-1);
+    const asideEnd = html.indexOf("</aside>", asideLabelIndex);
+    expect(asideEnd).toBeGreaterThan(asideLabelIndex);
+
+    const asideBlock = html.slice(asideLabelIndex, asideEnd);
+    expect(asideBlock).toContain("Signal headline of the day");
+    expect(asideBlock).toContain("Teams accelerate ship cycles to capture the move.");
+    expect(asideBlock).not.toContain("Noise headline that ranked lower");
+  });
+
+  it('omits the "If you only read one thing" section entirely when stories is empty', () => {
+    const html = renderBriefingEmail({ ...digest, stories: [] });
+    const text = renderBriefingText({ ...digest, stories: [] });
+
+    expect(html).not.toContain("If you only read one thing");
+    expect(text).not.toContain("If you only read one thing");
+  });
+
+  it("falls back to the highest-scored Noise story when no Signal exists", () => {
+    const html = renderBriefingEmail({
+      ...digest,
+      stories: [
+        {
+          topic: "markets",
+          title: "Top Noise pick of the day",
+          summary: "Noise but the loudest one.",
+          source: "ap.com",
+          url: "https://example.com/noise-top",
+          dedupeKey: "top-noise-pick-of-the-day",
+          score: 55,
+          whyItMatters: "Helpful texture.",
+          signalOrNoise: "Noise",
+          secondOrderEffect: "Watch for follow-on commentary in the next news cycle.",
+        },
+        {
+          topic: "markets",
+          title: "Lower Noise headline",
+          summary: "Background.",
+          source: "ap.com",
+          url: "https://example.com/noise-low",
+          dedupeKey: "lower-noise-headline",
+          score: 30,
+          whyItMatters: "Marginal.",
+          signalOrNoise: "Noise",
+          secondOrderEffect: "Negligible.",
+        },
+      ],
+    });
+
+    const asideLabelIndex = html.indexOf("If you only read one thing");
+    expect(asideLabelIndex).toBeGreaterThan(-1);
+    const asideEnd = html.indexOf("</aside>", asideLabelIndex);
+    const asideBlock = html.slice(asideLabelIndex, asideEnd);
+    expect(asideBlock).toContain("Top Noise pick of the day");
+    expect(asideBlock).toContain("Watch for follow-on commentary in the next news cycle.");
+  });
+
+  it("strips trailing colons from Decision Lens labels in HTML while leaving plain text colons intact", () => {
+    const html = renderBriefingEmail(digest);
+    const text = renderBriefingText(digest);
+
+    expect(html).toContain(">One thing to watch<");
+    expect(html).toContain(">One thing to ignore<");
+    expect(html).toContain(">One possible contrarian take<");
+    expect(html).not.toContain(">One thing to watch:<");
+    expect(html).not.toContain(">One thing to ignore:<");
+    expect(html).not.toContain(">One possible contrarian take:<");
+
+    expect(text).toContain("One thing to watch:");
+    expect(text).toContain("One thing to ignore:");
+    expect(text).toContain("One possible contrarian take:");
+  });
+
+  it("frames the lead story article as a hero card with a 4px accent left border", () => {
+    const html = renderBriefingEmail(digest);
+    const leadChipIndex = html.indexOf("Lead Story");
+    expect(leadChipIndex).toBeGreaterThan(-1);
+
+    // Walk back from the Lead Story chip to the opening <article ...> tag.
+    const articleOpen = html.lastIndexOf("<article", leadChipIndex);
+    expect(articleOpen).toBeGreaterThan(-1);
+    const articleEnd = html.indexOf(">", articleOpen);
+    const articleTag = html.slice(articleOpen, articleEnd + 1);
+
+    expect(articleTag).toContain("border-left:4px solid");
+  });
+
+  it("differentiates the lead-story data-role hook so the dark-mode rule preserves the hero accent border", () => {
+    const html = renderBriefingEmail(digest);
+
+    // Lead article uses the dedicated hero-surface hook.
+    const leadChipIndex = html.indexOf("Lead Story");
+    const leadArticleOpen = html.lastIndexOf("<article", leadChipIndex);
+    const leadArticleEnd = html.indexOf(">", leadArticleOpen);
+    const leadArticleTag = html.slice(leadArticleOpen, leadArticleEnd + 1);
+    expect(leadArticleTag).toContain('data-role="hero-surface"');
+    expect(leadArticleTag).not.toContain('data-role="surface"');
+
+    // Feed (non-lead) article still uses the generic surface hook and never
+    // adopts the hero-surface role.
+    const feedTitleIndex = html.indexOf("Denver Broncos adjust offseason plan");
+    expect(feedTitleIndex).toBeGreaterThan(-1);
+    const feedArticleOpen = html.lastIndexOf("<article", feedTitleIndex);
+    const feedArticleEnd = html.indexOf(">", feedArticleOpen);
+    const feedArticleTag = html.slice(feedArticleOpen, feedArticleEnd + 1);
+    expect(feedArticleTag).toContain('data-role="surface"');
+    expect(feedArticleTag).not.toContain('data-role="hero-surface"');
+  });
+
+  it("sets the lead-story title to 30px and leaves feed-story titles at 17px", () => {
+    const html = renderBriefingEmail(digest);
+
+    expect(html).toMatch(/font-size:30px[^>]*>\s*<a[^>]*>Model vendors cut inference costs</);
+    expect(html).toMatch(/font-size:17px[^>]*>\s*<a[^>]*>Denver Broncos adjust offseason plan</);
   });
 });
