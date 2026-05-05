@@ -14,7 +14,8 @@
     "test": "vitest run --exclude \"tests/smoke/**\"",
     "test:watch": "vitest",
     "test:smoke": "vitest run --dir tests/smoke",
-    "generate:blueprint": "node scripts/generate-blueprint-client.mjs"
+    "generate:blueprint": "node scripts/generate-blueprint-client.mjs",
+    "preview:email": "node scripts/preview-email.mjs"
   },
   "dependencies": {
     "fast-xml-parser": "^5.7.2",
@@ -27,6 +28,7 @@
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.2",
     "vitest": "^4.1.5"
   },

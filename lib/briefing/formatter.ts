@@ -3,6 +3,98 @@ import type { BriefingDigest, RankedStory, TaskNode, TaskSummary } from "@/lib/b
 import { getTopicLabel } from "@/lib/research/topics";
 
 // ============================================================
+// Design tokens (single source of truth for email styles)
+// ============================================================
+
+const PALETTE = {
+  light: {
+    canvas: "#f5efe6",
+    surface: "#fffdf9",
+    surfaceElevated: "#ffffff",
+    ink: "#111827",
+    inkMuted: "#4b5563",
+    inkSubtle: "#6b7280",
+    accent: "#9a3412",
+    accentSoft: "#fff7ec",
+    signalBg: "#ecfdf5",
+    signalFg: "#166534",
+    signalBorder: "#bbf7d0",
+    noiseBg: "#f3f4f6",
+    noiseFg: "#374151",
+    noiseBorder: "#e5e7eb",
+    divider: "#eadfce",
+    warningBg: "#fffbeb",
+    warningFg: "#78350f",
+    warningBorder: "#fcd34d",
+    freshnessGreen: "#15803d",
+    freshnessAmber: "#d97706",
+    freshnessGray: "#9ca3af",
+  },
+  dark: {
+    canvas: "#1c1917",
+    surface: "#292524",
+    surfaceElevated: "#3f3a36",
+    ink: "#f5f5f4",
+    inkMuted: "#a8a29e",
+    inkSubtle: "#78716c",
+    accent: "#fb923c",
+    accentSoft: "#431407",
+    signalBg: "#14532d",
+    signalFg: "#bbf7d0",
+    signalBorder: "#166534",
+    noiseBg: "#374151",
+    noiseFg: "#e5e7eb",
+    noiseBorder: "#4b5563",
+    divider: "#44403c",
+    warningBg: "#422006",
+    warningFg: "#fcd34d",
+    warningBorder: "#b45309",
+    freshnessGreen: "#22c55e",
+    freshnessAmber: "#fbbf24",
+    freshnessGray: "#78716c",
+  },
+} as const;
+
+const L = PALETTE.light;
+const D = PALETTE.dark;
+
+function renderDarkModeStyleBlock(): string {
+  return `
+    <style type="text/css">
+      @media (prefers-color-scheme: dark) {
+        [data-role="canvas"] { background-color: ${D.canvas} !important; color: ${D.ink} !important; }
+        [data-role="surface"] { background-color: ${D.surface} !important; border-color: ${D.divider} !important; color: ${D.ink} !important; }
+        [data-role="ink"] { color: ${D.ink} !important; }
+        [data-role="ink-muted"] { color: ${D.inkMuted} !important; }
+        [data-role="divider"] { border-color: ${D.divider} !important; background-color: ${D.divider} !important; }
+        [data-role="accent"] { color: ${D.accent} !important; background-color: ${D.accentSoft} !important; border-color: ${D.accent} !important; }
+        [data-role="signal-chip"] { background-color: ${D.signalBg} !important; color: ${D.signalFg} !important; border-color: ${D.signalBorder} !important; }
+        [data-role="noise-chip"] { background-color: ${D.noiseBg} !important; color: ${D.noiseFg} !important; border-color: ${D.noiseBorder} !important; }
+        [data-role="warning"] { background-color: ${D.warningBg} !important; border-color: ${D.warningBorder} !important; color: ${D.warningFg} !important; }
+        article[data-role="surface"] h3 a { color: ${D.accent} !important; }
+      }
+    </style>`;
+}
+
+function freshnessDotColor(publishedAt: string | undefined): string {
+  if (!publishedAt) {
+    return L.freshnessGray;
+  }
+  const t = Date.parse(publishedAt);
+  if (Number.isNaN(t)) {
+    return L.freshnessGray;
+  }
+  const hours = (Date.now() - t) / (1000 * 60 * 60);
+  if (hours <= 12) {
+    return L.freshnessGreen;
+  }
+  if (hours <= 48) {
+    return L.freshnessAmber;
+  }
+  return L.freshnessGray;
+}
+
+// ============================================================
 // Helpers
 // ============================================================
 
@@ -108,15 +200,65 @@ function pluralize(count: number, singular: string, plural: string): string {
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
+function sumOpenItems(summaries: TaskSummary[]): number {
+  return summaries.reduce((acc, s) => acc + s.openItems, 0);
+}
+
 // ============================================================
 // HTML section renderers
 // ============================================================
 
 function renderHeader(digest: BriefingDigest): string {
   return `
-        <p style="margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9a3412;">Daily Digest</p>
-        <h1 style="margin:0 0 8px;font-size:34px;line-height:1.1;color:#111827;">${escapeHtml(digest.dateLabel)}</h1>
-        <p style="margin:0 0 24px;color:#4b5563;font-style:italic;">Blueprint state plus live research filtered for decision relevance.</p>`;
+        <p style="margin:0 0 8px;">
+          <span data-role="accent" style="display:inline-block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:${L.accent};">Daily Digest</span>
+        </p>
+        <h1 data-role="ink" style="margin:0 0 8px;font-size:34px;line-height:1.1;color:${L.ink};font-weight:700;">${escapeHtml(digest.dateLabel)}</h1>
+        <p data-role="ink-muted" style="margin:0 0 24px;color:${L.inkMuted};font-style:italic;">Blueprint state plus live research filtered for decision relevance.</p>`;
+}
+
+function renderScoreboard(digest: BriefingDigest): string {
+  const storyCount = digest.stories.length;
+  const signalCount = digest.stories.filter((s) => s.signalOrNoise === "Signal").length;
+  const noiseCount = digest.stories.filter((s) => s.signalOrNoise === "Noise").length;
+  const taskAreas = digest.taskSummaries.length;
+  const openTotal = sumOpenItems(digest.taskSummaries);
+
+  type Tile = { value: string; label: string };
+  const tiles: Tile[] = [
+    { value: String(storyCount), label: "Stories" },
+    { value: String(signalCount), label: "Signal" },
+    { value: String(noiseCount), label: "Noise" },
+  ];
+  if (taskAreas > 0) {
+    tiles.push({ value: String(taskAreas), label: "Task areas" });
+  }
+  if (openTotal > 0) {
+    tiles.push({ value: String(openTotal), label: "Open items" });
+  }
+
+  const cells = tiles
+    .map((tile, index) => {
+      const divider =
+        index < tiles.length - 1
+          ? `<td data-role="divider" style="width:1px;padding:0;background-color:${L.divider};" aria-hidden="true"></td>`
+          : "";
+      return `
+            <td style="padding:14px 12px;text-align:center;vertical-align:top;">
+              <div data-role="ink" style="margin:0 0 4px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:30px;line-height:1.1;font-weight:600;color:${L.ink};">${escapeHtml(tile.value)}</div>
+              <div data-role="ink-muted" style="margin:0;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};">${escapeHtml(tile.label)}</div>
+            </td>${divider}`;
+    })
+    .join("");
+
+  return `
+        <div data-role="surface" style="margin:0 0 20px;padding:0;border:1px solid ${L.divider};border-radius:14px;background-color:${L.surfaceElevated};overflow:hidden;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;width:100%;">
+            <tr>
+              ${cells}
+            </tr>
+          </table>
+        </div>`;
 }
 
 function renderDecisionLens(digest: BriefingDigest): string {
@@ -127,19 +269,30 @@ function renderDecisionLens(digest: BriefingDigest): string {
   ];
 
   const items = rows
-    .map(
-      (row) => `
-            <p style="margin:0 0 12px;line-height:1.45;">
-              <strong style="color:#9a3412;">${escapeHtml(row.label)}</strong>
-              <span style="color:#1f2937;">${escapeHtml(row.value)}</span>
-            </p>`,
-    )
+    .map((row, index) => {
+      const divider =
+        index > 0
+          ? `<tr><td colspan="2" data-role="divider" style="padding:0;height:1px;background-color:${L.divider};line-height:1px;font-size:0;">&nbsp;</td></tr>`
+          : "";
+      return `
+            ${divider}
+            <tr>
+              <td style="width:140px;padding:12px 14px 12px 0;vertical-align:top;">
+                <div data-role="accent" style="display:inline-block;padding:6px 10px;border:1px solid ${L.accent};border-radius:999px;background-color:${L.accentSoft};color:${L.accent};">
+                  <strong style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;">${escapeHtml(row.label)}</strong>
+                </div>
+              </td>
+              <td data-role="ink" style="padding:12px 0;vertical-align:top;font-size:16px;line-height:1.5;color:${L.ink};">${escapeHtml(row.value)}</td>
+            </tr>`;
+    })
     .join("");
 
   return `
-        <section style="margin:0 0 24px;padding:20px 22px;border:1px solid #eadfce;border-left:4px solid #9a3412;background:#fff7ec;border-radius:14px;">
-          <p style="margin:0 0 12px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9a3412;font-weight:700;">Decision Lens</p>
-          ${items}
+        <section data-role="surface" style="margin:0 0 24px;padding:28px 22px 22px;border:1px solid ${L.divider};border-left:4px solid ${L.accent};background-color:${L.accentSoft};border-radius:14px;">
+          <p style="margin:0 0 18px;"><span data-role="accent" style="display:inline-block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:${L.accent};font-weight:700;">Decision Lens</span></p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;width:100%;">
+            ${items}
+          </table>
         </section>`;
 }
 
@@ -153,38 +306,50 @@ function renderWarningsBanner(warnings: string[]): string {
     .join("");
 
   return `
-        <section style="margin:0 0 20px;padding:14px 16px;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;">
-          <p style="margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#92400e;font-weight:700;">Briefing notes</p>
-          <ul style="margin:0;padding-left:18px;color:#78350f;">${items}</ul>
+        <section data-role="warning" style="margin:0 0 20px;padding:14px 16px;border:1px solid ${L.warningBorder};background-color:${L.warningBg};border-radius:12px;color:${L.warningFg};">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${L.warningFg};font-weight:700;">Briefing notes</p>
+          <ul style="margin:0;padding-left:18px;color:${L.warningFg};">${items}</ul>
         </section>`;
 }
 
 function renderTaskNodes(tasks: TaskNode[], depth = 0): string {
   if (!tasks.length) {
-    return `<p style="margin:0;color:#6b7280;">No active tasks in this list.</p>`;
+    return `<p style="margin:0;color:${L.inkSubtle};">No active tasks in this list.</p>`;
   }
 
-  const paddingLeft = depth === 0 ? 20 : 18;
-  return `<ul style="margin:8px 0 0;padding-left:${paddingLeft}px;">${tasks
-    .map(
-      (task) => `
+  const marginTop = depth === 0 ? "8px" : "6px";
+  const pad = depth === 0 ? "12px" : `${12 + depth * 10}px`;
+  return `<ul style="margin:${marginTop} 0 0;padding:0 0 0 ${pad};list-style:none;border-left:1px solid ${L.accentSoft};">
+    ${tasks
+      .map(
+        (task) => `
         <li style="margin:0 0 8px;">
-          <span style="color:#111827;">${escapeHtml(task.title)}</span>
-          <span style="color:#6b7280;"> (${escapeHtml(task.status)})</span>
+          <span data-role="ink" style="color:${L.ink};">${escapeHtml(task.title)}</span>
+          <span style="color:${L.inkSubtle};"> (${escapeHtml(task.status)})</span>
           ${task.subtasks.length ? renderTaskNodes(task.subtasks, depth + 1) : ""}
         </li>
       `,
-    )
-    .join("")}</ul>`;
+      )
+      .join("")}</ul>`;
 }
 
 function renderTaskSummary(summary: TaskSummary): string {
   return `
-    <section style="padding:18px;border:1px solid #e5e7eb;border-radius:16px;background:#ffffff;">
-      <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#9a3412;">${escapeHtml(summary.area)}</p>
-      <h3 style="margin:0 0 8px;font-size:18px;color:#111827;">${escapeHtml(summary.headline)}</h3>
-      <p style="margin:0 0 12px;color:#374151;"><strong>${summary.openItems}</strong> open items</p>
-      <p style="margin:0 0 4px;font-weight:700;color:#111827;">Active tasks</p>
+    <section data-role="surface" style="margin:0 0 16px;padding:20px;border:1px solid ${L.divider};border-radius:12px;background-color:${L.surfaceElevated};">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:0 0 8px;">
+        <tr>
+          <td style="vertical-align:middle;">
+            <span data-role="accent" style="display:inline-block;margin:0;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:${L.accent};">${escapeHtml(summary.area)}</span>
+          </td>
+          <td style="vertical-align:middle;text-align:right;white-space:nowrap;">
+            <span data-role="surface" style="display:inline-block;margin-left:8px;padding:4px 8px;border-radius:8px;border:1px solid ${L.divider};background-color:${L.canvas};font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:13px;font-weight:600;color:${L.ink};">${escapeHtml(String(summary.openItems))}</span>
+            <span data-role="ink-muted" style="margin-left:6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:${L.inkMuted};">open</span>
+          </td>
+        </tr>
+      </table>
+      <h3 data-role="ink" style="margin:0 0 10px;font-size:18px;line-height:1.2;color:${L.ink};">${escapeHtml(summary.headline)}</h3>
+      <p data-role="ink-muted" style="margin:0 0 12px;color:${L.inkMuted};font-size:14px;line-height:1.45;"><strong data-role="ink">${escapeHtml(String(summary.openItems))}</strong> open items</p>
+      <p data-role="ink" style="margin:0 0 4px;font-weight:700;color:${L.ink};">Active tasks</p>
       ${renderTaskNodes(summary.tasks)}
     </section>
   `;
@@ -197,42 +362,74 @@ function renderTaskSection(taskSummaries: TaskSummary[]): string {
 
   return `
         <section style="margin:0 0 24px;">
-          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Blueprint Snapshot</h2>
-          <div style="display:grid;gap:14px;">
-            ${taskSummaries.map(renderTaskSummary).join("")}
-          </div>
+          <h2 data-role="ink" style="margin:0 0 12px;font-size:22px;line-height:1.2;color:${L.ink};">Blueprint Snapshot</h2>
+          ${taskSummaries.map(renderTaskSummary).join("")}
         </section>`;
 }
 
 function renderStory(story: RankedStory, options: { isLead: boolean }): string {
   const displayTitle = getDisplayTitle(story);
   const sourceLabel = formatSourceLabel(story.source);
-  const signalTone = story.signalOrNoise === "Signal"
-    ? "background:#ecfdf5;color:#166534;border-color:#bbf7d0;"
-    : "background:#f3f4f6;color:#374151;border-color:#e5e7eb;";
+  const chipRole = story.signalOrNoise === "Signal" ? "signal-chip" : "noise-chip";
+  const chipBg = story.signalOrNoise === "Signal" ? L.signalBg : L.noiseBg;
+  const chipFg = story.signalOrNoise === "Signal" ? L.signalFg : L.noiseFg;
+  const chipBorder = story.signalOrNoise === "Signal" ? L.signalBorder : L.noiseBorder;
+  const titleSize = options.isLead ? 20 : 17;
+  const fresh = freshnessDotColor(story.publishedAt);
 
-  const borderTop = options.isLead
-    ? "border-top:3px solid #9a3412;"
-    : "border-top:1px solid #e5e7eb;";
-  const titleSize = options.isLead ? 22 : 18;
-  const padding = options.isLead ? "22px 0 18px" : "18px 0";
-  const leadEyebrow = options.isLead
-    ? `<p style="margin:0 0 6px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9a3412;font-weight:700;">Lead Story</p>`
+  const leadChip = options.isLead
+    ? `<div data-role="accent" style="margin:0 0 10px;display:inline-block;padding:6px 12px;border-radius:999px;background-color:${L.accentSoft};border:1px solid ${L.accent};color:${L.accent};font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;">Lead Story</div>`
     : "";
 
+  const storyBodyBlocks = `
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:14px 0 0;">
+        <tr>
+          <td data-role="divider" style="padding:0 0 10px;height:1px;background-color:${L.divider};line-height:1px;font-size:0;">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 0 0;">
+            <p data-role="ink-muted" style="margin:0 0 6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};"><strong>What happened</strong></p>
+            <p data-role="ink" style="margin:0;color:${L.ink};line-height:1.5;">${escapeHtml(getWhatHappened(story))}</p>
+          </td>
+        </tr>
+        <tr>
+          <td data-role="divider" style="padding:10px 0 0;height:1px;background-color:${L.divider};line-height:1px;font-size:0;">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 0 0;">
+            <p data-role="ink-muted" style="margin:0 0 6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};"><strong>Why it matters</strong></p>
+            <p data-role="ink" style="margin:0;color:${L.ink};line-height:1.5;">${escapeHtml(getWhyItMatters(story))}</p>
+          </td>
+        </tr>
+        <tr>
+          <td data-role="divider" style="padding:10px 0 0;height:1px;background-color:${L.divider};line-height:1px;font-size:0;">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 0 0;">
+            <p data-role="ink-muted" style="margin:0 0 6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};"><strong>Second-order effect</strong></p>
+            <p data-role="ink" style="margin:0;color:${L.ink};line-height:1.5;">${escapeHtml(story.secondOrderEffect)}</p>
+          </td>
+        </tr>
+      </table>`;
+
   return `
-    <article style="padding:${padding};${borderTop}">
-      ${leadEyebrow}
-      <div style="margin:0 0 6px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
-        <p style="margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">${escapeHtml(getTopicLabel(story.topic))} • ${escapeHtml(sourceLabel)}</p>
-        <span style="display:inline-block;padding:4px 10px;border:1px solid;border-radius:999px;font-size:12px;font-weight:700;${signalTone}">${escapeHtml(story.signalOrNoise)}</span>
-      </div>
-      <h3 style="margin:0 0 8px;font-size:${titleSize}px;line-height:1.25;">
-        <a href="${escapeHtml(story.url)}" style="color:#9a3412;text-decoration:none;">${escapeHtml(displayTitle)}</a>
+    <article data-role="surface" style="margin:0 0 16px;padding:20px;border:1px solid ${L.divider};border-radius:12px;background-color:${L.surfaceElevated};">
+      ${leadChip}
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" data-role="canvas" style="border-collapse:collapse;margin:0;padding:12px 14px;background-color:${L.canvas};border-bottom:1px solid ${L.divider};border-radius:10px;">
+        <tr>
+          <td style="vertical-align:middle;">
+            <p data-role="ink-muted" style="margin:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:${L.inkMuted};">${escapeHtml(getTopicLabel(story.topic))} · ${escapeHtml(sourceLabel)}</p>
+          </td>
+          <td style="vertical-align:middle;text-align:right;white-space:nowrap;">
+            <span data-role="${chipRole}" style="display:inline-block;margin-right:8px;padding:5px 11px;border:1px solid ${chipBorder};border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.04em;background-color:${chipBg};color:${chipFg};">${escapeHtml(story.signalOrNoise)}</span>
+            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background-color:${fresh};vertical-align:middle;"></span>
+          </td>
+        </tr>
+      </table>
+      <h3 style="margin:16px 0 8px;font-size:${titleSize}px;line-height:1.2;color:${L.ink};font-weight:700;">
+        <a href="${escapeHtml(story.url)}" style="color:${L.accent};text-decoration:none;">${escapeHtml(displayTitle)}</a>
       </h3>
-      <p style="margin:0 0 8px;color:#111827;line-height:1.5;"><strong>What happened</strong><br />${escapeHtml(getWhatHappened(story))}</p>
-      <p style="margin:0 0 8px;color:#111827;line-height:1.5;"><strong>Why it matters</strong><br />${escapeHtml(getWhyItMatters(story))}</p>
-      <p style="margin:0;color:#111827;line-height:1.5;"><strong>Second-order effect</strong><br />${escapeHtml(story.secondOrderEffect)}</p>
+      ${storyBodyBlocks}
     </article>`;
 }
 
@@ -240,14 +437,14 @@ function renderStoriesSection(stories: RankedStory[]): string {
   if (!stories.length) {
     return `
         <section>
-          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Briefing Feed</h2>
-          <p style="margin:0;color:#6b7280;">No stories cleared the relevance threshold today.</p>
+          <h2 data-role="ink" style="margin:0 0 12px;font-size:22px;color:${L.ink};">Briefing Feed</h2>
+          <p data-role="ink-muted" style="margin:0;color:${L.inkMuted};">No stories cleared the relevance threshold today.</p>
         </section>`;
   }
 
   return `
         <section>
-          <h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Briefing Feed</h2>
+          <h2 data-role="ink" style="margin:0 0 12px;font-size:22px;color:${L.ink};">Briefing Feed</h2>
           ${stories.map((story, index) => renderStory(story, { isLead: index === 0 })).join("")}
         </section>`;
 }
@@ -259,8 +456,8 @@ function renderFooter(digest: BriefingDigest): string {
     : "";
 
   return `
-        <footer style="margin-top:28px;padding-top:16px;border-top:1px solid #eadfce;">
-          <p style="margin:0;color:#6b7280;font-size:12px;letter-spacing:.04em;">${escapeHtml(storyLine)}${escapeHtml(taskLine)} · ${escapeHtml(digest.dateLabel)}</p>
+        <footer style="margin-top:28px;padding-top:16px;border-top:1px solid ${L.divider};" data-role="divider">
+          <p data-role="ink-muted" style="margin:0;color:${L.inkMuted};font-size:12px;letter-spacing:.04em;">${escapeHtml(storyLine)}${escapeHtml(taskLine)} · ${escapeHtml(digest.dateLabel)}</p>
         </footer>`;
 }
 
@@ -285,9 +482,17 @@ export function renderBriefingEmail(digest: BriefingDigest): string {
   return `
   <!doctype html>
   <html lang="en">
-    <body style="margin:0;padding:24px;background:#f5efe6;color:#111827;font-family:Georgia,serif;">
-      <div style="max-width:840px;margin:0 auto;background:#fffdf9;border-radius:24px;padding:28px;border:1px solid #eadfce;">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta name="color-scheme" content="light dark" />
+      <meta name="supported-color-schemes" content="light dark" />
+      ${renderDarkModeStyleBlock()}
+    </head>
+    <body data-role="canvas" style="margin:0;padding:24px;background-color:${L.canvas};color:${L.ink};font-family:Georgia,serif;">
+      <div data-role="surface" style="max-width:840px;margin:0 auto;background-color:${L.surface};border-radius:24px;padding:28px;border:1px solid ${L.divider};">
         ${renderHeader(digest)}
+        ${renderScoreboard(digest)}
         ${renderWarningsBanner(digest.warnings)}
         ${renderDecisionLens(digest)}
         ${renderTaskSection(digest.taskSummaries)}

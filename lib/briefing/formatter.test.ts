@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { renderBriefingEmail, renderBriefingText } from "@/lib/briefing/formatter";
 import type { BriefingDigest } from "@/lib/briefing/types";
@@ -246,5 +246,46 @@ describe("renderBriefingEmail", () => {
     expect(warningsIndex).toBeGreaterThan(-1);
     expect(lensIndex).toBeGreaterThan(-1);
     expect(warningsIndex).toBeLessThan(lensIndex);
+  });
+
+  it("ships editorial-dashboard hooks: dark-mode media query, scoreboard counts, and data-role anchors", () => {
+    const html = renderBriefingEmail(digest);
+
+    expect(html).toContain("prefers-color-scheme: dark");
+    expect(html).toContain('data-role="canvas"');
+    expect(html).toContain('data-role="surface"');
+    // Scoreboard shows the digest story total in the lead monospace tile (30px numerals).
+    expect(html).toMatch(/font-size:30px[^>]*>\s*2\s*</);
+    expect(html).toContain("Stories");
+    expect(html).toContain("Task areas");
+    expect(html).toContain("Open items");
+  });
+
+  it("omits Task areas and Open items scoreboard tiles when task summaries are empty", () => {
+    const html = renderBriefingEmail({
+      ...digest,
+      taskSummaries: [],
+    });
+
+    expect(html).not.toContain("Task areas");
+    expect(html).not.toContain("Open items");
+  });
+
+  it("renders a green freshness dot when publishedAt is within the last 12 hours", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-05T18:00:00.000Z"));
+    const html = renderBriefingEmail({
+      ...digest,
+      stories: [
+        {
+          ...digest.stories[0],
+          publishedAt: "2026-05-05T08:00:00.000Z",
+        },
+        digest.stories[1],
+      ],
+    });
+    vi.useRealTimers();
+
+    expect(html).toContain("background-color:#15803d");
   });
 });
