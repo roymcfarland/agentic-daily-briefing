@@ -185,6 +185,78 @@ describe("formatter-derived", () => {
     ).toContain("Balanced Signal and Noise");
   });
 
+  describe("topStoryPointer selection", () => {
+    it("returns null when there are no stories", () => {
+      const d = buildDigestDerived(digest());
+      expect(d.topStoryPointer).toBeNull();
+    });
+
+    it("prefers a Signal story even when a Noise story has a higher score", () => {
+      const noise = story({
+        title: "High-scoring Noise headline",
+        signalOrNoise: "Noise",
+        score: 80,
+        secondOrderEffect: "Noise framing.",
+      });
+      const signal = story({
+        title: "Signal headline",
+        signalOrNoise: "Signal",
+        score: 60,
+        secondOrderEffect: "Signal framing — what to watch for downstream.",
+      });
+
+      // Stories arrive sorted by score desc — Noise 80 first, Signal 60 second.
+      const d = buildDigestDerived(digest({ stories: [noise, signal] }));
+
+      expect(d.topStoryPointer).not.toBeNull();
+      expect(d.topStoryPointer?.story.title).toBe("Signal headline");
+      expect(d.topStoryPointer?.framing).toBe("Signal framing — what to watch for downstream.");
+    });
+
+    it("falls back to the highest-scored story when only Noise stories exist", () => {
+      const top = story({
+        title: "Top Noise pick",
+        signalOrNoise: "Noise",
+        score: 50,
+        secondOrderEffect: "Noise top framing.",
+      });
+      const lower = story({
+        title: "Lower Noise pick",
+        signalOrNoise: "Noise",
+        score: 25,
+        secondOrderEffect: "Noise lower framing.",
+      });
+
+      const d = buildDigestDerived(digest({ stories: [top, lower] }));
+
+      expect(d.topStoryPointer).not.toBeNull();
+      expect(d.topStoryPointer?.story.title).toBe("Top Noise pick");
+      expect(d.topStoryPointer?.framing).toBe("Noise top framing.");
+    });
+
+    it("picks the highest-scored Signal among multiple Signal stories", () => {
+      const lowSignal = story({
+        title: "Lower Signal",
+        signalOrNoise: "Signal",
+        score: 50,
+        secondOrderEffect: "Lower Signal framing.",
+      });
+      const highSignal = story({
+        title: "Higher Signal",
+        signalOrNoise: "Signal",
+        score: 80,
+        secondOrderEffect: "Higher Signal framing.",
+      });
+
+      // Stories arrive sorted by score desc — Higher Signal first.
+      const d = buildDigestDerived(digest({ stories: [highSignal, lowSignal] }));
+
+      expect(d.topStoryPointer).not.toBeNull();
+      expect(d.topStoryPointer?.story.title).toBe("Higher Signal");
+      expect(d.topStoryPointer?.framing).toBe("Higher Signal framing.");
+    });
+  });
+
   it("Task 2.7 renders the plain desk-facts line with optional story and Blueprint metrics", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-05T18:00:00.000Z"));

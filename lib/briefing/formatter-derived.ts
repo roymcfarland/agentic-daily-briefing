@@ -1,4 +1,4 @@
-import type { BriefingDigest, TaskNode } from "@/lib/briefing/types";
+import type { BriefingDigest, RankedStory, TaskNode } from "@/lib/briefing/types";
 
 export function countTaskNodes(tasks: TaskNode[]): number {
   let total = 0;
@@ -6,6 +6,11 @@ export function countTaskNodes(tasks: TaskNode[]): number {
     total += 1 + countTaskNodes(task.subtasks);
   }
   return total;
+}
+
+export interface TopStoryPointer {
+  story: RankedStory;
+  framing: string;
 }
 
 export interface DigestDerived {
@@ -20,6 +25,7 @@ export interface DigestDerived {
   blueprintTaskNodes: number;
   blueprintAreas: number;
   pulseSentence: string;
+  topStoryPointer: TopStoryPointer | null;
 }
 
 export function buildDigestDerived(digest: BriefingDigest): DigestDerived {
@@ -73,6 +79,18 @@ export function buildDigestDerived(digest: BriefingDigest): DigestDerived {
       "Balanced Signal and Noise — read for calibration and texture rather than urgency.";
   }
 
+  // The stories array arrives sorted by score descending, so the first Signal
+  // we find is also the highest-scored Signal. When no Signal exists, fall back
+  // to the highest-scored story regardless of label (stories[0]).
+  let topStoryPointer: TopStoryPointer | null = null;
+  if (storyCount > 0) {
+    const chosen = stories.find((s) => s.signalOrNoise === "Signal") ?? stories[0];
+    topStoryPointer = {
+      story: chosen,
+      framing: chosen.secondOrderEffect,
+    };
+  }
+
   return {
     signalCount,
     noiseCount,
@@ -85,6 +103,7 @@ export function buildDigestDerived(digest: BriefingDigest): DigestDerived {
     blueprintTaskNodes,
     blueprintAreas: digest.taskSummaries.length,
     pulseSentence,
+    topStoryPointer,
   };
 }
 
