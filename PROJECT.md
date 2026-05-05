@@ -32,7 +32,7 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 - **Runtime:** Node.js 22.12.x, declared in `package.json` `engines.node` and pinned in `.nvmrc` (see Verifier Rule 4 for the authoritative pin and rationale).
 - **Deployment:** Vercel (Serverless Functions + static landing page) triggered by Vercel Cron for the briefing job.
 - **Email:** Resend.
-- **Idempotency:** Upstash Redis / Vercel KV REST API, with fail-closed behavior in production.
+- **Idempotency:** Vercel KV / Upstash Redis REST API, with fail-closed behavior in production.
 - **External API Consumption:** Consumes the Workflow Blueprint v1 task-management API via a generated TypeScript client driven by an OpenAPI spec.
 
 ## Verifier Rules (Enforced on every PR)
@@ -66,9 +66,13 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 ### 6. Landing Page Surface Lock
 - **Hard-fail** any PR that adds new pages under `app/` (other than the existing `app/page.tsx`, `app/layout.tsx`, and image generators), new interactive components under `app/components/`, signup forms, analytics scripts, or third-party tracking pixels, without an explicit PROJECT.md update authorizing the change.
 
+### 7. Legacy Blueprint Migration Env Names
+- **Hard-fail** any PR that re-introduces legacy `TASKFLOW_*` or `READ_ONLY_API_KEY` env-var references in `lib/env.ts`, `lib/env.test.ts`, `lib/blueprint/`, or any new code. The Blueprint migration is complete; legacy names are forbidden.
+
 ## PR Sequencing (Current Work)
 
 | PR | Scope | Status |
 |---|---|---|
 | **PR 1 (Install + Harness)** | PROJECT.md, LICENSE, AGENTS.md, CLAUDE.md, GitHub Actions CI (`lint`, `test`, `smoke`), Node pinning (`22.12.x`), `test:smoke` script, smoke test for the preview endpoint, README scrub for naming neutrality. | Shipped |
-| **PR 2 (Migration)** | Rename all legacy upstream references to `Blueprint` (directories, env vars, OpenAPI spec, generated client, user-facing strings). Update OpenAPI spec to match Workflow Blueprint's v1 API contract. Regenerate client. Migrate consumer to use `EXTERNAL_API_KEY` and the new v1 endpoints. Coordinate with the corresponding deprecation work in the `workflow-blueprint` repo. | In Progress |
+| **PR 2 (Migration)** | Rename all legacy upstream references to `Blueprint` (directories, env vars, OpenAPI spec, generated client, user-facing strings). Update OpenAPI spec to match Workflow Blueprint's v1 API contract. Regenerate client. Migrate consumer to use `EXTERNAL_API_KEY` and the new v1 endpoints. Coordinate with the corresponding deprecation work in the `workflow-blueprint` repo. | Shipped |
+| **PR 5 (Cleanup)** | Remove the transitional legacy env-var alias shim added during the Blueprint migration, require canonical Blueprint env vars only, document the legacy-name hard-fail rule, and confirm production idempotency uses Vercel KV / Upstash Redis REST. | Shipped |
