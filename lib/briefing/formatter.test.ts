@@ -422,6 +422,28 @@ describe("renderBriefingEmail", () => {
     expect(articleTag).toContain("border-left:4px solid");
   });
 
+  it("differentiates the lead-story data-role hook so the dark-mode rule preserves the hero accent border", () => {
+    const html = renderBriefingEmail(digest);
+
+    // Lead article uses the dedicated hero-surface hook.
+    const leadChipIndex = html.indexOf("Lead Story");
+    const leadArticleOpen = html.lastIndexOf("<article", leadChipIndex);
+    const leadArticleEnd = html.indexOf(">", leadArticleOpen);
+    const leadArticleTag = html.slice(leadArticleOpen, leadArticleEnd + 1);
+    expect(leadArticleTag).toContain('data-role="hero-surface"');
+    expect(leadArticleTag).not.toContain('data-role="surface"');
+
+    // Feed (non-lead) article still uses the generic surface hook and never
+    // adopts the hero-surface role.
+    const feedTitleIndex = html.indexOf("Denver Broncos adjust offseason plan");
+    expect(feedTitleIndex).toBeGreaterThan(-1);
+    const feedArticleOpen = html.lastIndexOf("<article", feedTitleIndex);
+    const feedArticleEnd = html.indexOf(">", feedArticleOpen);
+    const feedArticleTag = html.slice(feedArticleOpen, feedArticleEnd + 1);
+    expect(feedArticleTag).toContain('data-role="surface"');
+    expect(feedArticleTag).not.toContain('data-role="hero-surface"');
+  });
+
   it("sets the lead-story title to 30px and leaves feed-story titles at 17px", () => {
     const html = renderBriefingEmail(digest);
 

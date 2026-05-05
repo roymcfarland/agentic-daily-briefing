@@ -193,19 +193,23 @@ describe("formatter-derived", () => {
 
     it("prefers a Signal story even when a Noise story has a higher score", () => {
       const noise = story({
-        title: "High-scoring Noise headline",
+        topic: "ai",
+        title: "Higher Noise pick",
         signalOrNoise: "Noise",
         score: 80,
         secondOrderEffect: "Noise framing.",
       });
       const signal = story({
+        topic: "business",
         title: "Signal headline",
         signalOrNoise: "Signal",
         score: 60,
         secondOrderEffect: "Signal framing — what to watch for downstream.",
       });
 
-      // Stories arrive sorted by score desc — Noise 80 first, Signal 60 second.
+      // Topic-balanced output from selectStoriesForBriefing — ai before business
+      // — places the higher-scored Noise first. Signal-first preference must
+      // still pick the lower-scored Signal.
       const d = buildDigestDerived(digest({ stories: [noise, signal] }));
 
       expect(d.topStoryPointer).not.toBeNull();
@@ -214,46 +218,131 @@ describe("formatter-derived", () => {
     });
 
     it("falls back to the highest-scored story when only Noise stories exist", () => {
-      const top = story({
+      const lowFirst = story({
+        topic: "ai",
+        title: "Low Noise pick",
+        signalOrNoise: "Noise",
+        score: 20,
+        secondOrderEffect: "Low framing.",
+      });
+      const topInMiddle = story({
+        topic: "markets",
         title: "Top Noise pick",
         signalOrNoise: "Noise",
         score: 50,
-        secondOrderEffect: "Noise top framing.",
+        secondOrderEffect: "Top framing.",
       });
-      const lower = story({
-        title: "Lower Noise pick",
+      const midLast = story({
+        topic: "business",
+        title: "Mid Noise pick",
         signalOrNoise: "Noise",
-        score: 25,
-        secondOrderEffect: "Noise lower framing.",
+        score: 35,
+        secondOrderEffect: "Mid framing.",
       });
 
-      const d = buildDigestDerived(digest({ stories: [top, lower] }));
+      // Input order [20, 50, 35] proves selection sorts rather than picking
+      // the first match.
+      const d = buildDigestDerived(digest({ stories: [lowFirst, topInMiddle, midLast] }));
 
       expect(d.topStoryPointer).not.toBeNull();
       expect(d.topStoryPointer?.story.title).toBe("Top Noise pick");
-      expect(d.topStoryPointer?.framing).toBe("Noise top framing.");
+      expect(d.topStoryPointer?.framing).toBe("Top framing.");
     });
 
-    it("picks the highest-scored Signal among multiple Signal stories", () => {
+    it("picks the highest-scored Signal among multiple Signal stories regardless of input order", () => {
       const lowSignal = story({
+        topic: "ai",
         title: "Lower Signal",
         signalOrNoise: "Signal",
         score: 50,
         secondOrderEffect: "Lower Signal framing.",
       });
       const highSignal = story({
+        topic: "business",
         title: "Higher Signal",
         signalOrNoise: "Signal",
         score: 80,
         secondOrderEffect: "Higher Signal framing.",
       });
 
-      // Stories arrive sorted by score desc — Higher Signal first.
-      const d = buildDigestDerived(digest({ stories: [highSignal, lowSignal] }));
+      // Input order [lowSignal, highSignal] mirrors topic-balanced output where
+      // a lower-scored Signal can precede a higher-scored Signal.
+      const d = buildDigestDerived(digest({ stories: [lowSignal, highSignal] }));
 
       expect(d.topStoryPointer).not.toBeNull();
       expect(d.topStoryPointer?.story.title).toBe("Higher Signal");
       expect(d.topStoryPointer?.framing).toBe("Higher Signal framing.");
+    });
+
+    it("ignores topic-balanced ordering and picks the highest-scored Signal", () => {
+      // This fixture mirrors selectStoriesForBriefing's BRIEFING_TOPIC_ORDER
+      // round-robin output: ai first, then business, then colorado. The ai
+      // Signal arrives at score 40; the business Signal arrives at score 65.
+      // The pointer must follow score, not arrival order.
+      const signalAi40 = story({
+        topic: "ai",
+        title: "AI Signal at 40",
+        signalOrNoise: "Signal",
+        score: 40,
+        secondOrderEffect: "AI Signal framing.",
+      });
+      const signalBusiness65 = story({
+        topic: "business",
+        title: "Business Signal at 65",
+        signalOrNoise: "Signal",
+        score: 65,
+        secondOrderEffect: "Business Signal framing.",
+      });
+      const noiseColorado50 = story({
+        topic: "colorado",
+        title: "Colorado Noise at 50",
+        signalOrNoise: "Noise",
+        score: 50,
+        secondOrderEffect: "Colorado Noise framing.",
+      });
+
+      const d = buildDigestDerived(
+        digest({ stories: [signalAi40, signalBusiness65, noiseColorado50] }),
+      );
+
+      expect(d.topStoryPointer).not.toBeNull();
+      expect(d.topStoryPointer?.story.title).toBe("Business Signal at 65");
+      expect(d.topStoryPointer?.framing).toBe("Business Signal framing.");
+    });
+
+    it("preserves Signal-first preference even when two higher-scored Noise stories appear before a lower-scored Signal", () => {
+      // Topic-balanced output can place two Noise stories ahead of a Signal
+      // when the Signal lives in a later topic slot. Signal-first must still
+      // win regardless of raw score ordering.
+      const noiseAi80 = story({
+        topic: "ai",
+        title: "AI Noise at 80",
+        signalOrNoise: "Noise",
+        score: 80,
+        secondOrderEffect: "AI Noise framing.",
+      });
+      const noiseMarkets75 = story({
+        topic: "markets",
+        title: "Markets Noise at 75",
+        signalOrNoise: "Noise",
+        score: 75,
+        secondOrderEffect: "Markets Noise framing.",
+      });
+      const signalBusiness45 = story({
+        topic: "business",
+        title: "Business Signal at 45",
+        signalOrNoise: "Signal",
+        score: 45,
+        secondOrderEffect: "Business Signal framing.",
+      });
+
+      const d = buildDigestDerived(
+        digest({ stories: [noiseAi80, noiseMarkets75, signalBusiness45] }),
+      );
+
+      expect(d.topStoryPointer).not.toBeNull();
+      expect(d.topStoryPointer?.story.title).toBe("Business Signal at 45");
+      expect(d.topStoryPointer?.framing).toBe("Business Signal framing.");
     });
   });
 

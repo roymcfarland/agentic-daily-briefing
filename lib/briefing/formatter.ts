@@ -65,6 +65,7 @@ function renderDarkModeStyleBlock(): string {
       @media (prefers-color-scheme: dark) {
         [data-role="canvas"] { background-color: ${D.canvas} !important; color: ${D.ink} !important; }
         [data-role="surface"] { background-color: ${D.surface} !important; border-color: ${D.divider} !important; color: ${D.ink} !important; }
+        [data-role="hero-surface"] { background-color: ${D.surface} !important; border-color: ${D.divider} !important; color: ${D.ink} !important; border-left-color: ${D.accent} !important; }
         [data-role="ink"] { color: ${D.ink} !important; }
         [data-role="ink-muted"] { color: ${D.inkMuted} !important; }
         [data-role="divider"] { border-color: ${D.divider} !important; background-color: ${D.divider} !important; }
@@ -72,7 +73,7 @@ function renderDarkModeStyleBlock(): string {
         [data-role="signal-chip"] { background-color: ${D.signalBg} !important; color: ${D.signalFg} !important; border-color: ${D.signalBorder} !important; }
         [data-role="noise-chip"] { background-color: ${D.noiseBg} !important; color: ${D.noiseFg} !important; border-color: ${D.noiseBorder} !important; }
         [data-role="warning"] { background-color: ${D.warningBg} !important; border-color: ${D.warningBorder} !important; color: ${D.warningFg} !important; }
-        article[data-role="surface"] h3 a { color: ${D.accent} !important; }
+        article[data-role="surface"] h3 a, article[data-role="hero-surface"] h3 a { color: ${D.accent} !important; }
       }
     </style>`;
 }
@@ -399,6 +400,7 @@ function renderStory(story: RankedStory, options: { isLead: boolean }): string {
   const titleLineHeight = options.isLead ? 1.15 : 1.2;
   const fresh = freshnessDotColor(story.publishedAt);
 
+  const articleRole = options.isLead ? "hero-surface" : "surface";
   const articlePadding = options.isLead ? "32px 28px" : "20px";
   const articleAccentBorder = options.isLead ? `border-left:4px solid ${L.accent};` : "";
 
@@ -460,7 +462,7 @@ function renderStory(story: RankedStory, options: { isLead: boolean }): string {
       </table>`;
 
   return `
-    <article data-role="surface" style="margin:0 0 16px;padding:${articlePadding};border:1px solid ${L.divider};${articleAccentBorder}border-radius:12px;background-color:${L.surfaceElevated};">
+    <article data-role="${articleRole}" style="margin:0 0 16px;padding:${articlePadding};border:1px solid ${L.divider};${articleAccentBorder}border-radius:12px;background-color:${L.surfaceElevated};">
       ${leadChip}
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" data-role="canvas" style="border-collapse:collapse;margin:0;padding:12px 14px;background-color:${L.canvas};border-bottom:1px solid ${L.divider};border-radius:10px;">
         <tr>
