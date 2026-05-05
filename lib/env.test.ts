@@ -4,11 +4,8 @@ import { getEnv, getIdempotencyEnv } from "@/lib/env";
 
 const ENV_KEYS = [
   "BLUEPRINT_API_BASE_URL",
-  "TASKFLOW_API_BASE_URL",
   "EXTERNAL_API_KEY",
-  "READ_ONLY_API_KEY",
   "BLUEPRINT_TIMEOUT_MS",
-  "TASKFLOW_TIMEOUT_MS",
   "RESEND_API_KEY",
   "BRIEFING_FROM_EMAIL",
   "BRIEFING_TO_EMAILS",
@@ -27,11 +24,8 @@ const ENV_KEYS = [
 
 const VALID_ENV: Record<(typeof ENV_KEYS)[number], string> = {
   BLUEPRINT_API_BASE_URL: "https://www.workflowblueprint.io",
-  TASKFLOW_API_BASE_URL: "",
   EXTERNAL_API_KEY: "blueprint-key",
-  READ_ONLY_API_KEY: "",
   BLUEPRINT_TIMEOUT_MS: "12000",
-  TASKFLOW_TIMEOUT_MS: "",
   RESEND_API_KEY: "resend-key",
   BRIEFING_FROM_EMAIL: "Daily Brief <briefing@example.com>",
   BRIEFING_TO_EMAILS: "roy@example.com, Ops <ops@example.com>",
@@ -82,36 +76,6 @@ describe("getEnv", () => {
       briefingFromEmail: "Daily Brief <briefing@example.com>",
       briefingToEmails: ["roy@example.com", "Ops <ops@example.com>"],
       briefingMaxItems: 10,
-    });
-  });
-
-  it("accepts legacy Taskflow aliases during the Blueprint env migration", () => {
-    delete process.env.BLUEPRINT_API_BASE_URL;
-    delete process.env.EXTERNAL_API_KEY;
-    delete process.env.BLUEPRINT_TIMEOUT_MS;
-    process.env.TASKFLOW_API_BASE_URL = "https://www.workflowblueprint.io/";
-    process.env.READ_ONLY_API_KEY = "legacy-read-only-key";
-    process.env.TASKFLOW_TIMEOUT_MS = "15000";
-
-    expect(getEnv()).toMatchObject({
-      blueprintApiBaseUrl: "https://www.workflowblueprint.io",
-      blueprintApiKey: "legacy-read-only-key",
-      blueprintTimeoutMs: 15000,
-    });
-  });
-
-  it("prefers Blueprint env names over legacy aliases", () => {
-    process.env.BLUEPRINT_API_BASE_URL = "https://new.workflowblueprint.io";
-    process.env.TASKFLOW_API_BASE_URL = "https://old.workflowblueprint.io";
-    process.env.EXTERNAL_API_KEY = "new-key";
-    process.env.READ_ONLY_API_KEY = "old-key";
-    process.env.BLUEPRINT_TIMEOUT_MS = "13000";
-    process.env.TASKFLOW_TIMEOUT_MS = "14000";
-
-    expect(getEnv()).toMatchObject({
-      blueprintApiBaseUrl: "https://new.workflowblueprint.io",
-      blueprintApiKey: "new-key",
-      blueprintTimeoutMs: 13000,
     });
   });
 
