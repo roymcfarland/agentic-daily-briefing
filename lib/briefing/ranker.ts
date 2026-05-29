@@ -1,5 +1,6 @@
 import type { RankedStory, ResearchTopic, StoryCandidate } from "@/lib/briefing/types";
 import { ageInHours } from "@/lib/briefing/freshness";
+import { normalizeText } from "@/lib/briefing/text-utils";
 import { getTopicLabel } from "@/lib/research/topics";
 
 const SOURCE_BONUS: Record<string, number> = {
@@ -118,10 +119,7 @@ const LOW_TRUST_SOURCE_PENALTIES: Array<[RegExp, number]> = [
 ];
 
 function canonicalize(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, " ")
+  return normalizeText(text)
     .replace(/\b(the|a|an|to|for|of|in|on)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();

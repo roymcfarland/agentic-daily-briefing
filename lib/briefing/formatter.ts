@@ -1,6 +1,7 @@
 import { escapeHtml } from "@/lib/html";
 import { ageInHours } from "@/lib/briefing/freshness";
 import { buildDigestDerived, renderDeskFactsLinePlain } from "@/lib/briefing/formatter-derived";
+import { normalizeText } from "@/lib/briefing/text-utils";
 import type { BriefingDigest, RankedStory, TaskNode, TaskSummary } from "@/lib/briefing/types";
 import { getTopicLabel } from "@/lib/research/topics";
 
@@ -97,15 +98,6 @@ function freshnessDotColor(publishedAt: string | undefined): string {
 // Helpers
 // ============================================================
 
-function normalizeForComparison(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function trimSentence(value: string): string {
   return value.replace(/\s+/g, " ").trim().replace(/[.\s]+$/, "");
 }
@@ -155,12 +147,12 @@ function removeRedundantTail(value: string, repeated: string[]): string {
   let next = trimSentence(value);
 
   for (const item of repeated.map(trimSentence).filter(Boolean)) {
-    const normalizedItem = normalizeForComparison(item);
+    const normalizedItem = normalizeText(item);
     if (!normalizedItem) {
       continue;
     }
 
-    const normalizedNext = normalizeForComparison(next);
+    const normalizedNext = normalizeText(next);
     if (normalizedNext === normalizedItem) {
       continue;
     }
@@ -181,7 +173,7 @@ function getDisplayTitle(story: RankedStory): string {
 function getWhatHappened(story: RankedStory): string {
   const title = getDisplayTitle(story);
   const summary = trimSentence(story.summary || story.title);
-  if (!summary || normalizeForComparison(summary) === normalizeForComparison(title)) {
+  if (!summary || normalizeText(summary) === normalizeText(title)) {
     return title;
   }
 
