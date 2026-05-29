@@ -1,4 +1,5 @@
 import type { RankedStory, ResearchTopic, StoryCandidate } from "@/lib/briefing/types";
+import { ageInHours } from "@/lib/briefing/freshness";
 import { getTopicLabel } from "@/lib/research/topics";
 
 const SOURCE_BONUS: Record<string, number> = {
@@ -164,30 +165,16 @@ export function isLowSignal(story: StoryCandidate): boolean {
 }
 
 export function isFreshStory(story: StoryCandidate, now = new Date()): boolean {
-  if (!story.publishedAt) {
-    return false;
-  }
-
-  const published = new Date(story.publishedAt).getTime();
-  if (Number.isNaN(published)) {
-    return false;
-  }
-
-  const ageHours = Math.max(0, (now.getTime() - published) / (1000 * 60 * 60));
-  return ageHours <= FRESHNESS_WINDOW_HOURS;
+  const age = ageInHours(story.publishedAt, now);
+  return age !== null && age <= FRESHNESS_WINDOW_HOURS;
 }
 
 function getFreshnessBonus(publishedAt?: string): number {
-  if (!publishedAt) {
+  const ageHours = ageInHours(publishedAt, new Date());
+  if (ageHours === null) {
     return 0;
   }
 
-  const published = new Date(publishedAt).getTime();
-  if (Number.isNaN(published)) {
-    return 0;
-  }
-
-  const ageHours = Math.max(0, (Date.now() - published) / (1000 * 60 * 60));
   if (ageHours <= 6) {
     return 12;
   }

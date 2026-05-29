@@ -1,5 +1,6 @@
 import { getEnv } from "@/lib/env";
 import { getErrorMessage } from "@/lib/errors";
+import { ageInHours } from "@/lib/briefing/freshness";
 import type {
   BriefingDigest,
   RankedStory,
@@ -46,17 +47,8 @@ function containsKeyword(text: string, keywords: string[]): boolean {
 }
 
 function isSportsStoryFresh(story: StoryCandidate, now: Date): boolean {
-  if (!story.publishedAt) {
-    return false;
-  }
-
-  const published = new Date(story.publishedAt).getTime();
-  if (Number.isNaN(published)) {
-    return false;
-  }
-
-  const ageHours = Math.max(0, (now.getTime() - published) / (1000 * 60 * 60));
-  return ageHours <= 72;
+  const age = ageInHours(story.publishedAt, now);
+  return age !== null && age <= 72;
 }
 
 function summarizeWatch(stories: RankedStory[]): string {
@@ -69,17 +61,8 @@ function summarizeWatch(stories: RankedStory[]): string {
 }
 
 function isWithinPastWeek(story: RankedStory, now: Date): boolean {
-  if (!story.publishedAt) {
-    return false;
-  }
-
-  const publishedAt = new Date(story.publishedAt).getTime();
-  if (Number.isNaN(publishedAt)) {
-    return false;
-  }
-
-  const ageHours = Math.max(0, (now.getTime() - publishedAt) / (1000 * 60 * 60));
-  return ageHours <= 24 * 7;
+  const age = ageInHours(story.publishedAt, now);
+  return age !== null && age <= 24 * 7;
 }
 
 function summarizeIgnore(displayedStories: RankedStory[], rankedStories: RankedStory[], now: Date): string {
