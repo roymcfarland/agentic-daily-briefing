@@ -1,4 +1,5 @@
 import { getEnv } from "@/lib/env";
+import { getErrorMessage } from "@/lib/errors";
 import type {
   BriefingDigest,
   RankedStory,
@@ -32,10 +33,6 @@ const BRIEFING_TOPIC_ORDER: ResearchTopic[] = [
 const MAX_STORIES_PER_TOPIC = 2;
 const SOFT_MAX_STORIES_PER_TOPIC = 2;
 const EXTRA_TOPIC_STORY_MIN_SCORE = 40;
-
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Unknown error";
-}
 
 function warnPartialFailure(source: string, error: unknown) {
   console.warn(`${source} unavailable`, {

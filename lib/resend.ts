@@ -1,26 +1,12 @@
 import { Resend } from "resend";
 
 import { renderBriefingEmail, renderBriefingText } from "@/lib/briefing/formatter";
-import type { BriefingDigest } from "@/lib/briefing/types";
 import { getEnv } from "@/lib/env";
+import { getErrorMessage } from "@/lib/errors";
+import type { BriefingDigest } from "@/lib/briefing/types";
 
 interface SendBriefingEmailOptions {
   idempotencyKey?: string;
-}
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (typeof error === "object" && error !== null && "message" in error) {
-    const message = (error as { message?: unknown }).message;
-    if (typeof message === "string") {
-      return message;
-    }
-  }
-
-  return "Unknown Resend error";
 }
 
 export async function sendBriefingEmail(
@@ -42,7 +28,9 @@ export async function sendBriefingEmail(
   );
 
   if (result.error) {
-    throw new Error(`Resend email send failed: ${getErrorMessage(result.error)}`);
+    throw new Error(
+      `Resend email send failed: ${getErrorMessage(result.error, "Unknown Resend error")}`,
+    );
   }
 
   return result.data?.id ?? null;
