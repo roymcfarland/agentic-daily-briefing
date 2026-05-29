@@ -1,4 +1,5 @@
 import { escapeHtml } from "@/lib/html";
+import { ageInHours } from "@/lib/briefing/freshness";
 import { buildDigestDerived, renderDeskFactsLinePlain } from "@/lib/briefing/formatter-derived";
 import type { BriefingDigest, RankedStory, TaskNode, TaskSummary } from "@/lib/briefing/types";
 import { getTopicLabel } from "@/lib/research/topics";
@@ -79,14 +80,10 @@ function renderDarkModeStyleBlock(): string {
 }
 
 function freshnessDotColor(publishedAt: string | undefined): string {
-  if (!publishedAt) {
+  const hours = ageInHours(publishedAt, new Date());
+  if (hours === null) {
     return L.freshnessGray;
   }
-  const t = Date.parse(publishedAt);
-  if (Number.isNaN(t)) {
-    return L.freshnessGray;
-  }
-  const hours = (Date.now() - t) / (1000 * 60 * 60);
   if (hours <= 12) {
     return L.freshnessGreen;
   }

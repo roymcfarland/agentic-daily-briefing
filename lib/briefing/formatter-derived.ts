@@ -1,4 +1,5 @@
 import type { BriefingDigest, RankedStory, TaskNode } from "@/lib/briefing/types";
+import { ageInHours } from "@/lib/briefing/freshness";
 
 export function countTaskNodes(tasks: TaskNode[]): number {
   let total = 0;
@@ -42,16 +43,12 @@ export function buildDigestDerived(digest: BriefingDigest): DigestDerived {
   let fresh12Count = 0;
   let unpublishedCount = 0;
   for (const story of stories) {
-    if (!story.publishedAt) {
+    const age = ageInHours(story.publishedAt, new Date(now));
+    if (age === null) {
       unpublishedCount += 1;
       continue;
     }
-    const t = Date.parse(story.publishedAt);
-    if (Number.isNaN(t)) {
-      unpublishedCount += 1;
-      continue;
-    }
-    if ((now - t) / (1000 * 60 * 60) <= 12) {
+    if (age <= 12) {
       fresh12Count += 1;
     }
   }
