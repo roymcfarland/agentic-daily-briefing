@@ -91,4 +91,30 @@ describe("BlueprintClient", () => {
       "Blueprint getDailySummary returned malformed JSON",
     );
   });
+
+  it("preserves custom (non-enum) task categories", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "application/json" }),
+        json: async () => ({
+          inProgress: [
+            {
+              id: 9,
+              title: "Update LinkedIn Skills",
+              status: "in-progress",
+              category: "career-development",
+              parentId: null,
+            },
+          ],
+        }),
+      }),
+    );
+
+    const client = new BlueprintClient({ baseUrl: "https://example.test", apiKey: "k" });
+    const summary = await client.getDailySummary();
+
+    expect(summary.inProgress?.[0]?.category).toBe("career-development");
+  });
 });

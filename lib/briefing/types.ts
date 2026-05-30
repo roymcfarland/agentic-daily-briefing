@@ -1,6 +1,4 @@
-export type CoverageArea =
-  | "personal"
-  | "brightline-labs";
+export type CoverageArea = string;
 
 export interface TaskNode {
   id: number | string;

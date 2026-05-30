@@ -1,11 +1,6 @@
 import { getEnv } from "@/lib/env";
-import type { CoverageArea, TaskNode, TaskSummary } from "@/lib/briefing/types";
+import type { TaskNode, TaskSummary } from "@/lib/briefing/types";
 import { BlueprintClient, type Task } from "@/lib/blueprint/generated/client";
-
-const AREAS: CoverageArea[] = [
-  "personal",
-  "brightline-labs",
-];
 
 const EXCLUDED_TASK_TITLES = new Set([
   "Test task",
@@ -13,15 +8,37 @@ const EXCLUDED_TASK_TITLES = new Set([
   "Ice box task",
 ]);
 
-function normalizeCategory(category?: string): CoverageArea | null {
-  if (
-    category === "personal" ||
-    category === "brightline-labs"
-  ) {
-    return category;
+function humanizeCategory(category: string): string {
+  return category
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function normalizeCategory(category?: string): string | null {
+  const trimmed = category?.trim();
+  return trimmed ? trimmed : null;
+}
+
+function groupByCategory(tasks: Task[] | undefined): Map<string, Task[]> {
+  const grouped = new Map<string, Task[]>();
+
+  for (const task of tasks ?? []) {
+    const category = normalizeCategory(task.category);
+    if (!category) {
+      continue;
+    }
+
+    const bucket = grouped.get(category);
+    if (bucket) {
+      bucket.push(task);
+    } else {
+      grouped.set(category, [task]);
+    }
   }
 
-  return null;
+  return grouped;
 }
 
 function sortTasks(tasks: Task[]): Task[] {
@@ -40,22 +57,6 @@ function sortTasks(tasks: Task[]): Task[] {
 
     return (left.title ?? "").localeCompare(right.title ?? "");
   });
-}
-
-function byArea(tasks: Task[] | undefined): Record<CoverageArea, Task[]> {
-  const grouped: Record<CoverageArea, Task[]> = {
-    personal: [],
-    "brightline-labs": [],
-  };
-
-  for (const task of tasks ?? []) {
-    const area = normalizeCategory(task.category);
-    if (area) {
-      grouped[area].push(task);
-    }
-  }
-
-  return grouped;
 }
 
 function statusOf(task: Task): "in-progress" | "on-deck" {
@@ -113,9 +114,7 @@ function buildTaskTree(tasks: Task[]): TaskNode[] {
     .filter((node) => !childIds.has(String(node.id)));
 }
 
-function createHeadline(area: CoverageArea, openItems: number, parentItems: number): string {
-  const label = area === "personal" ? "Personal" : "Brightline Labs";
-
+function createHeadline(label: string, openItems: number, parentItems: number): string {
   return `${label}: ${openItems} active tasks across ${parentItems} parent items`;
 }
 
@@ -129,23 +128,39 @@ export async function getTaskSummaries(now: Date): Promise<TaskSummary[]> {
   void now;
 
   const summary = await client.getDailySummary();
-  const inProgressByArea = byArea(summary.inProgress);
-  const onDeckByArea = byArea(summary.onDeck);
+  const inProgressByCategory = groupByCategory(summary.inProgress);
+  const onDeckByCategory = groupByCategory(summary.onDeck);
 
-  return AREAS.map((area) => {
-    const activeTasks = [...inProgressByArea[area], ...onDeckByArea[area]];
-    const tasks = buildTaskTree(activeTasks);
-    const openItems = activeTasks.length;
+  const categories = new Set<string>([
+    ...inProgressByCategory.keys(),
+    ...onDeckByCategory.keys(),
+  ]);
 
-    return {
-      area,
-      headline: createHeadline(area, openItems, tasks.length),
-      openItems,
-      tasks,
-      rawSummary: JSON.stringify({
-        generatedAt: summary.generatedAt,
-        completionRate: summary.summary?.completionRate,
-      }),
-    };
-  }).filter((summary) => summary.openItems > 0 && summary.tasks.length > 0);
+  return [...categories]
+    .map((category) => {
+      const activeTasks = [
+        ...(inProgressByCategory.get(category) ?? []),
+        ...(onDeckByCategory.get(category) ?? []),
+      ];
+      const tasks = buildTaskTree(activeTasks);
+      const openItems = activeTasks.length;
+
+      return {
+        area: category,
+        headline: createHeadline(humanizeCategory(category), openItems, tasks.length),
+        openItems,
+        tasks,
+        rawSummary: JSON.stringify({
+          generatedAt: summary.generatedAt,
+          completionRate: summary.summary?.completionRate,
+        }),
+      };
+    })
+    .filter((item) => item.openItems > 0 && item.tasks.length > 0)
+    .sort((left, right) => {
+      if (right.openItems !== left.openItems) {
+        return right.openItems - left.openItems;
+      }
+      return left.area.localeCompare(right.area);
+    });
 }
