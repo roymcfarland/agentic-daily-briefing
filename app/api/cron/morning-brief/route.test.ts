@@ -78,12 +78,22 @@ describe("morning brief route", () => {
     vi.unstubAllEnvs();
   });
 
-  it("returns 401 when the bearer token is missing in production", async () => {
+  it("returns 401 when the bearer token is missing", async () => {
     const response = await GET(new Request("https://example.com/api/cron/morning-brief?preview=1"));
     const payload = await response.json();
 
     expect(response.status).toBe(401);
     expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(payload).toEqual({ ok: false, error: "Unauthorized" });
+  });
+
+  it("returns 401 when the bearer token is missing even outside production", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+
+    const response = await GET(new Request("https://example.com/api/cron/morning-brief?preview=1"));
+    const payload = await response.json();
+
+    expect(response.status).toBe(401);
     expect(payload).toEqual({ ok: false, error: "Unauthorized" });
   });
 
@@ -243,6 +253,25 @@ describe("morning brief route", () => {
     expect(payload).toEqual({ ok: false, error: "Morning brief failed." });
     expect(lock.complete).not.toHaveBeenCalled();
     expect(lock.release).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not release the lock when completion fails after the email was sent", async () => {
+    const lock = mockAcquiredSendLock();
+    lock.complete.mockRejectedValueOnce(new Error("Redis write failed"));
+    mockedBuildBriefingDigest.mockResolvedValueOnce(digest());
+    mockedSendBriefingEmail.mockResolvedValueOnce("email-id");
+
+    const response = await GET(
+      new Request("https://example.com/api/cron/morning-brief", {
+        headers: {
+          authorization: "Bearer secret-value-long",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(500);
+    expect(mockedSendBriefingEmail).toHaveBeenCalledTimes(1);
+    expect(lock.release).not.toHaveBeenCalled();
   });
 
   it("skips duplicate sends that already completed", async () => {
