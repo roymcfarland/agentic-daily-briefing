@@ -59,6 +59,7 @@ function cleanText(input: string | undefined): string {
   }
 
   return decodeEntities(input)
+    .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
