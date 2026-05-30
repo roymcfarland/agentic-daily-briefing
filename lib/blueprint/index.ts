@@ -1,12 +1,28 @@
 import { getEnv } from "@/lib/env";
 import type { TaskNode, TaskSummary } from "@/lib/briefing/types";
-import { BlueprintClient, type Task } from "@/lib/blueprint/generated/client";
+import {
+  BlueprintClient,
+  type DailySummaryResponse,
+  type Task,
+} from "@/lib/blueprint/generated/client";
 
 const EXCLUDED_TASK_TITLES = new Set([
   "Test task",
   "Valid task",
   "Ice box task",
 ]);
+
+// Re-maps the generated client's HTTP-status errors into actionable messages.
+// Keyed off the message strings emitted by lib/blueprint/generated/client.ts.
+function classifyBlueprintError(error: unknown): never {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/failed with 40[13]\b/.test(message)) {
+    throw new Error(
+      "Blueprint authentication failed (HTTP 401/403) — verify EXTERNAL_API_KEY points at the correct workspace.",
+    );
+  }
+  throw error;
+}
 
 function humanizeCategory(category: string): string {
   return category
@@ -127,16 +143,26 @@ export async function getTaskSummaries(now: Date): Promise<TaskSummary[]> {
   });
   void now;
 
-  const summary = await client.getDailySummary();
-  const inProgressByCategory = groupByCategory(summary.inProgress);
-  const onDeckByCategory = groupByCategory(summary.onDeck);
+  const summary: DailySummaryResponse = await client
+    .getDailySummary()
+    .catch((error: unknown) => classifyBlueprintError(error));
+
+  const rawInProgress = summary.inProgress ?? [];
+  const rawOnDeck = summary.onDeck ?? [];
+  const rawActiveCount = rawInProgress.length + rawOnDeck.length;
+  const categoriesSeen = [
+    ...new Set([...rawInProgress, ...rawOnDeck].map((task) => task.category ?? "(none)")),
+  ];
+
+  const inProgressByCategory = groupByCategory(rawInProgress);
+  const onDeckByCategory = groupByCategory(rawOnDeck);
 
   const categories = new Set<string>([
     ...inProgressByCategory.keys(),
     ...onDeckByCategory.keys(),
   ]);
 
-  return [...categories]
+  const summaries = [...categories]
     .map((category) => {
       const activeTasks = [
         ...(inProgressByCategory.get(category) ?? []),
@@ -163,4 +189,22 @@ export async function getTaskSummaries(now: Date): Promise<TaskSummary[]> {
       }
       return left.area.localeCompare(right.area);
     });
+
+  const displayedOpenItems = summaries.reduce((total, item) => total + item.openItems, 0);
+  if (rawActiveCount > displayedOpenItems) {
+    console.warn("Blueprint active tasks dropped before display", {
+      rawActiveCount,
+      displayedOpenItems,
+      categoriesSeen,
+    });
+  }
+
+  if (rawActiveCount > 0 && summaries.length === 0) {
+    throw new Error(
+      `Blueprint returned ${rawActiveCount} active task(s) but none were displayable after filtering ` +
+        `(categories seen: ${categoriesSeen.join(", ") || "none"}); verify the workspace and the excluded-title list.`,
+    );
+  }
+
+  return summaries;
 }
