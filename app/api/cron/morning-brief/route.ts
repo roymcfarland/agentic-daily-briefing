@@ -35,10 +35,11 @@ export async function GET(request: Request) {
   const preview = searchParams.get("preview") === "1";
   const now = new Date();
   let sendLock: Awaited<ReturnType<typeof beginBriefingSend>> | null = null;
+  let emailSent = false;
 
   try {
     const authorized = isAuthorized(request);
-    if (!authorized && process.env.NODE_ENV === "production") {
+    if (!authorized) {
       return NextResponse.json(
         { ok: false, error: "Unauthorized" },
         { status: 401, headers: JSON_HEADERS },
@@ -93,6 +94,7 @@ export async function GET(request: Request) {
     const emailId = await sendBriefingEmail(digest, {
       idempotencyKey: sendLock.idempotencyKey,
     });
+    emailSent = true;
     await sendLock.complete({
       emailId,
       dateLabel: digest.dateLabel,
@@ -109,7 +111,7 @@ export async function GET(request: Request) {
       warnings: digest.warnings,
     }, { headers: JSON_HEADERS });
   } catch (error) {
-    if (sendLock?.status === "acquired") {
+    if (sendLock?.status === "acquired" && !emailSent) {
       await sendLock.release().catch((releaseError) => {
         console.error("Failed to release morning brief send lock", {
           message: releaseError instanceof Error ? releaseError.message : "Unknown error",
