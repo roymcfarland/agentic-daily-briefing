@@ -101,7 +101,7 @@ describe("morning brief route", () => {
     mockedBuildBriefingDigest.mockRejectedValueOnce(new Error("Blueprint timeout details"));
 
     const response = await GET(
-      new Request("https://example.com/api/cron/morning-brief?force=1&preview=1", {
+      new Request("https://example.com/api/cron/morning-brief?preview=1", {
         headers: {
           authorization: "Bearer secret-value-long",
         },
@@ -118,7 +118,7 @@ describe("morning brief route", () => {
     applyEnv({ CRON_SECRET: undefined });
 
     const response = await GET(
-      new Request("https://example.com/api/cron/morning-brief?force=1&preview=1", {
+      new Request("https://example.com/api/cron/morning-brief?preview=1", {
         headers: {
           authorization: "Bearer secret-value-long",
         },
@@ -134,7 +134,7 @@ describe("morning brief route", () => {
     mockedBuildBriefingDigest.mockResolvedValueOnce(digest());
 
     const response = await GET(
-      new Request("https://example.com/api/cron/morning-brief?force=1&preview=1", {
+      new Request("https://example.com/api/cron/morning-brief?preview=1", {
         headers: {
           authorization: "Bearer secret-value-long",
         },
@@ -161,7 +161,6 @@ describe("morning brief route", () => {
     const payload = await response.json();
 
     expect(response.status).toBe(200);
-    expect(payload.forced).toBe(false);
     expect(mockedBuildBriefingDigest).toHaveBeenCalledTimes(1);
   });
 
@@ -171,7 +170,7 @@ describe("morning brief route", () => {
     mockedSendBriefingEmail.mockResolvedValueOnce("email-id");
 
     const response = await GET(
-      new Request("https://example.com/api/cron/morning-brief?force=1", {
+      new Request("https://example.com/api/cron/morning-brief", {
         headers: {
           authorization: "Bearer secret-value-long",
         },
@@ -204,7 +203,7 @@ describe("morning brief route", () => {
     mockedSendBriefingEmail.mockResolvedValueOnce("email-id");
 
     const response = await GET(
-      new Request("https://example.com/api/cron/morning-brief?force=1", {
+      new Request("https://example.com/api/cron/morning-brief", {
         headers: {
           authorization: "Bearer secret-value-long",
         },
@@ -222,7 +221,7 @@ describe("morning brief route", () => {
     mockedBuildBriefingDigest.mockResolvedValueOnce(digest({ warnings }));
 
     const response = await GET(
-      new Request("https://example.com/api/cron/morning-brief?force=1&preview=1", {
+      new Request("https://example.com/api/cron/morning-brief?preview=1", {
         headers: {
           authorization: "Bearer secret-value-long",
         },
@@ -241,7 +240,7 @@ describe("morning brief route", () => {
     mockedSendBriefingEmail.mockRejectedValueOnce(new Error("Resend API key rejected"));
 
     const response = await GET(
-      new Request("https://example.com/api/cron/morning-brief?force=1", {
+      new Request("https://example.com/api/cron/morning-brief", {
         headers: {
           authorization: "Bearer secret-value-long",
         },

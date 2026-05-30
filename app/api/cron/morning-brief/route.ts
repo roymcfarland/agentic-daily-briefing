@@ -31,7 +31,6 @@ function isAuthorized(request: Request): boolean {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const force = searchParams.get("force") === "1";
   const preview = searchParams.get("preview") === "1";
   const now = new Date();
   let sendLock: Awaited<ReturnType<typeof beginBriefingSend>> | null = null;
@@ -51,7 +50,6 @@ export async function GET(request: Request) {
       return NextResponse.json({
         ok: true,
         preview: true,
-        forced: force,
         digest,
       }, { headers: JSON_HEADERS });
     }
@@ -72,7 +70,6 @@ export async function GET(request: Request) {
         sent: false,
         skipped: true,
         reason: "already_sent",
-        forced: force,
         idempotencyKey: sendLock.idempotencyKey,
         id: sendLock.record.emailId,
         sentAt: sendLock.record.sentAt,
@@ -86,7 +83,6 @@ export async function GET(request: Request) {
         sent: false,
         skipped: true,
         reason: "send_in_progress",
-        forced: force,
         idempotencyKey: sendLock.idempotencyKey,
       }, { status: 202, headers: JSON_HEADERS });
     }
@@ -104,7 +100,6 @@ export async function GET(request: Request) {
     return NextResponse.json({
       ok: true,
       sent: true,
-      forced: force,
       idempotencyKey: sendLock.idempotencyKey,
       id: emailId,
       stories: digest.stories.length,
@@ -123,7 +118,6 @@ export async function GET(request: Request) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Morning brief failed", {
       message,
-      force,
       preview,
       timestamp: now.toISOString(),
     });

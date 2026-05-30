@@ -20,5 +20,4 @@ This file contains tactical instructions for AI agents (Cursor, Claude Code, etc
 
 - **Cron execution:** The app is designed to be triggered by Vercel Cron. To test the route locally, you must send a `GET` request to `/api/cron/morning-brief` with an `Authorization: Bearer <CRON_SECRET>` header.
 - **Preview mode:** Append `?preview=1` to the cron URL to assemble the digest and return it as JSON without sending an email or acquiring an idempotency lock. This is the safest way to test the pipeline locally.
-- **Force mode:** Append `?force=1` to bypass the time-of-day checks if you are testing outside the normal morning window.
 <!-- END:agent-rules -->

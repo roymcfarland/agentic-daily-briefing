@@ -95,32 +95,16 @@ Manually trigger the cron route in development:
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/morning-brief
 ```
 
-Force a manual send outside the normal cron window:
-
-```bash
-curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/morning-brief?force=1"
-```
-
 Preview the assembled briefing without sending email:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/morning-brief?preview=1"
 ```
 
-Preview the assembled briefing outside the normal send window:
-
-```bash
-curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/morning-brief?force=1&preview=1"
-```
-
 Production domain:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/cron/morning-brief?preview=1"
-```
-
-```bash
-curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/cron/morning-brief?force=1"
 ```
 
 ## What I'd do differently if I started over
@@ -170,6 +154,5 @@ npm test
 - Research is gathered live at send time from public RSS search results, then deduped and ranked.
 - If a feed fails, the pipeline continues with the remaining sources.
 - The route returns JSON so Vercel Cron logs stay readable.
-- `force=1` can be used on an authenticated request for manual testing outside the scheduled send window.
 - `preview=1` can be used on an authenticated request to inspect the assembled digest without sending email.
 - Sent emails use a stable Chicago-date idempotency key in Redis/Upstash and Resend, so duplicate cron retries for the same day return the persisted send record instead of sending again.
