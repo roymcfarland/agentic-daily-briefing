@@ -185,4 +185,28 @@ describe("rankStories", () => {
     expect(isLowSignal(story)).toBe(true);
     expect(rankStories([story])).toHaveLength(0);
   });
+
+  it("preserves passthrough fields while ranking stories", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-04T23:00:00Z"));
+
+    const stories: Array<StoryCandidate & { sportsArea: "tennis"; sportsLabel: string }> = [
+      {
+        topic: "sports",
+        title: "ATP and WTA launch new tournament partnership for tennis calendar",
+        summary: "The partnership changes tournament distribution and player schedule planning.",
+        source: "ATP Tour",
+        url: "https://example.com/tennis-partnership",
+        publishedAt: "2026-04-04T18:00:00Z",
+        sportsArea: "tennis",
+        sportsLabel: "Tennis",
+      },
+    ];
+
+    const ranked = rankStories(stories);
+
+    expect(ranked[0]?.sportsArea).toBe("tennis");
+    expect(ranked[0]?.sportsLabel).toBe("Tennis");
+    vi.useRealTimers();
+  });
 });

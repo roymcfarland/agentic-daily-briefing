@@ -296,8 +296,8 @@ function inferSecondOrderEffect(story: StoryCandidate): string {
   return "The first-order headline may be modest, but the real impact could show up in pricing, partnerships, or execution speed.";
 }
 
-export function rankStories(candidates: StoryCandidate[]): RankedStory[] {
-  const deduped: StoryCandidate[] = [];
+export function rankStories<T extends StoryCandidate>(candidates: T[]): (T & RankedStory)[] {
+  const deduped: T[] = [];
 
   for (const story of candidates) {
     if (isLowSignal(story) || !isFreshStory(story)) {
@@ -328,7 +328,7 @@ export function rankStories(candidates: StoryCandidate[]): RankedStory[] {
   }
 
   return deduped
-    .map((story) => {
+    .map((story): T & RankedStory => {
       const dedupeKey = buildDedupeKey(story);
       const score = getDecisionRelevanceScore(story);
 
@@ -339,7 +339,7 @@ export function rankStories(candidates: StoryCandidate[]): RankedStory[] {
         whyItMatters: inferWhyItMatters(story),
         signalOrNoise: score >= 35 ? "Signal" : "Noise",
         secondOrderEffect: inferSecondOrderEffect(story),
-      } satisfies RankedStory;
+      };
     })
     .sort((left, right) => right.score - left.score);
 }
