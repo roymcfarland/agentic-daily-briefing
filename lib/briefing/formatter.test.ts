@@ -86,6 +86,27 @@ describe("renderBriefingEmail", () => {
     expect(html).not.toContain(">One possible contrarian take:<");
   });
 
+  it("sanitizes story links and escapes hostile story content in HTML", () => {
+    const html = renderBriefingEmail({
+      ...digest,
+      stories: [
+        {
+          ...digest.stories[0],
+          title: `Hostile <script>alert(1)</script> " & title`,
+          summary: `Hostile <script>alert(1)</script> " & summary`,
+          url: "javascript:alert(document.cookie)",
+          whyItMatters: `Hostile <script>alert(1)</script> " & why it matters`,
+          secondOrderEffect: `Hostile <script>alert(1)</script> " & second order`,
+        },
+      ],
+    });
+
+    expect(html).not.toContain('href="javascript:');
+    expect(html).not.toContain("<script>");
+    expect(html).toContain('href="#"');
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+  });
+
   it("renders a matching plain-text version", () => {
     const text = renderBriefingText(digest);
 

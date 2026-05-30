@@ -1,4 +1,4 @@
-import { escapeHtml } from "@/lib/html";
+import { escapeHtml, sanitizeUrl } from "@/lib/html";
 import { ageInHours } from "@/lib/briefing/freshness";
 import { buildDigestDerived, renderDeskFactsLinePlain } from "@/lib/briefing/formatter-derived";
 import { normalizeText } from "@/lib/briefing/text-utils";
@@ -207,7 +207,7 @@ function renderDeskReading(digest: BriefingDigest): string {
   return `
         <aside data-role="canvas" style="margin:0 0 20px;padding:16px 18px;border:1px solid ${L.divider};border-radius:14px;background-color:${L.canvas};">
           <p style="margin:0 0 8px;"><span data-role="accent" style="display:inline-block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:${L.accent};font-weight:600;">If you only read one thing</span></p>
-          <p data-role="ink-muted" style="margin:0;font-size:15px;line-height:1.55;color:${L.inkMuted};font-style:italic;"><a href="${escapeHtml(story.url)}" style="color:${L.accent};text-decoration:none;">${escapeHtml(displayTitle)}</a> — ${escapeHtml(framing)}</p>
+          <p data-role="ink-muted" style="margin:0;font-size:15px;line-height:1.55;color:${L.inkMuted};font-style:italic;"><a href="${escapeHtml(sanitizeUrl(story.url))}" style="color:${L.accent};text-decoration:none;">${escapeHtml(displayTitle)}</a> — ${escapeHtml(framing)}</p>
         </aside>`;
 }
 
@@ -470,7 +470,7 @@ function renderStory(story: RankedStory, options: { isLead: boolean }): string {
         </tr>
       </table>
       <h3 style="margin:16px 0 8px;font-size:${titleSize}px;line-height:${titleLineHeight};color:${L.ink};font-weight:700;">
-        <a href="${escapeHtml(story.url)}" style="color:${L.accent};text-decoration:none;">${escapeHtml(displayTitle)}</a>
+        <a href="${escapeHtml(sanitizeUrl(story.url))}" style="color:${L.accent};text-decoration:none;">${escapeHtml(displayTitle)}</a>
       </h3>
       ${storyBodyBlocks}
     </article>`;
@@ -566,7 +566,7 @@ export function renderBriefingText(digest: BriefingDigest): string {
     lines.push("", "If you only read one thing:");
     lines.push(getDisplayTitle(story));
     lines.push(framing);
-    lines.push(`Link: ${story.url}`);
+    lines.push(`Link: ${sanitizeUrl(story.url)}`);
   }
   const metricsPlain = renderDeskFactsLinePlain(derivedBlock);
   if (metricsPlain) {
@@ -608,7 +608,7 @@ export function renderBriefingText(digest: BriefingDigest): string {
       lines.push(`Why it matters: ${getWhyItMatters(story)}`);
       lines.push(`Signal: ${story.signalOrNoise}`);
       lines.push(`Second-order effect: ${story.secondOrderEffect}`);
-      lines.push(`Link: ${story.url}`);
+      lines.push(`Link: ${sanitizeUrl(story.url)}`);
       lines.push("");
     });
   }
