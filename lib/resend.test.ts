@@ -47,6 +47,7 @@ describe("sendBriefingEmail", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     for (const key of Object.keys(ENV)) {
       delete process.env[key];
     }
@@ -87,5 +88,16 @@ describe("sendBriefingEmail", () => {
     await expect(sendBriefingEmail(digest)).rejects.toThrow(
       "Resend email send failed: API key rejected",
     );
+  });
+
+  it("rejects when the Resend send hangs past the timeout", async () => {
+    vi.useFakeTimers();
+    mocks.send.mockReturnValueOnce(new Promise(() => {}));
+
+    const promise = sendBriefingEmail(digest);
+    const assertion = expect(promise).rejects.toThrow(/timed out after 15000ms/);
+
+    await vi.advanceTimersByTimeAsync(15000);
+    await assertion;
   });
 });
