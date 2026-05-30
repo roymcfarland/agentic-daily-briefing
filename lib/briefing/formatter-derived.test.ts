@@ -17,7 +17,6 @@ const baseStory: RankedStory = {
   score: 40,
   whyItMatters: "Cheaper inference can reset product margins.",
   signalOrNoise: "Signal",
-  secondOrderEffect: "More teams ship copilots sooner.",
 };
 
 function story(overrides: Partial<RankedStory> = {}): RankedStory {
@@ -197,14 +196,14 @@ describe("formatter-derived", () => {
         title: "Higher Noise pick",
         signalOrNoise: "Noise",
         score: 80,
-        secondOrderEffect: "Noise framing.",
+        whyItMatters: "Noise framing.",
       });
       const signal = story({
         topic: "business",
         title: "Signal headline",
         signalOrNoise: "Signal",
         score: 60,
-        secondOrderEffect: "Signal framing — what to watch for downstream.",
+        whyItMatters: "Signal framing - what to watch for downstream.",
       });
 
       // Topic-balanced output from selectStoriesForBriefing — ai before business
@@ -214,7 +213,7 @@ describe("formatter-derived", () => {
 
       expect(d.topStoryPointer).not.toBeNull();
       expect(d.topStoryPointer?.story.title).toBe("Signal headline");
-      expect(d.topStoryPointer?.framing).toBe("Signal framing — what to watch for downstream.");
+      expect(d.topStoryPointer?.framing).toBe("Signal framing - what to watch for downstream.");
     });
 
     it("falls back to the highest-scored story when only Noise stories exist", () => {
@@ -223,21 +222,21 @@ describe("formatter-derived", () => {
         title: "Low Noise pick",
         signalOrNoise: "Noise",
         score: 20,
-        secondOrderEffect: "Low framing.",
+        whyItMatters: "Low framing.",
       });
       const topInMiddle = story({
         topic: "markets",
         title: "Top Noise pick",
         signalOrNoise: "Noise",
         score: 50,
-        secondOrderEffect: "Top framing.",
+        whyItMatters: "Top framing.",
       });
       const midLast = story({
         topic: "business",
         title: "Mid Noise pick",
         signalOrNoise: "Noise",
         score: 35,
-        secondOrderEffect: "Mid framing.",
+        whyItMatters: "Mid framing.",
       });
 
       // Input order [20, 50, 35] proves selection sorts rather than picking
@@ -255,14 +254,14 @@ describe("formatter-derived", () => {
         title: "Lower Signal",
         signalOrNoise: "Signal",
         score: 50,
-        secondOrderEffect: "Lower Signal framing.",
+        whyItMatters: "Lower Signal framing.",
       });
       const highSignal = story({
         topic: "business",
         title: "Higher Signal",
         signalOrNoise: "Signal",
         score: 80,
-        secondOrderEffect: "Higher Signal framing.",
+        whyItMatters: "Higher Signal framing.",
       });
 
       // Input order [lowSignal, highSignal] mirrors topic-balanced output where
@@ -284,21 +283,21 @@ describe("formatter-derived", () => {
         title: "AI Signal at 40",
         signalOrNoise: "Signal",
         score: 40,
-        secondOrderEffect: "AI Signal framing.",
+        whyItMatters: "AI Signal framing.",
       });
       const signalBusiness65 = story({
         topic: "business",
         title: "Business Signal at 65",
         signalOrNoise: "Signal",
         score: 65,
-        secondOrderEffect: "Business Signal framing.",
+        whyItMatters: "Business Signal framing.",
       });
       const noiseColorado50 = story({
         topic: "colorado",
         title: "Colorado Noise at 50",
         signalOrNoise: "Noise",
         score: 50,
-        secondOrderEffect: "Colorado Noise framing.",
+        whyItMatters: "Colorado Noise framing.",
       });
 
       const d = buildDigestDerived(
@@ -319,21 +318,21 @@ describe("formatter-derived", () => {
         title: "AI Noise at 80",
         signalOrNoise: "Noise",
         score: 80,
-        secondOrderEffect: "AI Noise framing.",
+        whyItMatters: "AI Noise framing.",
       });
       const noiseMarkets75 = story({
         topic: "markets",
         title: "Markets Noise at 75",
         signalOrNoise: "Noise",
         score: 75,
-        secondOrderEffect: "Markets Noise framing.",
+        whyItMatters: "Markets Noise framing.",
       });
       const signalBusiness45 = story({
         topic: "business",
         title: "Business Signal at 45",
         signalOrNoise: "Signal",
         score: 45,
-        secondOrderEffect: "Business Signal framing.",
+        whyItMatters: "Business Signal framing.",
       });
 
       const d = buildDigestDerived(

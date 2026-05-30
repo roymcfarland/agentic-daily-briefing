@@ -44,7 +44,6 @@ const digest: BriefingDigest = {
       score: 42,
       whyItMatters: "Cheaper inference can reset product margins.",
       signalOrNoise: "Signal",
-      secondOrderEffect: "More teams ship copilots sooner.",
     },
     {
       topic: "sports",
@@ -56,7 +55,6 @@ const digest: BriefingDigest = {
       score: 31,
       whyItMatters: "This is useful context if it changes momentum, fan attention, or the near-term storyline around a team or tournament you track.",
       signalOrNoise: "Noise",
-      secondOrderEffect: "A small shift in form, injury status, or tournament momentum could change how the next few days play out.",
     },
   ],
   oneThingToWatch: "Watch margin compression in AI software.",
@@ -70,9 +68,8 @@ describe("renderBriefingEmail", () => {
     const html = renderBriefingEmail(digest);
 
     expect(html).toContain("Daily Digest");
-    expect(html).toContain("What happened</strong>");
+    expect(html).toContain("Summary</strong>");
     expect(html).toContain("Why it matters</strong>");
-    expect(html).toContain("Second-order effect</strong>");
     expect(html).toContain("Briefing Feed");
     expect(html).toContain("Denver Broncos adjust offseason plan");
     expect(html).not.toContain("Denver Broncos adjust offseason plan - ap.com");
@@ -96,7 +93,6 @@ describe("renderBriefingEmail", () => {
           summary: `Hostile <script>alert(1)</script> " & summary`,
           url: "javascript:alert(document.cookie)",
           whyItMatters: `Hostile <script>alert(1)</script> " & why it matters`,
-          secondOrderEffect: `Hostile <script>alert(1)</script> " & second order`,
         },
       ],
     });
@@ -121,6 +117,7 @@ describe("renderBriefingEmail", () => {
     expect(text).toContain("If you only read one thing:");
     expect(text).toContain("peak relevance 42");
     expect(text).toContain("Relevance score: 42");
+    expect(text).toContain("Summary: Two major providers cut prices for enterprise tiers");
     expect(text).toContain("One possible contrarian take:");
   });
 
@@ -145,8 +142,9 @@ describe("renderBriefingEmail", () => {
       ],
     });
 
-    expect(html).toContain("Cheaper inference can reset product margins");
-    expect(html).not.toContain("Cheaper inference can reset product margins. Two major providers cut prices for enterprise tiers.");
+    const feedHtml = html.slice(html.indexOf("Briefing Feed"));
+    expect(feedHtml).toContain("Cheaper inference can reset product margins");
+    expect(feedHtml).not.toContain("Cheaper inference can reset product margins. Two major providers cut prices for enterprise tiers.");
   });
 
   it("renders a Briefing notes banner in HTML when warnings are present", () => {
@@ -336,9 +334,8 @@ describe("renderBriefingEmail", () => {
           url: "https://example.com/signal",
           dedupeKey: "signal-headline-of-the-day",
           score: 60,
-          whyItMatters: "Could shift product roadmaps.",
+          whyItMatters: "Teams accelerate ship cycles to capture the move.",
           signalOrNoise: "Signal",
-          secondOrderEffect: "Teams accelerate ship cycles to capture the move.",
         },
         {
           topic: "markets",
@@ -350,7 +347,6 @@ describe("renderBriefingEmail", () => {
           score: 40,
           whyItMatters: "Texture, not a decision driver.",
           signalOrNoise: "Noise",
-          secondOrderEffect: "Marginal effect on positioning.",
         },
       ],
     });
@@ -386,9 +382,8 @@ describe("renderBriefingEmail", () => {
           url: "https://example.com/noise-top",
           dedupeKey: "top-noise-pick-of-the-day",
           score: 55,
-          whyItMatters: "Helpful texture.",
+          whyItMatters: "Watch for follow-on commentary in the next news cycle.",
           signalOrNoise: "Noise",
-          secondOrderEffect: "Watch for follow-on commentary in the next news cycle.",
         },
         {
           topic: "markets",
@@ -400,7 +395,6 @@ describe("renderBriefingEmail", () => {
           score: 30,
           whyItMatters: "Marginal.",
           signalOrNoise: "Noise",
-          secondOrderEffect: "Negligible.",
         },
       ],
     });

@@ -402,7 +402,7 @@ function renderStory(story: RankedStory, options: { isLead: boolean }): string {
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:18px 0 0;">
         <tr>
           <td style="padding:0;">
-            <p data-role="ink-muted" style="margin:0 0 6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};"><strong>What happened</strong></p>
+            <p data-role="ink-muted" style="margin:0 0 6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};"><strong>Summary</strong></p>
             <p data-role="ink" style="margin:0;color:${L.ink};line-height:1.5;">${escapeHtml(getWhatHappened(story))}</p>
           </td>
         </tr>
@@ -410,12 +410,6 @@ function renderStory(story: RankedStory, options: { isLead: boolean }): string {
           <td style="padding:18px 0 0;">
             <p data-role="ink-muted" style="margin:0 0 6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};"><strong>Why it matters</strong></p>
             <p data-role="ink" style="margin:0;color:${L.ink};line-height:1.5;">${escapeHtml(getWhyItMatters(story))}</p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:18px 0 0;">
-            <p data-role="ink-muted" style="margin:0 0 6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};"><strong>Second-order effect</strong></p>
-            <p data-role="ink" style="margin:0;color:${L.ink};line-height:1.5;">${escapeHtml(story.secondOrderEffect)}</p>
           </td>
         </tr>
       </table>`
@@ -426,7 +420,7 @@ function renderStory(story: RankedStory, options: { isLead: boolean }): string {
         </tr>
         <tr>
           <td style="padding:12px 0 0;">
-            <p data-role="ink-muted" style="margin:0 0 6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};"><strong>What happened</strong></p>
+            <p data-role="ink-muted" style="margin:0 0 6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};"><strong>Summary</strong></p>
             <p data-role="ink" style="margin:0;color:${L.ink};line-height:1.5;">${escapeHtml(getWhatHappened(story))}</p>
           </td>
         </tr>
@@ -437,15 +431,6 @@ function renderStory(story: RankedStory, options: { isLead: boolean }): string {
           <td style="padding:12px 0 0;">
             <p data-role="ink-muted" style="margin:0 0 6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};"><strong>Why it matters</strong></p>
             <p data-role="ink" style="margin:0;color:${L.ink};line-height:1.5;">${escapeHtml(getWhyItMatters(story))}</p>
-          </td>
-        </tr>
-        <tr>
-          <td data-role="divider" style="padding:10px 0 0;height:1px;background-color:${L.divider};line-height:1px;font-size:0;">&nbsp;</td>
-        </tr>
-        <tr>
-          <td style="padding:12px 0 0;">
-            <p data-role="ink-muted" style="margin:0 0 6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${L.inkMuted};"><strong>Second-order effect</strong></p>
-            <p data-role="ink" style="margin:0;color:${L.ink};line-height:1.5;">${escapeHtml(story.secondOrderEffect)}</p>
           </td>
         </tr>
       </table>`;
@@ -470,7 +455,7 @@ function renderStory(story: RankedStory, options: { isLead: boolean }): string {
         </tr>
       </table>
       <h3 style="margin:16px 0 8px;font-size:${titleSize}px;line-height:${titleLineHeight};color:${L.ink};font-weight:700;">
-        <a href="${escapeHtml(sanitizeUrl(story.url))}" style="color:${L.accent};text-decoration:none;">${escapeHtml(displayTitle)}</a>
+        <a href="${escapeHtml(sanitizeUrl(story.url))}" style="color:${L.accent};text-decoration:underline;">${escapeHtml(displayTitle)}</a>
       </h3>
       ${storyBodyBlocks}
     </article>`;
@@ -604,10 +589,9 @@ export function renderBriefingText(digest: BriefingDigest): string {
         `${leadPrefix}[${getTopicLabel(story.topic)}] ${getDisplayTitle(story)} (${formatSourceLabel(story.source)})`,
       );
       lines.push(`Relevance score: ${story.score}`);
-      lines.push(`What happened: ${getWhatHappened(story)}`);
+      lines.push(`Summary: ${getWhatHappened(story)}`);
       lines.push(`Why it matters: ${getWhyItMatters(story)}`);
       lines.push(`Signal: ${story.signalOrNoise}`);
-      lines.push(`Second-order effect: ${story.secondOrderEffect}`);
       lines.push(`Link: ${sanitizeUrl(story.url)}`);
       lines.push("");
     });
