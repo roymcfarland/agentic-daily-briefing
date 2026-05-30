@@ -90,7 +90,7 @@ export function buildDigestDerived(digest: BriefingDigest): DigestDerived {
       sortedByScoreDesc[0];
     topStoryPointer = {
       story: chosen,
-      framing: chosen.secondOrderEffect,
+      framing: chosen.whyItMatters,
     };
   }
 

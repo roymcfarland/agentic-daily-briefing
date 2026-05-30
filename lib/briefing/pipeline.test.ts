@@ -15,7 +15,6 @@ function story(overrides: Partial<RankedStory>): RankedStory {
     score: 30,
     whyItMatters: "Why it matters",
     signalOrNoise: "Noise",
-    secondOrderEffect: "Second order",
     ...overrides,
   };
 }

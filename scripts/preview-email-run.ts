@@ -80,7 +80,6 @@ const fixture: BriefingDigest = {
       score: 42,
       whyItMatters: "Cheaper inference can reset product margins.",
       signalOrNoise: "Signal",
-      secondOrderEffect: "More teams ship copilots sooner.",
       publishedAt: hoursAgo(6),
     },
     {
@@ -93,7 +92,6 @@ const fixture: BriefingDigest = {
       score: 38,
       whyItMatters: "Cash policy this week matters for near-term runway decisions.",
       signalOrNoise: "Noise",
-      secondOrderEffect: "A sustained move changes how vendors price annual deals.",
       publishedAt: hoursAgo(20),
     },
     {
@@ -106,7 +104,6 @@ const fixture: BriefingDigest = {
       score: 35,
       whyItMatters: "Shelf economics for emerging CPG tighten at the worst time.",
       signalOrNoise: "Signal",
-      secondOrderEffect: "Smaller brands front-load promos or exit slow doors.",
       publishedAt: hoursAgo(80),
     },
     {
@@ -120,8 +117,6 @@ const fixture: BriefingDigest = {
       whyItMatters:
         "This is useful context if it changes momentum, fan attention, or the near-term storyline around a team or tournament you track.",
       signalOrNoise: "Noise",
-      secondOrderEffect:
-        "A small shift in form, injury status, or tournament momentum could change how the next few days play out.",
       publishedAt: hoursAgo(2),
     },
     {
@@ -134,7 +129,6 @@ const fixture: BriefingDigest = {
       score: 29,
       whyItMatters: "A working SMR template would reset baseload economics for data-center-heavy regions.",
       signalOrNoise: "Signal",
-      secondOrderEffect: "Cheaper, denser baseload changes where the next AI buildout actually lands.",
     },
   ],
 };

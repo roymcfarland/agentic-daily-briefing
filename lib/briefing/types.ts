@@ -45,7 +45,6 @@ export interface RankedStory extends StoryCandidate {
   score: number;
   whyItMatters: string;
   signalOrNoise: "Signal" | "Noise";
-  secondOrderEffect: string;
 }
 
 export interface SportsUpdate extends RankedStory {

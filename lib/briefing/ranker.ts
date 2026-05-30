@@ -279,23 +279,6 @@ function inferWhyItMatters(story: StoryCandidate): string {
   return `${topicLabel} relevance is mainly in downstream operational or strategic decisions. ${summary}`;
 }
 
-function inferSecondOrderEffect(story: StoryCandidate): string {
-  if (story.topic === "markets") {
-    return "A rates or liquidity move could re-rank which bets deserve capital this week.";
-  }
-  if (story.topic === "chicago" || story.topic === "colorado") {
-    return "Local policy or economic moves could quietly reshape hiring, customer demand, or permitting friction.";
-  }
-  if (story.topic === "asymmetric-upside") {
-    return "A small early signal here could become a low-consensus wedge before most operators notice it.";
-  }
-  if (story.topic === "sports") {
-    return "A small shift in form, injury status, or tournament momentum could change how the next few days play out.";
-  }
-
-  return "The first-order headline may be modest, but the real impact could show up in pricing, partnerships, or execution speed.";
-}
-
 export function rankStories<T extends StoryCandidate>(candidates: T[]): (T & RankedStory)[] {
   const deduped: T[] = [];
 
@@ -338,7 +321,6 @@ export function rankStories<T extends StoryCandidate>(candidates: T[]): (T & Ran
         score,
         whyItMatters: inferWhyItMatters(story),
         signalOrNoise: score >= 35 ? "Signal" : "Noise",
-        secondOrderEffect: inferSecondOrderEffect(story),
       };
     })
     .sort((left, right) => right.score - left.score);
