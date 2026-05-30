@@ -9,6 +9,7 @@ import type {
   SportsUpdate,
   TaskSummary,
 } from "@/lib/briefing/types";
+import { enrichStoriesWithSummaries } from "@/lib/briefing/enrich";
 import { rankStories } from "@/lib/briefing/ranker";
 import { getTaskSummaries } from "@/lib/blueprint";
 import { getChicagoDateLabel } from "@/lib/time";
@@ -257,7 +258,8 @@ export async function buildBriefingDigest(now: Date): Promise<BriefingDigest> {
   const allRankedStories = [...rankedStories, ...sportsUpdates].sort(
     (left, right) => right.score - left.score,
   );
-  const stories = selectStoriesForBriefing(allRankedStories, env.briefingMaxItems);
+  const selected = selectStoriesForBriefing(allRankedStories, env.briefingMaxItems);
+  const stories = await enrichStoriesWithSummaries(selected);
 
   const warnings: string[] = [];
   if (taskResult.warning) {
