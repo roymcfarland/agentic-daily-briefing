@@ -13,7 +13,7 @@ import { rankStories } from "@/lib/briefing/ranker";
 import { getTaskSummaries } from "@/lib/blueprint";
 import { getChicagoDateLabel } from "@/lib/time";
 import { fetchGoogleNewsStories } from "@/lib/research/google-news";
-import { getSportsLabel, SPORTS_CONFIG, TOPIC_CONFIG } from "@/lib/research/topics";
+import { SPORTS_CONFIG, TOPIC_CONFIG } from "@/lib/research/topics";
 
 type SportsCandidate = StoryCandidate & {
   sportsArea: SportsUpdate["sportsArea"];
@@ -209,14 +209,7 @@ async function fetchSportsResearch(now: Date): Promise<SportsUpdate[]> {
     );
   });
 
-  const ranked = rankStories(filteredCandidates).map((story) => {
-    const sportsStory = filteredCandidates.find((candidate) => candidate.url === story.url);
-    return {
-      ...story,
-      sportsArea: sportsStory?.sportsArea ?? "tennis",
-      sportsLabel: sportsStory?.sportsLabel ?? getSportsLabel("tennis"),
-    } satisfies SportsUpdate;
-  });
+  const ranked = rankStories(filteredCandidates);
 
   return SPORTS_CONFIG.flatMap((entry) => {
     const story = ranked.find((candidate) => candidate.sportsArea === entry.sportsArea);
