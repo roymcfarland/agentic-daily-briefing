@@ -56,6 +56,15 @@ export async function GET(request: Request) {
       }, { headers: JSON_HEADERS });
     }
 
+    const digest = await buildBriefingDigest(now);
+
+    if (digest.warnings.length > 0) {
+      console.warn("Morning brief partial failure", {
+        warnings: digest.warnings,
+        timestamp: now.toISOString(),
+      });
+    }
+
     sendLock = await beginBriefingSend(now);
     if (sendLock.status === "already_sent") {
       return NextResponse.json({
@@ -80,15 +89,6 @@ export async function GET(request: Request) {
         forced: force,
         idempotencyKey: sendLock.idempotencyKey,
       }, { status: 202, headers: JSON_HEADERS });
-    }
-
-    const digest = await buildBriefingDigest(now);
-
-    if (digest.warnings.length > 0) {
-      console.warn("Morning brief partial failure", {
-        warnings: digest.warnings,
-        timestamp: now.toISOString(),
-      });
     }
 
     const emailId = await sendBriefingEmail(digest, {
