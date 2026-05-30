@@ -275,6 +275,7 @@ describe("morning brief route", () => {
   });
 
   it("skips duplicate sends that already completed", async () => {
+    mockedBuildBriefingDigest.mockResolvedValueOnce(digest());
     mockedBeginBriefingSend.mockResolvedValueOnce({
       status: "already_sent",
       idempotencyKey: "morning-brief:2026-04-04",
@@ -308,11 +309,12 @@ describe("morning brief route", () => {
       id: "existing-email-id",
       stories: 7,
     });
-    expect(mockedBuildBriefingDigest).not.toHaveBeenCalled();
+    expect(mockedBuildBriefingDigest).toHaveBeenCalledTimes(1);
     expect(mockedSendBriefingEmail).not.toHaveBeenCalled();
   });
 
   it("skips concurrent sends while another request owns the lock", async () => {
+    mockedBuildBriefingDigest.mockResolvedValueOnce(digest());
     mockedBeginBriefingSend.mockResolvedValueOnce({
       status: "in_progress",
       idempotencyKey: "morning-brief:2026-04-04",
@@ -335,7 +337,7 @@ describe("morning brief route", () => {
       reason: "send_in_progress",
       idempotencyKey: "morning-brief:2026-04-04",
     });
-    expect(mockedBuildBriefingDigest).not.toHaveBeenCalled();
+    expect(mockedBuildBriefingDigest).toHaveBeenCalledTimes(1);
     expect(mockedSendBriefingEmail).not.toHaveBeenCalled();
   });
 });
