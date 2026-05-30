@@ -148,10 +148,7 @@
           },
           "category": {
             "type": "string",
-            "enum": [
-              "personal",
-              "brightline-labs"
-            ]
+            "description": "Task category slug (user-defined; e.g. personal, brightline-labs, career-development)"
           },
           "parentId": {
             "type": "integer",

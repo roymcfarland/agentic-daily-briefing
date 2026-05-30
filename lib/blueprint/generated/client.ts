@@ -6,7 +6,7 @@ export type Task = {
   title?: string;
   description?: string | null;
   status?: "ice-box" | "on-deck" | "in-progress" | "done" | "archived";
-  category?: "personal" | "brightline-labs";
+  category?: string;
   parentId?: number | null;
   sortOrder?: number;
   createdAt?: string;
@@ -25,10 +25,7 @@ export type DailySummaryResponse = {
       done?: number;
       archived?: number;
     };
-    byCategory?: {
-      personal?: number;
-      brightlineLabs?: number;
-    };
+    byCategory?: Record<string, number>;
   };
   inProgress?: Task[];
   onDeck?: Task[];
@@ -58,6 +55,22 @@ function optionalNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
+function optionalNumberRecord(value: unknown): Record<string, number> | undefined {
+  if (!isObject(value)) {
+    return undefined;
+  }
+
+  const record: Record<string, number> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    const numberValue = optionalNumber(entry);
+    if (numberValue !== undefined) {
+      record[key] = numberValue;
+    }
+  }
+
+  return record;
+}
+
 function isTaskStatus(value: unknown): value is Task["status"] {
   return (
     value === "ice-box" ||
@@ -70,8 +83,7 @@ function isTaskStatus(value: unknown): value is Task["status"] {
 
 function isTaskCategory(value: unknown): value is Task["category"] {
   return (
-    value === "personal"
-    || value === "brightline-labs"
+    typeof value === "string"
   );
 }
 
@@ -144,7 +156,7 @@ function parseDailySummaryResponse(value: unknown): DailySummaryResponse {
               ? value.summary.completionRate
               : undefined,
           byStatus: isObject(value.summary.byStatus) ? value.summary.byStatus : undefined,
-          byCategory: isObject(value.summary.byCategory) ? value.summary.byCategory : undefined,
+          byCategory: optionalNumberRecord(value.summary.byCategory),
         }
       : undefined,
     inProgress: toTaskArray(value.inProgress),
