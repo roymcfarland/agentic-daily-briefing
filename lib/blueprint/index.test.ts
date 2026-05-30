@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DailySummaryResponse, Task } from "@/lib/blueprint/generated/client";
 
@@ -36,6 +36,10 @@ function mockSummary(summary: DailySummaryResponse): void {
 
 beforeEach(() => {
   getDailySummary.mockReset();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("getTaskSummaries", () => {
@@ -99,6 +103,8 @@ describe("getTaskSummaries", () => {
   });
 
   it("excludes test-task titles and tasks with no category", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
     mockSummary({
       inProgress: [
         task({ id: 1, title: "Test task", category: "personal" }),
@@ -134,5 +140,67 @@ describe("getTaskSummaries", () => {
     });
 
     await expect(getTaskSummaries(new Date("2026-04-04T12:00:00Z"))).resolves.toEqual([]);
+  });
+
+  it("maps 401 responses to an actionable auth message", async () => {
+    getDailySummary.mockRejectedValue(new Error("Blueprint getDailySummary failed with 401"));
+
+    await expect(getTaskSummaries(new Date("2026-04-04T12:00:00Z"))).rejects.toThrow(
+      /EXTERNAL_API_KEY/,
+    );
+  });
+
+  it("maps 403 responses to an actionable auth message", async () => {
+    getDailySummary.mockRejectedValue(new Error("Blueprint getDailySummary failed with 403"));
+
+    await expect(getTaskSummaries(new Date("2026-04-04T12:00:00Z"))).rejects.toThrow(
+      /EXTERNAL_API_KEY/,
+    );
+  });
+
+  it("passes through non-auth client errors", async () => {
+    getDailySummary.mockRejectedValue(
+      new Error("Blueprint getDailySummary timed out after 12000ms"),
+    );
+
+    await expect(getTaskSummaries(new Date("2026-04-04T12:00:00Z"))).rejects.toThrow(
+      /timed out/,
+    );
+  });
+
+  it("throws when active tasks are all filtered out before display", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mockSummary({
+      inProgress: [task({ id: 1, title: "Test task", category: "personal" })],
+      onDeck: [task({ id: 2, title: "Ice box task", status: "on-deck", category: "personal" })],
+    });
+
+    await expect(getTaskSummaries(new Date("2026-04-04T12:00:00Z"))).rejects.toThrow(
+      /none were displayable/,
+    );
+  });
+
+  it("logs diagnostics when active tasks are partially dropped", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mockSummary({
+      inProgress: [
+        task({ id: 1, title: "Real work", category: "career-development" }),
+        task({ id: 2, title: "Test task", category: undefined }),
+      ],
+      onDeck: [],
+    });
+
+    const summaries = await getTaskSummaries(new Date("2026-04-04T12:00:00Z"));
+
+    expect(summaries).toHaveLength(1);
+    expect(summaries[0]).toMatchObject({
+      area: "career-development",
+      tasks: [{ id: "1", title: "Real work" }],
+    });
+    expect(warn).toHaveBeenCalledWith("Blueprint active tasks dropped before display", {
+      rawActiveCount: 2,
+      displayedOpenItems: 1,
+      categoriesSeen: ["career-development", "(none)"],
+    });
   });
 });
