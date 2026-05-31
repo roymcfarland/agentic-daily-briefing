@@ -29,7 +29,7 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 ## Architecture & Stack
 
 - **Framework:** Next.js 15.5.x App Router, React 19.
-- **Runtime:** Node.js 22.12.x, declared in `package.json` `engines.node` and pinned in `.nvmrc` (see Verifier Rule 4 for the authoritative pin and rationale).
+- **Runtime:** Node.js 24 LTS, declared in `package.json` `engines.node` as `24.x` and pinned to a concrete 24 LTS patch in `.nvmrc` (see Verifier Rule 4 for the authoritative pin and rationale).
 - **Deployment:** Vercel (Serverless Functions + static landing page) triggered by Vercel Cron for the briefing job.
 - **Email:** Resend.
 - **Idempotency:** Vercel KV / Upstash Redis REST API, with fail-closed behavior in production.
@@ -51,14 +51,15 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 - **Hard-fail** any PR that adds a new email-send code path that bypasses `beginBriefingSend()`.
 
 ### 4. Node Version Pinning
-- The project pins Node.js to **major.minor `22.12`** (any patch). This is enforced at three sites, each using the syntax appropriate to its tool:
-  - `package.json` `engines.node`: `22.12.x` (npm/pnpm semver-range form).
-  - `.nvmrc`: `22.12.0` (nvm form; nvm does not support `.x`, so a concrete patch is pinned).
+- The project pins Node.js to **Node 24 LTS**. This is enforced at three sites, each using the syntax appropriate to its tool:
+  - `package.json` `engines.node`: `24.x` (npm/pnpm semver-range form; any Node 24 release satisfies the known rolldown floor).
+  - `.nvmrc`: a concrete Node 24 LTS patch, currently `24.16.0` (nvm form; nvm does not support `.x`).
   - `.github/workflows/ci.yml`: must use `node-version-file: .nvmrc` (so CI reads the same source of truth as local development).
-- **Why 22.12 and not 22.11:** Node 22.11 was the original pin, but Vitest 4 / rolldown 1.0.0-rc.17 prebuilt Linux native bindings require a runtime >= 22.12 to load on `ubuntu-latest` GitHub Actions runners. Lower than 22.12 produces "Cannot find native binding" errors (npm/cli#4828 surfaces this). Do not roll back to 22.11 without verifying rolldown bindings still work; if a future Vitest/rolldown release relaxes this requirement, the pin can move back via a documented PR.
-- **Hard-fail** any PR that changes the pinned Node major.minor at any of the three sites without updating all three sites and this rule.
+- **Why Node 24 LTS:** Node 24 is the current LTS line and satisfies the Vitest 4 / rolldown native binding requirement of runtime >= 22.12 on `ubuntu-latest`, so the minor no longer needs to be pinned in `engines.node` (hence `24.x`). The original 22.12 floor existed for rolldown native bindings; see npm/cli#4828 for the binding-loading failure mode.
+- **Hard-fail** any PR that changes `package.json` `engines.node` without updating `.nvmrc`, preserving `.github/workflows/ci.yml` as `node-version-file: .nvmrc`, and updating this rule.
+- **Hard-fail** any PR that changes `.nvmrc` without updating `package.json` `engines.node`, preserving `.github/workflows/ci.yml` as `node-version-file: .nvmrc`, and updating this rule.
 - **Hard-fail** any PR that removes any of those three pin sites.
-- **Hard-fail** any PR that introduces a literal Node version in `ci.yml` (e.g. `node-version: 22.12`) instead of `node-version-file: .nvmrc`.
+- **Hard-fail** any PR that introduces a literal Node version in `ci.yml` (e.g. `node-version: 24`) instead of `node-version-file: .nvmrc`.
 
 ### 5. OpenAPI Client Generation
 - **Hard-fail** any PR that manually edits `lib/blueprint/generated/client.ts` without updating the source OpenAPI spec at `openapi/blueprint.openapi.json` and re-running the generation script. The OpenAPI spec is the source of truth for the external contract.
