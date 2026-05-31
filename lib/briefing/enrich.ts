@@ -1,8 +1,10 @@
 import type { RankedStory } from "@/lib/briefing/types";
 import { fetchArticleText as defaultFetchArticleText } from "@/lib/research/article";
+import { resolveArticleUrl as defaultResolveArticleUrl } from "@/lib/research/google-news-url";
 import { summarizeArticle as defaultSummarizeArticle } from "@/lib/research/summarize";
 
 export interface EnrichDeps {
+  resolveArticleUrl: (url: string) => Promise<string>;
   fetchArticleText: (url: string) => Promise<string>;
   summarizeArticle: (input: {
     title: string;
@@ -13,6 +15,7 @@ export interface EnrichDeps {
 }
 
 const DEFAULT_DEPS: EnrichDeps = {
+  resolveArticleUrl: defaultResolveArticleUrl,
   fetchArticleText: defaultFetchArticleText,
   summarizeArticle: defaultSummarizeArticle,
 };
@@ -28,7 +31,8 @@ export async function enrichStoriesWithSummaries(
   return Promise.all(
     stories.map(async (story) => {
       try {
-        const articleText = await deps.fetchArticleText(story.url);
+        const articleUrl = await deps.resolveArticleUrl(story.url);
+        const articleText = await deps.fetchArticleText(articleUrl);
         const summary = await deps.summarizeArticle({
           title: story.title,
           source: story.source,

@@ -21,6 +21,7 @@ function story(overrides: Partial<RankedStory> = {}): RankedStory {
 
 function deps(): EnrichDeps {
   return {
+    resolveArticleUrl: vi.fn(async (url: string) => url),
     fetchArticleText: vi.fn(async (url: string) => `body for ${url}`),
     summarizeArticle: vi.fn(async (input) => `AI summary: ${input.title}`),
   };
@@ -65,8 +66,22 @@ describe("enrichStoriesWithSummaries", () => {
     });
   });
 
+  it("resolves the article URL before fetching the body", async () => {
+    const fakeDeps = deps();
+    fakeDeps.resolveArticleUrl = vi.fn(async () => "https://publisher.example/real-article");
+    const input = story({ url: "https://news.google.com/rss/articles/XYZ?oc=5" });
+
+    await enrichStoriesWithSummaries([input], fakeDeps);
+
+    expect(fakeDeps.resolveArticleUrl).toHaveBeenCalledWith(
+      "https://news.google.com/rss/articles/XYZ?oc=5",
+    );
+    expect(fakeDeps.fetchArticleText).toHaveBeenCalledWith("https://publisher.example/real-article");
+  });
+
   it("never throws and keeps the original summary when a dependency fails", async () => {
     const fakeDeps: EnrichDeps = {
+      resolveArticleUrl: vi.fn(async (url: string) => url),
       fetchArticleText: vi.fn(async (url: string) => {
         if (url === "https://example.com/fail") {
           throw new Error("fetch failed");
@@ -91,6 +106,7 @@ describe("enrichStoriesWithSummaries", () => {
 
   it("keeps the original summary when the summarizer falls back", async () => {
     const fakeDeps: EnrichDeps = {
+      resolveArticleUrl: vi.fn(async (url: string) => url),
       fetchArticleText: vi.fn(async (url: string) => `body for ${url}`),
       summarizeArticle: vi.fn(async (input) => input.fallback),
     };
