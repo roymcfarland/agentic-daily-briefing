@@ -151,4 +151,33 @@ describe("enrichStoriesWithSummaries", () => {
     expect(fakeDeps.fetchArticleText).not.toHaveBeenCalled();
     expect(fakeDeps.summarizeArticle).not.toHaveBeenCalled();
   });
+
+  it("logs the enrichment hit-rate", async () => {
+    const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+    const fakeDeps: EnrichDeps = {
+      resolveArticleUrl: vi.fn(async (url: string) => url),
+      fetchArticleText: vi.fn(async (url: string) => `body for ${url}`),
+      // "Enriched" gets a real summary; "FellBack" returns its RSS fallback unchanged
+      summarizeArticle: vi.fn(async (input) =>
+        input.title === "Enriched" ? `AI summary: ${input.title}` : input.fallback,
+      ),
+    };
+
+    await enrichStoriesWithSummaries(
+      [
+        story({ title: "Enriched", summary: "RSS one", dedupeKey: "a", url: "https://example.com/a" }),
+        story({ title: "FellBack", summary: "RSS two", dedupeKey: "b", url: "https://example.com/b" }),
+      ],
+      fakeDeps,
+    );
+
+    expect(infoSpy).toHaveBeenCalledWith("Briefing enrichment", {
+      total: 2,
+      enriched: 1,
+      fallback: 1,
+      enrichedPct: 50,
+    });
+
+    infoSpy.mockRestore();
+  });
 });
