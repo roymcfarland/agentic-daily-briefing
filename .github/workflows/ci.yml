@@ -42,3 +42,13 @@ jobs:
       - name: Force-install rolldown Linux binding (npm/cli#4828 workaround)
         run: npm install --no-save --force @rolldown/binding-linux-x64-gnu
       - run: npm run test:smoke
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm run build
