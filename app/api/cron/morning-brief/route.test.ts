@@ -12,7 +12,7 @@ vi.mock("@/lib/resend", () => ({
   sendBriefingEmail: vi.fn(),
 }));
 
-import { GET } from "@/app/api/cron/morning-brief/route";
+import { GET, dynamic, maxDuration } from "@/app/api/cron/morning-brief/route";
 import { beginBriefingSend } from "@/lib/briefing/idempotency";
 import { buildBriefingDigest } from "@/lib/briefing/pipeline";
 import { sendBriefingEmail } from "@/lib/resend";
@@ -76,6 +76,11 @@ describe("morning brief route", () => {
 
   afterEach(() => {
     vi.unstubAllEnvs();
+  });
+
+  it("exports 120s maxDuration headroom and stays force-dynamic", () => {
+    expect(maxDuration).toBe(120);
+    expect(dynamic).toBe("force-dynamic");
   });
 
   it("returns 401 when the bearer token is missing", async () => {

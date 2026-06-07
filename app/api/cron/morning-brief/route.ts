@@ -7,7 +7,7 @@ import { getCronSecret } from "@/lib/env";
 import { sendBriefingEmail } from "@/lib/resend";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const JSON_HEADERS = {
   "Cache-Control": "no-store",
