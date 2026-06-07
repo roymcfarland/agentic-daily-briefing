@@ -96,4 +96,12 @@ describe("summarizeArticle", () => {
 
     expect(generateTextMock.mock.calls[0][0].model).toBe("openai/gpt-5.4");
   });
+
+  it("requests the longer-summary output token budget", async () => {
+    generateTextMock.mockResolvedValue({ text: "A fuller, multi-sentence summary." });
+
+    await summarize();
+
+    expect(generateTextMock.mock.calls[0][0].maxOutputTokens).toBe(420);
+  });
 });

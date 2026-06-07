@@ -4,11 +4,12 @@ const DEFAULT_SUMMARY_MODEL = "openai/gpt-5.4-mini";
 const SUMMARY_TIMEOUT_MS = 12000;
 const MIN_ARTICLE_TEXT_LENGTH = 200;
 const MAX_ARTICLE_TEXT_LENGTH = 6000;
-const MAX_SUMMARY_OUTPUT_TOKENS = 220;
+const MAX_SUMMARY_OUTPUT_TOKENS = 420;
 
 const SYSTEM_PROMPT =
-  "You write concise factual summaries for a busy founder's morning news brief. " +
-  "Summarize the article in 2-3 plain sentences. Use ONLY facts stated in the provided text — " +
+  "You write factual, substantive summaries for a busy founder's morning news brief. " +
+  "Summarize the article in 4-5 plain sentences, covering the key developments, specific figures, " +
+  "and the named people or organizations involved. Use ONLY facts stated in the provided text — " +
   "do not speculate, editorialize, or add outside context. Return the summary only, with no preamble or labels.";
 
 export interface SummarizeArticleInput {
