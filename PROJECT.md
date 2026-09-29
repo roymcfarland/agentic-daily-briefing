@@ -111,4 +111,4 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 | **#33 (Cron duration headroom)** | Raise the cron route maxDuration from 60 to 120 seconds with a route configuration regression test. | Shipped |
 | **#34 (Resend 6)** | Upgrade the Resend SDK from 4 to 6 without changing the email-send implementation. | Shipped |
 | **#35 (Pause cron)** | Pause the daily briefing by emptying the `crons` array in `vercel.json`; route, idempotency, and pipeline unchanged. README and PROJECT.md document the paused state and the resume block. | Shipped |
-| **#<pending> (Docs accuracy sweep)** | Align README, PROJECT.md, and AGENTS.md with current code; backfill PR Sequencing rows #7–#34; correct the landing-page "Next delivery" idempotency sentence. | Shipped |
+| **#36 (Docs accuracy sweep)** | Align README, PROJECT.md, and AGENTS.md with current code; backfill PR Sequencing rows #7–#34; correct the landing-page "Next delivery" idempotency sentence. | Shipped |
