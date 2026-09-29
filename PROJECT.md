@@ -16,7 +16,7 @@
 
 Agentic Daily Briefing is a proprietary Next.js application with two distinct surfaces:
 
-1. **Primary product surface — daily briefing cron job.** A Vercel Cron job that aggregates live research (via Google News RSS) and task state (via the Workflow Blueprint v1 API), ranks the items for decision relevance, and sends a daily morning email briefing to the founder. It is designed for extreme reliability, idempotency, and graceful degradation. This is where the active development work happens.
+1. **Primary product surface — daily briefing cron job.** A Vercel Cron job that aggregates live research (via Google News RSS) and task state (via the Workflow Blueprint v1 API), ranks the items for decision relevance, and sends a daily morning email briefing to the founder. It is designed for extreme reliability, idempotency, and graceful degradation. This is where the active development work happens. **Currently paused (2026-09-29):** the cron entry has been removed from `vercel.json`; restore it to resume (see README → Resuming the daily brief).
 2. **Secondary surface — public landing page.** A static marketing landing page served at `roymcfarland.news` and `www.roymcfarland.news`. This page exists deliberately and is preserved, but is intentionally minimal. No new pages, components, or interactive features should be added to this surface without an explicit PROJECT.md update.
 
 ## Non-goals
@@ -80,3 +80,4 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 | **PR 4 (Env hotfix)** | Transitional fix: tolerate legacy `TASKFLOW_*` env aliases in `lib/env.ts` so the morning-brief route stops 500'ing during the Blueprint env rename window. Superseded by PR 5. (Merged as `6fea610`.) | Shipped |
 | **PR 5 (Cleanup)** | Remove the transitional legacy env-var alias shim added during the Blueprint migration, require canonical Blueprint env vars only, document the legacy-name hard-fail rule, and confirm production idempotency uses Vercel KV / Upstash Redis REST. | Shipped |
 | **PR 6 (Editorial-dashboard email)** | Daily Digest email redesign in `lib/briefing/formatter.ts`: scoreboard strip, story cards with signal/noise chips and freshness dots, hero Decision Lens, dark-mode `prefers-color-scheme` block, muted editorial palette. Adds `lib/briefing/formatter-derived.ts` for digest stats with focused tests, and `npm run preview:email` for local visual review. (Merged as `623708a`.) | Shipped |
+| **#<pending> (Pause cron)** | Pause the daily briefing by emptying the `crons` array in `vercel.json`; route, idempotency, and pipeline unchanged. README and PROJECT.md document the paused state and the resume block. | Shipped |
