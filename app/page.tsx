@@ -686,8 +686,8 @@ export default function HomePage() {
                   <div className="cta-clock-tz">Denver · America/Denver</div>
                   <p className="cta-clock-rule">
                     Vercel Cron fires once daily at 12:00 UTC. The brief is
-                    idempotent, fail-closed, and skips itself when nothing has
-                    changed since the last send.
+                    idempotent and fail-closed: it sends at most once per day,
+                    so a retried run never sends a duplicate.
                   </p>
                 </div>
               </div>

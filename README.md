@@ -17,8 +17,10 @@ If you want to understand the architectural reasoning, the constraints, and the 
 - Sends a daily morning briefing email with [Resend](https://resend.com/)
 - Runs from `/api/cron/morning-brief`
 - Pulls task state from the Workflow Blueprint v1 API via `getDailySummary` only
-- Covers Personal and Brightline Labs as the two task areas
-- Pulls live research from Google News RSS across AI, Markets, Business, CPG & Startups, Chicago, Colorado, and one asymmetric-upside area
+- Groups tasks by the categories returned by Workflow Blueprint
+- Pulls live research from Google News RSS across AI, Markets, Business, CPG Startups, Chicago, Colorado, and Asymmetric Upside
+- Covers Denver Broncos, Colorado Buffaloes Football, Notre Dame Football, and ATP + WTA Tennis
+- Optionally enriches selected stories with LLM article summaries through the Vercel AI Gateway, falling back to the RSS description
 - Removes duplicates and low-signal items
 - Ranks for implication and decision relevance
 - Ends with one thing to watch, one thing to ignore, and one contrarian take
@@ -30,6 +32,14 @@ If you want to understand the architectural reasoning, the constraints, and the 
 - `openapi/blueprint.openapi.json`: source schema for the generated client
 - `lib/briefing/pipeline.ts`: data collection, ranking, and digest assembly
 - `lib/briefing/formatter.ts`: HTML and text email rendering
+- `app/page.tsx`: public landing page
+- `lib/research/`: Google News RSS, URL resolution, article fetch, summarizer, and topic configuration
+- `lib/briefing/enrich.ts`: selected-story summary enrichment and hit-rate logging
+- `lib/briefing/idempotency.ts`: daily send records and idempotency locks
+- `lib/resend.ts`: email delivery through Resend
+- `lib/env.ts`: environment variable parsing and validation
+- `scripts/preview-email.mjs`: local fixture email preview runner
+- `tests/smoke/`: cron preview endpoint smoke tests
 - `vercel.json`: Vercel Cron config (currently empty; the app is paused)
 
 ## Why one Vercel cron schedule
@@ -70,8 +80,11 @@ Optional values:
 - `BRIEFING_MAX_ITEMS`
 - `BRIEFING_IDEMPOTENCY_SENT_TTL_SECONDS`
 - `BRIEFING_IDEMPOTENCY_LOCK_TTL_SECONDS`
+- `BRIEFING_SUMMARY_MODEL`: defaults to `openai/gpt-5.4-mini`
+- `BRIEFING_SUMMARIES_ENABLED`: summaries are enabled by default; set to `false` to disable them
+- `AI_GATEWAY_API_KEY`: read by the AI SDK for local summary generation; Vercel uses automatic OIDC authentication
 
-The idempotency variables can use either the project-specific names above or Vercel KV's `KV_REST_API_URL` and `KV_REST_API_TOKEN` aliases. Production sends fail closed without a persistent idempotency backend so cron retries cannot double-send.
+The idempotency variables can use the project-specific names above, Vercel KV's `KV_REST_API_URL` / `KV_REST_API_TOKEN` aliases, or Upstash's `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` aliases. Production sends fail closed without a persistent idempotency backend so cron retries cannot double-send. Outside production, missing Redis configuration automatically falls back to an in-memory store.
 
 ## Local development
 
@@ -94,6 +107,8 @@ npm run dev
 ```
 
 Manually trigger the cron route in development:
+
+**Warning:** This sends a real email when Resend is configured; use `?preview=1` to avoid sending.
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/morning-brief
@@ -163,16 +178,22 @@ If the upstream schema changes:
 
 ## Testing
 
-Run the formatter and ranker tests with:
+Run the same four checks as CI:
 
 ```bash
+npm run lint
 npm test
+npm run test:smoke
+npm run build
 ```
+
+For a local visual check of the email, run `npm run preview:email` and open `/tmp/email-preview.html` (a text version is also written to `/tmp/email-preview.txt`). The preview uses a fixture digest without network or environment access.
 
 ## Production notes
 
 - The route uses `getDailySummary` only and does not rely on any upstream dashboard behavior.
 - Research is gathered live at send time from public RSS search results, then deduped and ranked.
+- Selected stories are enriched in order: Google News URL resolution → article text fetch → LLM summary, with fallback to the original RSS description on failure and enrichment hit-rate logging.
 - If a feed fails, the pipeline continues with the remaining sources.
 - The route returns JSON so Vercel Cron logs stay readable.
 - `preview=1` can be used on an authenticated request to inspect the assembled digest without sending email.

@@ -22,16 +22,17 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 ## Non-goals
 
 1. **Not a multi-user SaaS product** — The app is hardcoded to send to a specific list of recipients (`BRIEFING_TO_EMAILS`). There is no user management, no database of preferences, and no authenticated UI.
-2. **Not a generic newsletter tool** — The research topics, ranking logic, and email formatting are highly specific to the founder's operational needs (Personal and Brightline Labs task areas, plus a fixed set of research beats).
+2. **Not a generic newsletter tool** — The research topics, ranking logic, and email formatting are highly specific to the founder's operational needs (task categories from the founder's Workflow Blueprint account, plus a fixed set of news and sports beats).
 3. **Not a stateful application** — The app has no primary database. It uses Vercel KV / Upstash Redis exclusively for idempotency locks to prevent double-sends.
 4. **Not an expanded marketing site** — The public landing page surface is deliberately minimal. New pages, interactive features, blog posts, signup forms, or analytics integrations are forbidden without an explicit PROJECT.md update authorizing them.
 
 ## Architecture & Stack
 
-- **Framework:** Next.js 15.5.x App Router, React 19.
+- **Framework:** Next.js 16.x App Router, React 19.
 - **Runtime:** Node.js 24 LTS, declared in `package.json` `engines.node` as `24.x` and pinned to a concrete 24 LTS patch in `.nvmrc` (see Verifier Rule 4 for the authoritative pin and rationale).
-- **Deployment:** Vercel (Serverless Functions + static landing page) triggered by Vercel Cron for the briefing job.
+- **Deployment:** Vercel (Serverless Functions + static landing page) triggered by Vercel Cron for the briefing job; the cron trigger is currently paused (PR #35).
 - **Email:** Resend.
+- **AI summaries:** Vercel AI SDK (`ai`) through the Vercel AI Gateway optionally enriches selected stories in order: Google News URL resolution → article text fetch → LLM summary (default model `openai/gpt-5.4-mini`), with fallback to the RSS description on failure and enrichment hit-rate logging.
 - **Idempotency:** Vercel KV / Upstash Redis REST API, with fail-closed behavior in production.
 - **External API Consumption:** Consumes the Workflow Blueprint v1 task-management API via a generated TypeScript client driven by an OpenAPI spec.
 
@@ -80,4 +81,34 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 | **PR 4 (Env hotfix)** | Transitional fix: tolerate legacy `TASKFLOW_*` env aliases in `lib/env.ts` so the morning-brief route stops 500'ing during the Blueprint env rename window. Superseded by PR 5. (Merged as `6fea610`.) | Shipped |
 | **PR 5 (Cleanup)** | Remove the transitional legacy env-var alias shim added during the Blueprint migration, require canonical Blueprint env vars only, document the legacy-name hard-fail rule, and confirm production idempotency uses Vercel KV / Upstash Redis REST. | Shipped |
 | **PR 6 (Editorial-dashboard email)** | Daily Digest email redesign in `lib/briefing/formatter.ts`: scoreboard strip, story cards with signal/noise chips and freshness dots, hero Decision Lens, dark-mode `prefers-color-scheme` block, muted editorial palette. Adds `lib/briefing/formatter-derived.ts` for digest stats with focused tests, and `npm run preview:email` for local visual review. (Merged as `623708a`.) | Shipped |
+| **#7 (Ledger backfill)** | Backfill the PR Sequencing rows for merged PRs #3, #4, and #6. | Shipped |
+| **#8 (Email hierarchy)** | Add a hero lead story, pull-quote Decision Lens, anchored scoreboard, and an “If you only read one thing” pointer. | Shipped |
+| **de29798 (Public-release prep, no PR)** | Remove Elevated Organics and cannabis coverage, derive generated category checks from the OpenAPI enum, and add README portfolio context. | Shipped |
+| **#9 (Shared errors)** | Extract a shared getErrorMessage utility for the pipeline and Resend error handling. | Shipped |
+| **#10 (Shared freshness)** | Extract the shared ageInHours helper without changing freshness thresholds or presentation. | Shipped |
+| **#11 (Shared text normalization)** | Extract normalizeText for shared comparison and canonicalization logic. | Shipped |
+| **#12 (Dynamic task categories)** | Surface all Blueprint task categories dynamically, humanize category labels, and regenerate the client from the updated OpenAPI schema. | Shipped |
+| **#13 (Blueprint diagnostics)** | Classify authentication errors and report active tasks dropped or missing from display. | Shipped |
+| **#14 (Cron auth and locks)** | Enforce cron authorization in every environment and preserve the lock after a successful send if recording completion fails. | Shipped |
+| **#15 (Email URL allowlist)** | Apply a URL scheme allowlist to story links in HTML and plain-text email rendering. | Shipped |
+| **#16 (Send timeout)** | Add a 15-second client-side timeout to Resend email sends. | Shipped |
+| **#17 (Dependency patches)** | Update Next.js to ^15.5.18 and fast-xml-parser to ^5.8.0. | Shipped |
+| **#18 (Lock timing)** | Build the digest before acquiring the idempotency lock so digest build failures cannot strand it. | Shipped |
+| **#19 (RSS text cleanup)** | Strip HTML tags from RSS titles and source names while preserving story URLs. | Shipped |
+| **#20 (Sports label preservation)** | Preserve sports metadata through ranking and remove the URL re-lookup and tennis fallback. | Shipped |
+| **#21 (Remove dead force parameter)** | Remove the unused force parameter from the cron route and correct its documentation. | Shipped |
+| **#22 (Summary-first email)** | Make story cards summary-first with linked titles, remove second-order effects, and use whyItMatters for the lead-story pointer. | Shipped |
+| **#23 (Article fetcher)** | Add a bounded article-text fetcher that returns an empty string on failure, before pipeline integration. | Shipped |
+| **#24 (AI Gateway summarizer)** | Add the AI SDK article summarizer through the Vercel AI Gateway with an overridable model and RSS fallback, before pipeline integration. | Shipped |
+| **#25 (Summary enrichment)** | Wire article fetching and LLM summaries into selected-story enrichment while retaining the RSS summary on failure. | Shipped |
+| **#26 (Google News URL resolution)** | Resolve Google News redirect URLs before article fetching to activate summary enrichment. | Shipped |
+| **#27 (Node 24 LTS)** | Move runtime pins and Node types to Node 24 LTS and update the project runtime rule. | Shipped |
+| **#28 (Enrichment logging)** | Log enrichment totals, fallback counts, and hit rate for nonempty selected-story batches. | Shipped |
+| **#29 (Next.js 16)** | Upgrade Next.js from 15 to 16 along with React 19.2 patches and React type updates. | Shipped |
+| **#30 (CI build gate)** | Add a production build job to CI for pull requests and pushes to main. | Shipped |
+| **#31 (TypeScript 6)** | Upgrade the TypeScript development dependency from 5 to ^6.0.3. | Shipped |
+| **#32 (Longer summaries)** | Expand article summaries to four or five sentences and raise the output budget to 420 tokens. | Shipped |
+| **#33 (Cron duration headroom)** | Raise the cron route maxDuration from 60 to 120 seconds with a route configuration regression test. | Shipped |
+| **#34 (Resend 6)** | Upgrade the Resend SDK from 4 to 6 without changing the email-send implementation. | Shipped |
 | **#35 (Pause cron)** | Pause the daily briefing by emptying the `crons` array in `vercel.json`; route, idempotency, and pipeline unchanged. README and PROJECT.md document the paused state and the resume block. | Shipped |
+| **#36 (Docs accuracy sweep)** | Align README, PROJECT.md, and AGENTS.md with current code; backfill PR Sequencing rows #7–#34; correct the landing-page "Next delivery" idempotency sentence. | Shipped |
