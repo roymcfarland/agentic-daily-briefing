@@ -1,5 +1,7 @@
 # Daily Morning Brief
 
+> **Status: paused (2026-09-29).** The daily Vercel Cron trigger has been removed from `vercel.json`, so no briefing emails are sent on a schedule. The route still exists and can still be invoked manually with `CRON_SECRET` (which **will** send an email unless `?preview=1` is used). See "Resuming the daily brief" below.
+
 Next.js App Router project for a daily morning email briefing, designed for Vercel deployment and Vercel Cron.
 
 ## About this repo
@@ -28,9 +30,11 @@ If you want to understand the architectural reasoning, the constraints, and the 
 - `openapi/blueprint.openapi.json`: source schema for the generated client
 - `lib/briefing/pipeline.ts`: data collection, ranking, and digest assembly
 - `lib/briefing/formatter.ts`: HTML and text email rendering
-- `vercel.json`: UTC cron schedule for one delivery per day
+- `vercel.json`: Vercel Cron config (currently empty; the app is paused)
 
 ## Why one Vercel cron schedule
+
+The schedule is currently disabled (see the Status note above); the following describes the schedule restored when resuming.
 
 Vercel Cron uses UTC schedules. This project is configured with one daily cron at `0 12 * * *`.
 
@@ -121,6 +125,23 @@ A few things I would change with the benefit of hindsight, kept here for honesty
 
 This project is licensed under the PolyForm Noncommercial License 1.0.0. See the [LICENSE](LICENSE) file for details. Commercial use is strictly prohibited without express written permission from Roy McFarland.
 
+## Resuming the daily brief
+
+Restore this exact content in `vercel.json`:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/morning-brief",
+      "schedule": "0 12 * * *"
+    }
+  ]
+}
+```
+
+Merging this change to `main` redeploys production and re-creates the daily cron job. Update the paused status notes in this README and PROJECT.md when resuming.
+
 ## Deploy to Vercel
 
 1. Import the repo into Vercel.
@@ -128,7 +149,7 @@ This project is licensed under the PolyForm Noncommercial License 1.0.0. See the
 3. Ensure your sender domain is verified in Resend.
 4. Set `CRON_SECRET` in Vercel and call the route with that shared secret.
 5. Point `roymcfarland.news` and `www.roymcfarland.news` at the Vercel project.
-6. Deploy. Vercel will pick up `vercel.json` and create the cron job.
+6. Deploy. Vercel creates the cron job from `vercel.json` only when a `crons` entry is present; the array is currently empty, so no cron job is created.
 
 ## Upstream API client generation
 
