@@ -26,8 +26,11 @@ jobs:
           node-version-file: .nvmrc
       - name: Install dependencies (clean install)
         run: npm ci
-      - name: Force-install rolldown Linux binding (npm/cli#4828 workaround)
-        run: npm install --no-save --force @rolldown/binding-linux-x64-gnu
+      - name: Force-install rolldown Linux binding pinned to lockfile (npm/cli#4828 workaround)
+        run: |
+          ROLLDOWN_VERSION=$(node -p "require('./package-lock.json').packages['node_modules/rolldown'].version")
+          echo "Pinning @rolldown/binding-linux-x64-gnu to rolldown ${ROLLDOWN_VERSION}"
+          npm install --no-save --force "@rolldown/binding-linux-x64-gnu@${ROLLDOWN_VERSION}"
       - run: npm run test
 
   smoke:
@@ -39,8 +42,11 @@ jobs:
           node-version-file: .nvmrc
       - name: Install dependencies (clean install)
         run: npm ci
-      - name: Force-install rolldown Linux binding (npm/cli#4828 workaround)
-        run: npm install --no-save --force @rolldown/binding-linux-x64-gnu
+      - name: Force-install rolldown Linux binding pinned to lockfile (npm/cli#4828 workaround)
+        run: |
+          ROLLDOWN_VERSION=$(node -p "require('./package-lock.json').packages['node_modules/rolldown'].version")
+          echo "Pinning @rolldown/binding-linux-x64-gnu to rolldown ${ROLLDOWN_VERSION}"
+          npm install --no-save --force "@rolldown/binding-linux-x64-gnu@${ROLLDOWN_VERSION}"
       - run: npm run test:smoke
 
   build:
