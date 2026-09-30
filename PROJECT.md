@@ -113,4 +113,4 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 | **#35 (Pause cron)** | Pause the daily briefing by emptying the `crons` array in `vercel.json`; route, idempotency, and pipeline unchanged. README and PROJECT.md document the paused state and the resume block. | Shipped |
 | **#36 (Docs accuracy sweep)** | Align README, PROJECT.md, and AGENTS.md with current code; backfill PR Sequencing rows #7–#34; correct the landing-page "Next delivery" idempotency sentence. | Shipped |
 | **#37 (Audit fix)** | Lockfile-only refresh clearing 12 npm audit advisories (next 16.3.7, sharp 0.35.5, postcss 8.5.28, ai 6.0.296, vitest 4.1.11, tsx 4.23.15/esbuild 0.28.2); no package.json or source changes. | Shipped |
-| **#<pending> (Pin rolldown binding)** | CI `test`/`smoke` jobs install `@rolldown/binding-linux-x64-gnu` pinned to the lockfile's `rolldown` version instead of latest; no job added or removed. | Shipped |
+| **#38 (Pin rolldown binding)** | CI `test`/`smoke` jobs install `@rolldown/binding-linux-x64-gnu` pinned to the lockfile's `rolldown` version instead of latest; no job added or removed. | Shipped |
