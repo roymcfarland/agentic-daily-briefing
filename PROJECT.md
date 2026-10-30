@@ -29,7 +29,7 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 ## Architecture & Stack
 
 - **Framework:** Next.js 16.x App Router, React 19.
-- **Runtime:** Node.js 24 LTS, declared in `package.json` `engines.node` as `24.x` and pinned to a concrete 24 LTS patch in `.nvmrc` (see Verifier Rule 4 for the authoritative pin and rationale).
+- **Runtime:** Node.js 24 LTS, declared in `package.json` `engines.node` as `24.x` and pinned to `24.22.2` in `.nvmrc` (see Verifier Rule 4 for the authoritative pin and rationale).
 - **Deployment:** Vercel (Serverless Functions + static landing page) triggered by Vercel Cron for the briefing job; the cron trigger is currently paused (PR #35).
 - **Email:** Resend.
 - **AI summaries:** Vercel AI SDK (`ai`) through the Vercel AI Gateway optionally enriches selected stories in order: Google News URL resolution → article text fetch → LLM summary (default model `openai/gpt-5.4-mini`), with fallback to the RSS description on failure and enrichment hit-rate logging.
@@ -54,9 +54,10 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 ### 4. Node Version Pinning
 - The project pins Node.js to **Node 24 LTS**. This is enforced at three sites, each using the syntax appropriate to its tool:
   - `package.json` `engines.node`: `24.x` (npm/pnpm semver-range form; any Node 24 release satisfies the known rolldown floor).
-  - `.nvmrc`: a concrete Node 24 LTS patch, currently `24.16.0` (nvm form; nvm does not support `.x`).
+  - `.nvmrc`: a concrete Node 24 LTS patch, currently `24.22.2` (nvm form; nvm does not support `.x`).
   - `.github/workflows/ci.yml`: must use `node-version-file: .nvmrc` (so CI reads the same source of truth as local development).
 - **Why Node 24 LTS:** Node 24 is the current LTS line and satisfies the Vitest 4 / rolldown native binding requirement of runtime >= 22.12 on `ubuntu-latest`, so the minor no longer needs to be pinned in `engines.node` (hence `24.x`). The original 22.12 floor existed for rolldown native bindings; see npm/cli#4828 for the binding-loading failure mode.
+- For a concrete patch-pin update within Node 24, the required `engines.node` review confirms that `24.x` still admits the patched line; the field stays `24.x`. This security patch advances `.nvmrc` to `24.22.2` with that compatible range unchanged.
 - **Hard-fail** any PR that changes `package.json` `engines.node` without updating `.nvmrc`, preserving `.github/workflows/ci.yml` as `node-version-file: .nvmrc`, and updating this rule.
 - **Hard-fail** any PR that changes `.nvmrc` without updating `package.json` `engines.node`, preserving `.github/workflows/ci.yml` as `node-version-file: .nvmrc`, and updating this rule.
 - **Hard-fail** any PR that removes any of those three pin sites.
@@ -114,3 +115,4 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 | **#36 (Docs accuracy sweep)** | Align README, PROJECT.md, and AGENTS.md with current code; backfill PR Sequencing rows #7–#34; correct the landing-page "Next delivery" idempotency sentence. | Shipped |
 | **#37 (Audit fix)** | Lockfile-only refresh clearing 12 npm audit advisories (next 16.3.7, sharp 0.35.5, postcss 8.5.28, ai 6.0.296, vitest 4.1.11, tsx 4.23.15/esbuild 0.28.2); no package.json or source changes. | Shipped |
 | **#38 (Pin rolldown binding)** | CI `test`/`smoke` jobs install `@rolldown/binding-linux-x64-gnu` pinned to the lockfile's `rolldown` version instead of latest; no job added or removed. | Shipped |
+| **#39 (Next.js security patch)** | Next.js ^16.4.3 (clears GHSA-2464-fhr4-w9xw), lockfile refresh of transitive advisories, and Node pin 24.22.2; no source changes. | Shipped |
