@@ -43,6 +43,7 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 - **Hard-fail** any PR that removes the `test`, `test:smoke`, or `lint` scripts from `package.json`.
 
 ### 2. Continuous Integration
+- The CI `lint` job runs `npm audit --omit=dev --audit-level=high`, and Dependabot opens pull requests for available npm and GitHub Actions updates on a monthly schedule.
 - **Hard-fail** any PR that deletes, disables, or removes a job from `.github/workflows/ci.yml`.
 - **Hard-fail** any PR that bypasses required CI checks via admin override without a documented PROJECT.md emergency note.
 

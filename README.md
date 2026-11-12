@@ -178,6 +178,8 @@ If the upstream schema changes:
 
 ## Testing
 
+The CI `lint` job runs `npm audit --omit=dev --audit-level=high`, and Dependabot opens pull requests for available npm and GitHub Actions updates on a monthly schedule.
+
 Run the same four checks as CI:
 
 ```bash
