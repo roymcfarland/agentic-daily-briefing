@@ -1,24 +1,22 @@
+import { decodeEntities } from "@/lib/research/decode-entities";
+
 const FETCH_TIMEOUT_MS = 8000;
 const MAX_ARTICLE_BYTES = 2_000_000;
 const MAX_TEXT_LENGTH = 8000;
 
-function decodeEntities(input: string): string {
-  return input
-    .replaceAll("&nbsp;", " ")
-    .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">");
-}
-
 function extractReadableText(html: string): string {
   const withoutScripts = html
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
-    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, " ");
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script(?:[\t\n\f\r /][^>]{0,256})?>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style(?:[\t\n\f\r /][^>]{0,256})?>/gi, " ")
+    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript(?:[\t\n\f\r /][^>]{0,256})?>/gi, " ");
 
-  return decodeEntities(withoutScripts.replace(/<[^>]+>/g, " "))
+  // No tag can match beyond the final >. Keep that suffix out of the tag scan.
+  const tagScanEnd = withoutScripts.lastIndexOf(">") + 1;
+  const withoutTags =
+    withoutScripts.slice(0, tagScanEnd).replace(/<[^>]+>/g, " ") +
+    withoutScripts.slice(tagScanEnd);
+
+  return decodeEntities(withoutTags)
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, MAX_TEXT_LENGTH);

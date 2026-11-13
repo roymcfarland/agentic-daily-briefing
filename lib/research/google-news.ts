@@ -1,6 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 
 import type { ResearchTopic, StoryCandidate } from "@/lib/briefing/types";
+import { decodeEntities } from "@/lib/research/decode-entities";
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -20,16 +21,6 @@ const MAX_RSS_BYTES = 1_000_000;
 
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === "AbortError";
-}
-
-function decodeEntities(input: string): string {
-  return input
-    .replaceAll("&nbsp;", " ")
-    .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">");
 }
 
 function toArray<T>(value: T | T[] | undefined): T[] {
