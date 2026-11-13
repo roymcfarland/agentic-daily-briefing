@@ -17,6 +17,9 @@ updates:
       # Evaluate the TypeScript 7 native compiler separately.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # ai (AI SDK) 7 changes the production Gateway request (v3 -> v4 endpoint, toolChoice auto) and cannot be verified while the morning-brief cron is paused (no live Gateway/OIDC run). Revisit when the cron resumes: compare summarizeArticle on v6 vs v7 against the live Gateway and add a real-SDK request/fallback fixture test (PROJECT.md Rule 1). 6.x minor/patch still flow through the group.
+      - dependency-name: "ai"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
