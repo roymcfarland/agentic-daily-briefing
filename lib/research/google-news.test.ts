@@ -47,6 +47,32 @@ describe("fetchGoogleNewsStories", () => {
     ]);
   });
 
+  it("cleans a description containing entity-escaped HTML", async () => {
+    stubGoogleNewsFeed(`<rss><channel><item>
+      <title>Headline</title>
+      <link>https://example.com/story</link>
+      <source>Source</source>
+      <description>&lt;a href="x"&gt;Title&lt;/a&gt; &nbsp;Source</description>
+    </item></channel></rss>`);
+
+    const stories = await fetchGoogleNewsStories("ai", "fixture");
+
+    expect(stories[0]?.summary).toBe("Title");
+  });
+
+  it("preserves a literal entity in a doubly encoded description", async () => {
+    // CDATA passes the entity spellings through the XML parser unchanged.
+    stubGoogleNewsFeed(`<rss><channel><item>
+      <title>Headline</title>
+      <link>https://example.com/story</link>
+      <description><![CDATA[Literal &amp;lt;]]></description>
+    </item></channel></rss>`);
+
+    const stories = await fetchGoogleNewsStories("ai", "fixture");
+
+    expect(stories[0]?.summary).toBe("Literal &lt;");
+  });
+
   it("drops non-https links from the parsed feed", async () => {
     stubGoogleNewsFeed(`<?xml version="1.0"?>
           <rss>

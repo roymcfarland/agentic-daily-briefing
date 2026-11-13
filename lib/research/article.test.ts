@@ -57,6 +57,57 @@ describe("fetchArticleText", () => {
     expect(text).not.toContain(".hidden");
   });
 
+  it.each([
+    ["exact spelling", "</script>"],
+    ["uppercase", "</SCRIPT>"],
+    ["space", "</script >"],
+    ["tab", "</script\t>"],
+    ["newline", "</script\n>"],
+    ["form feed", "</script\f>"],
+    ["carriage return", "</script\r>"],
+    ["slash", "</script/>"],
+    ["an attribute", '</script foo="bar">'],
+  ])("strips script contents when the closing tag uses %s", async (_variant, closingTag) => {
+    stubArticleResponse(`<script type="text/javascript">Hidden text${closingTag}<p>Story</p>`);
+
+    await expect(fetchArticleText("https://example.com/story")).resolves.toBe("Story");
+  });
+
+  it.each([
+    ["a longer tag name", "</scripts>"],
+    ["a nonbreaking space", "</script\u00a0>"],
+  ])("keeps stripping until the real closing tag after %s", async (_variant, falseClosingTag) => {
+    stubArticleResponse(`<script>First hidden text${falseClosingTag}More hidden text</script><p>Story</p>`);
+
+    await expect(fetchArticleText("https://example.com/story")).resolves.toBe("Story");
+  });
+
+  it("strips style and noscript contents when the closing tags contain whitespace", async () => {
+    stubArticleResponse("<style>Hidden style</style ><noscript>Hidden fallback</noscript\n><p>Story</p>");
+
+    await expect(fetchArticleText("https://example.com/story")).resolves.toBe("Story");
+  });
+
+  it("preserves literal entities in doubly encoded text", async () => {
+    stubArticleResponse("<p>&amp;lt;b&amp;gt;</p>");
+
+    await expect(fetchArticleText("https://example.com/story")).resolves.toBe("&lt;b&gt;");
+  });
+
+  it("decodes ordinary entities after stripping tags", async () => {
+    stubArticleResponse("<p>&quot;A&nbsp;&amp;&nbsp;B&#39;s &lt;C&gt;&quot;</p>");
+
+    await expect(fetchArticleText("https://example.com/story")).resolves.toBe(`"A & B's <C>"`);
+  });
+
+  it("preserves text and decodes entities after the final tag delimiter", async () => {
+    stubArticleResponse("<p>Story</p> &amp; <unfinished <unfinished");
+
+    await expect(fetchArticleText("https://example.com/story")).resolves.toBe(
+      "Story & <unfinished <unfinished",
+    );
+  });
+
   it("returns an empty string when the response is not OK", async () => {
     stubArticleResponse("not found", { ok: false });
 
