@@ -118,4 +118,4 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 | **#37 (Audit fix)** | Lockfile-only refresh clearing 12 npm audit advisories (next 16.3.7, sharp 0.35.5, postcss 8.5.28, ai 6.0.296, vitest 4.1.11, tsx 4.23.15/esbuild 0.28.2); no package.json or source changes. | Shipped |
 | **#38 (Pin rolldown binding)** | CI `test`/`smoke` jobs install `@rolldown/binding-linux-x64-gnu` pinned to the lockfile's `rolldown` version instead of latest; no job added or removed. | Shipped |
 | **#39 (Next.js security patch)** | Next.js ^16.4.3 (clears GHSA-2464-fhr4-w9xw), lockfile refresh of transitive advisories, and Node pin 24.22.2; no source changes. | Shipped |
-| **#TBD (Documentation audit)** | Align the README and agent guidance with the runtime, cron, environment, and CI configuration, and document private vulnerability reporting. | Shipped |
+| **#53 (Documentation audit)** | Align the README and agent guidance with the runtime, cron, environment, and CI configuration, and document private vulnerability reporting. | Shipped |
