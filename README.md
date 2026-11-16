@@ -1,16 +1,12 @@
 # Daily Morning Brief
 
-> **Status: paused (2026-09-29).** The daily Vercel Cron trigger has been removed from `vercel.json`, so no briefing emails are sent on a schedule. The route still exists and can still be invoked manually with `CRON_SECRET` (which **will** send an email unless `?preview=1` is used). See "Resuming the daily brief" below.
+> **Status: paused (2026-09-29).** The daily Vercel Cron trigger has been removed from `vercel.json`, so no briefing emails are sent on a schedule. The route still exists and can still be invoked manually with `CRON_SECRET` (which can send an email unless `?preview=1` is used). See "Resuming the daily brief" below.
 
-Next.js App Router project for a daily morning email briefing, designed for Vercel deployment and Vercel Cron.
+This is the source of a personal morning email briefing designed to run on Vercel Cron. It fetches my open tasks from a separate internal API I built ([Workflow Blueprint](https://www.workflowblueprint.io)), pulls live news from a curated set of Google News RSS feeds, ranks stories for decision relevance, and emails one digest to a configured list of recipients. The beats are fixed and the briefing is designed for a single reader.
 
-## About this repo
+The public landing page lives at [roymcfarland.news](https://www.roymcfarland.news). The page still displays a 6:00 AM Mountain delivery time while the cron is paused.
 
-This is the source of a personal production system I use every morning. It runs on Vercel Cron, fetches my open tasks from a separate internal API I built ([Workflow Blueprint](https://www.workflowblueprint.io)), pulls live news from a curated set of Google News RSS feeds, ranks everything for decision relevance, and emails me one digest at 6:00 AM Mountain. It is intentionally hardcoded for one reader and one set of beats; it is not a multi-user product.
-
-The public landing page lives at [roymcfarland.news](https://www.roymcfarland.news).
-
-If you want to understand the architectural reasoning, the constraints, and the rules a code-review agent enforces on every PR, read [`PROJECT.md`](./PROJECT.md) before the code itself. It is the authoritative source of truth for the project and gives more context than the code does on its own.
+If you want to understand the architectural reasoning, the constraints, and the rules a code-review agent enforces on every PR, read [`PROJECT.md`](./PROJECT.md) before the code itself. It is the authoritative source of truth for the project and gives more context than the code does on its own. [AGENTS.md](AGENTS.md) covers contributor and agent workflows.
 
 ## What it does
 
@@ -39,59 +35,54 @@ If you want to understand the architectural reasoning, the constraints, and the 
 - `lib/resend.ts`: email delivery through Resend
 - `lib/env.ts`: environment variable parsing and validation
 - `scripts/preview-email.mjs`: local fixture email preview runner
-- `tests/smoke/`: cron preview endpoint smoke tests
+- `tests/smoke/`: cron route smoke tests
 - `vercel.json`: Vercel Cron config (currently empty; the app is paused)
 
 ## Why one Vercel cron schedule
 
-The schedule is currently disabled (see the Status note above); the following describes the schedule restored when resuming.
-
-Vercel Cron uses UTC schedules. This project is configured with one daily cron at `0 12 * * *`.
-
-That means:
-
-1. It sends once per day, not twice.
-2. On April 4, 2026, that schedule maps to `6:00 AM America/Denver`.
-3. After daylight saving time ends, it will map to `5:00 AM America/Denver` unless you adjust the UTC schedule.
+Restoring the daily schedule adds one trigger at 12:00 UTC (`0 12 * * *`). In `America/Denver` that is 6:00 AM during daylight saving time and 5:00 AM during standard time.
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local` for local development and configure the same values in Vercel production:
+Copy the template for local development. On Vercel, set the briefing configuration in the environment where you intend to invoke the route.
 
 ```bash
 cp .env.example .env.local
 ```
 
-Required values:
+| Name | Purpose | Required? | Where to set |
+|---|---|---|---|
+| `BLUEPRINT_API_BASE_URL` | Workflow Blueprint API base URL | Yes for cron requests | Local / Vercel |
+| `EXTERNAL_API_KEY` | Workflow Blueprint API authentication | Yes for cron requests | Local / Vercel |
+| `RESEND_API_KEY` | Resend authentication | Required in configuration for preview and send | Local / Vercel |
+| `BRIEFING_FROM_EMAIL` | Sender address | Required in configuration for preview and send | Local / Vercel |
+| `BRIEFING_TO_EMAILS` | Comma-separated recipient addresses | Required in configuration for preview and send | Local / Vercel |
+| `CRON_SECRET` | Cron route bearer authentication | Yes for preview and send requests | Local / Vercel |
+| `BRIEFING_IDEMPOTENCY_REDIS_REST_URL`, `KV_REST_API_URL`, `UPSTASH_REDIS_REST_URL` | Redis REST endpoint, in lookup order | One for sends when Next.js runs in production mode | Local / Vercel |
+| `BRIEFING_IDEMPOTENCY_REDIS_REST_TOKEN`, `KV_REST_API_TOKEN`, `UPSTASH_REDIS_REST_TOKEN` | Redis REST authentication, in lookup order | One for sends when Next.js runs in production mode | Local / Vercel |
+| `BRIEFING_IDEMPOTENCY_SENT_TTL_SECONDS` | Redis retention for a completed send | Optional | Local / Vercel |
+| `BRIEFING_IDEMPOTENCY_LOCK_TTL_SECONDS` | Redis retention for an in-progress send lock | Optional | Local / Vercel |
+| `BLUEPRINT_TIMEOUT_MS` | Blueprint request timeout | Optional | Local / Vercel |
+| `BRIEFING_SUBJECT_PREFIX` | Email subject prefix | Optional | Local / Vercel |
+| `BRIEFING_MAX_ITEMS` | Maximum stories selected for the digest | Optional | Local / Vercel |
+| `BRIEFING_SUMMARY_MODEL` | Override the default Gateway model in [the summarizer](lib/research/summarize.ts) | Optional | Local / Vercel |
+| `BRIEFING_SUMMARIES_ENABLED` | Control article summaries, which are enabled by default | Optional | Local / Vercel |
+| `AI_GATEWAY_API_KEY` | AI SDK key for Gateway authentication | Optional for local summaries | Local |
+| `VERCEL_OIDC_TOKEN` | Vercel OIDC fallback used by the Gateway SDK | Automatic on Vercel with OIDC enabled | Vercel runtime |
+| `NODE_ENV` | Controls production idempotency, URL validation, and error details | Set automatically | Next.js runtime |
 
-- `BLUEPRINT_API_BASE_URL`
-- `EXTERNAL_API_KEY`
-- `RESEND_API_KEY`
-- `BRIEFING_FROM_EMAIL`
-- `BRIEFING_TO_EMAILS`
-- `CRON_SECRET`
-- `BRIEFING_IDEMPOTENCY_REDIS_REST_URL`
-- `BRIEFING_IDEMPOTENCY_REDIS_REST_TOKEN`
-
-Optional values:
-
-- `BLUEPRINT_TIMEOUT_MS`
-- `BRIEFING_SUBJECT_PREFIX`
-- `BRIEFING_MAX_ITEMS`
-- `BRIEFING_IDEMPOTENCY_SENT_TTL_SECONDS`
-- `BRIEFING_IDEMPOTENCY_LOCK_TTL_SECONDS`
-- `BRIEFING_SUMMARY_MODEL`: defaults to `openai/gpt-5.4-mini`
-- `BRIEFING_SUMMARIES_ENABLED`: summaries are enabled by default; set to `false` to disable them
-- `AI_GATEWAY_API_KEY`: read by the AI SDK for local summary generation; Vercel uses automatic OIDC authentication
-
-The idempotency variables can use the project-specific names above, Vercel KV's `KV_REST_API_URL` / `KV_REST_API_TOKEN` aliases, or Upstash's `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` aliases. Production sends fail closed without a persistent idempotency backend so cron retries cannot double-send. Outside production, missing Redis configuration automatically falls back to an in-memory store.
+The preview route validates the briefing configuration and can call Blueprint, Google News, and the AI Gateway while assembling the digest. It skips email delivery and the idempotency store. In production mode, sends fail closed without a persistent idempotency backend. Outside production mode, missing Redis configuration falls back to an in-memory store.
 
 ## Local development
 
-Install dependencies:
+The stack is Next.js 16 App Router, React 19, TypeScript 6, and Vitest 5. See [package.json](package.json) for dependency ranges and [package-lock.json](package-lock.json) for resolved versions.
+
+Use Node 24 LTS at the exact pin in [.nvmrc](.nvmrc) and the npm bundled with that Node release, as CI does. Put that bundled npm first on your PATH and avoid a different global npm or pnpm. Install from the committed npm lockfile.
 
 ```bash
-npm install
+nvm install
+nvm use
+npm ci
 ```
 
 Generate the upstream API client from the OpenAPI schema:
@@ -130,15 +121,15 @@ curl -H "Authorization: Bearer $CRON_SECRET" "https://www.roymcfarland.news/api/
 
 A few things I would change with the benefit of hindsight, kept here for honesty rather than polish:
 
-1. **The ranker is mostly hand-tuned regex and source weights.** It works well enough that I read the brief every morning, but it is fragile to topic drift. A small evaluation harness — a few dozen labeled stories per beat, scored against the current ranker — would make changes safer and let me swap the heuristic layer for a small LLM judge without guessing whether quality regressed.
+1. **The ranker is mostly hand-tuned regex and source weights.** It worked well enough for daily use, but it is fragile to topic drift. A small evaluation harness — a few dozen labeled stories per beat, scored against the current ranker — would make changes safer and let me swap the heuristic layer for a small LLM judge without guessing whether quality regressed.
 2. **Idempotency lives in two places.** The route uses Redis/Upstash to lock the day, and Resend's own idempotency key is passed as a backstop. That belt-and-suspenders design has saved me from double sends, but it also means the truth about "did today's brief send" is split across two systems. A single durable record with a clear state machine would be cleaner.
 3. **No structured observability.** Failures show up in Vercel function logs and (sometimes) in the email itself as a warning banner. For a tool I depend on daily, I should have a tiny `/api/health` summary plus a once-a-week digest of partial failures, rather than relying on me noticing a missing brief.
-4. **The landing page and the cron job share a Next.js app for convenience.** That is fine today, but if the briefing logic ever needed a heavier runtime (e.g., a real LLM judge), the right move would be to split the cron into its own service so the marketing site stays static and cheap.
+4. **The landing page and the cron job share a Next.js app for convenience.** That is fine today, but if the briefing logic ever needed a heavier runtime (e.g., a real LLM judge), the right move would be to split the cron into its own service to keep the marketing site small.
 5. **`PROJECT.md` was added late.** The verifier rules and non-goals would have prevented at least three of the dumber refactors I made early on. If I were starting again, I would write `PROJECT.md` before the first commit, not after the tenth.
 
 ## License
 
-This project is licensed under the PolyForm Noncommercial License 1.0.0. See the [LICENSE](LICENSE) file for details. Commercial use is strictly prohibited without express written permission from Roy McFarland.
+This project is licensed under the PolyForm Noncommercial License 1.0.0. See the [LICENSE](LICENSE) file for details. For commercial licensing requests, contact Roy McFarland.
 
 ## Resuming the daily brief
 
@@ -159,8 +150,10 @@ Merging this change to `main` redeploys production and re-creates the daily cron
 
 ## Deploy to Vercel
 
+The Vercel Git integration builds preview deployments for pull requests and deploys production from `main`. A Vercel preview is a deployment of the branch. The cron route's `?preview=1` option controls whether a request sends email.
+
 1. Import the repo into Vercel.
-2. Set the environment variables from `.env.example`.
+2. Configure the [environment variables](#environment-variables) for the intended Vercel environment.
 3. Ensure your sender domain is verified in Resend.
 4. Set `CRON_SECRET` in Vercel and call the route with that shared secret.
 5. Point `roymcfarland.news` and `www.roymcfarland.news` at the Vercel project.
@@ -178,18 +171,26 @@ If the upstream schema changes:
 
 ## Testing
 
-The CI `lint` job runs `npm audit --omit=dev --audit-level=high`, and Dependabot opens pull requests for available npm and GitHub Actions updates on a monthly schedule.
+[CI](.github/workflows/ci.yml) runs lint, tests, smoke tests, and a production build on pull requests and pushes to `main`. The `lint` script type-checks the app. The `lint` job also audits production dependencies. Smoke tests check that the cron route loads and exposes the expected runtime settings.
 
-Run the same four checks as CI:
+Run the CI commands locally. The production build fetches Google Fonts.
 
 ```bash
+npm audit --omit=dev --audit-level=high
 npm run lint
 npm test
 npm run test:smoke
 npm run build
 ```
 
-For a local visual check of the email, run `npm run preview:email` and open `/tmp/email-preview.html` (a text version is also written to `/tmp/email-preview.txt`). The preview uses a fixture digest without network or environment access.
+For a local visual check of the email, run `npm run preview:email` and open `/tmp/email-preview.html` (a text version is also written to `/tmp/email-preview.txt`). The preview uses a fixture digest without network calls or app configuration.
+
+## Security and automation
+
+- [Dependabot](.github/dependabot.yml) checks npm and GitHub Actions monthly, with up to three open version-update PRs per ecosystem. It groups npm minor and patch updates and groups GitHub Actions updates together. It skips major version updates for `@types/node`, `typescript`, and `ai`. [package.json](package.json) also sets a PostCSS override.
+- GitHub CodeQL runs on pull requests. The repository currently has no Gitleaks workflow or configuration.
+- The protected `main` branch requires an up-to-date PR with passing `Vercel`, `lint`, `smoke`, and `test` checks.
+- Report vulnerabilities privately using [SECURITY.md](SECURITY.md).
 
 ## Production notes
 
@@ -199,4 +200,4 @@ For a local visual check of the email, run `npm run preview:email` and open `/tm
 - If a feed fails, the pipeline continues with the remaining sources.
 - The route returns JSON so Vercel Cron logs stay readable.
 - `preview=1` can be used on an authenticated request to inspect the assembled digest without sending email.
-- Sent emails use a stable Chicago-date idempotency key in Redis/Upstash and Resend, so duplicate cron retries for the same day return the persisted send record instead of sending again.
+- Sends use a stable Chicago-date idempotency key for the Redis record and the Resend request. A same-day retry with a completed record returns the stored send details. A retry with a pending lock skips the send while it is in progress.

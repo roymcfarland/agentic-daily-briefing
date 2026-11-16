@@ -11,28 +11,29 @@
 2. `AGENTS.md` — Tactical execution rules (how to run the app, environment setup).
 3. `README.md` — Human-facing documentation and deployment instructions.
 4. `CLAUDE.md` — Redirect pointer for Claude Code.
+5. `SECURITY.md` — Private vulnerability reporting.
 
 ## Purpose
 
 Agentic Daily Briefing is a proprietary Next.js application with two distinct surfaces:
 
-1. **Primary product surface — daily briefing cron job.** A Vercel Cron job that aggregates live research (via Google News RSS) and task state (via the Workflow Blueprint v1 API), ranks the items for decision relevance, and sends a daily morning email briefing to the founder. It is designed for extreme reliability, idempotency, and graceful degradation. This is where the active development work happens. **Currently paused (2026-09-29):** the cron entry has been removed from `vercel.json`; restore it to resume (see README → Resuming the daily brief).
-2. **Secondary surface — public landing page.** A static marketing landing page served at `roymcfarland.news` and `www.roymcfarland.news`. This page exists deliberately and is preserved, but is intentionally minimal. No new pages, components, or interactive features should be added to this surface without an explicit PROJECT.md update.
+1. **Primary product surface — daily briefing cron job.** A route designed for Vercel Cron that aggregates live research (via Google News RSS) and task state (via the Workflow Blueprint v1 API), ranks the items for decision relevance, and sends a daily morning email briefing to the founder. It is designed for extreme reliability, idempotency, and graceful degradation. This is where the active development work happens. **Currently paused (2026-09-29):** the cron entry has been removed from `vercel.json`; restore it to resume (see README → Resuming the daily brief).
+2. **Secondary surface — public landing page.** A marketing landing page rendered on demand and served at `roymcfarland.news` and `www.roymcfarland.news`. This page exists deliberately and is preserved, but is intentionally minimal. No new pages, components, or interactive features should be added to this surface without an explicit PROJECT.md update.
 
 ## Non-goals
 
-1. **Not a multi-user SaaS product** — The app is hardcoded to send to a specific list of recipients (`BRIEFING_TO_EMAILS`). There is no user management, no database of preferences, and no authenticated UI.
+1. **Not a multi-user SaaS product** — The app sends to a specific list of recipients configured through `BRIEFING_TO_EMAILS`. There is no user management, no database of preferences, and no authenticated UI.
 2. **Not a generic newsletter tool** — The research topics, ranking logic, and email formatting are highly specific to the founder's operational needs (task categories from the founder's Workflow Blueprint account, plus a fixed set of news and sports beats).
-3. **Not a stateful application** — The app has no primary database. It uses Vercel KV / Upstash Redis exclusively for idempotency locks to prevent double-sends.
+3. **Not a stateful application** — The app has no primary database. It uses Vercel KV / Upstash Redis for idempotency locks and completed send records.
 4. **Not an expanded marketing site** — The public landing page surface is deliberately minimal. New pages, interactive features, blog posts, signup forms, or analytics integrations are forbidden without an explicit PROJECT.md update authorizing them.
 
 ## Architecture & Stack
 
-- **Framework:** Next.js 16.x App Router, React 19.
-- **Runtime:** Node.js 24 LTS, declared in `package.json` `engines.node` as `24.x` and pinned to `24.22.2` in `.nvmrc` (see Verifier Rule 4 for the authoritative pin and rationale).
-- **Deployment:** Vercel (Serverless Functions + static landing page) triggered by Vercel Cron for the briefing job; the cron trigger is currently paused (PR #35).
+- **Framework:** Next.js App Router and React. See [README](README.md#local-development) for stack versions.
+- **Runtime:** Node.js LTS. See Verifier Rule 4 for the pin and rationale.
+- **Deployment:** Vercel (Serverless Functions, including the landing page) triggered by Vercel Cron for the briefing job; the cron trigger is currently paused (PR #35).
 - **Email:** Resend.
-- **AI summaries:** Vercel AI SDK (`ai`) through the Vercel AI Gateway optionally enriches selected stories in order: Google News URL resolution → article text fetch → LLM summary (default model `openai/gpt-5.4-mini`), with fallback to the RSS description on failure and enrichment hit-rate logging.
+- **AI summaries:** Vercel AI SDK (`ai`) through the Vercel AI Gateway optionally enriches selected stories in order: Google News URL resolution → article text fetch → LLM summary (default model defined in [the summarizer](lib/research/summarize.ts)), with fallback to the RSS description on failure and enrichment hit-rate logging.
 - **Idempotency:** Vercel KV / Upstash Redis REST API, with fail-closed behavior in production.
 - **External API Consumption:** Consumes the Workflow Blueprint v1 task-management API via a generated TypeScript client driven by an OpenAPI spec.
 
@@ -43,7 +44,7 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 - **Hard-fail** any PR that removes the `test`, `test:smoke`, or `lint` scripts from `package.json`.
 
 ### 2. Continuous Integration
-- The CI `lint` job runs `npm audit --omit=dev --audit-level=high`, and Dependabot opens pull requests for available npm and GitHub Actions updates on a monthly schedule.
+- See [README](README.md#testing) for the CI jobs and [Security and automation](README.md#security-and-automation) for required checks and Dependabot coverage.
 - **Hard-fail** any PR that deletes, disables, or removes a job from `.github/workflows/ci.yml`.
 - **Hard-fail** any PR that bypasses required CI checks via admin override without a documented PROJECT.md emergency note.
 
@@ -57,12 +58,12 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
   - `package.json` `engines.node`: `24.x` (npm/pnpm semver-range form; any Node 24 release satisfies the known rolldown floor).
   - `.nvmrc`: a concrete Node 24 LTS patch, currently `24.22.2` (nvm form; nvm does not support `.x`).
   - `.github/workflows/ci.yml`: must use `node-version-file: .nvmrc` (so CI reads the same source of truth as local development).
-- **Why Node 24 LTS:** Node 24 is the current LTS line and satisfies the Vitest 4 / rolldown native binding requirement of runtime >= 22.12 on `ubuntu-latest`, so the minor no longer needs to be pinned in `engines.node` (hence `24.x`). The original 22.12 floor existed for rolldown native bindings; see npm/cli#4828 for the binding-loading failure mode.
-- For a concrete patch-pin update within Node 24, the required `engines.node` review confirms that `24.x` still admits the patched line; the field stays `24.x`. This security patch advances `.nvmrc` to `24.22.2` with that compatible range unchanged.
+- **Why Node 24 LTS:** Node 24 satisfies the locked Vitest and rolldown engine ranges. CI explicitly installs the Linux binding matching the locked rolldown version in the `test` and `smoke` jobs to work around npm/cli#4828. See [CI](.github/workflows/ci.yml).
+- For a concrete patch-pin update within Node 24, review `engines.node` and keep `24.x` if it still admits the patched release.
 - **Hard-fail** any PR that changes `package.json` `engines.node` without updating `.nvmrc`, preserving `.github/workflows/ci.yml` as `node-version-file: .nvmrc`, and updating this rule.
-- **Hard-fail** any PR that changes `.nvmrc` without updating `package.json` `engines.node`, preserving `.github/workflows/ci.yml` as `node-version-file: .nvmrc`, and updating this rule.
+- **Hard-fail** any PR that changes `.nvmrc` without reviewing `package.json` `engines.node` for compatibility, preserving `.github/workflows/ci.yml` as `node-version-file: .nvmrc`, and updating this rule.
 - **Hard-fail** any PR that removes any of those three pin sites.
-- **Hard-fail** any PR that introduces a literal Node version in `ci.yml` (e.g. `node-version: 24`) instead of `node-version-file: .nvmrc`.
+- **Hard-fail** any PR that introduces a literal Node version in `.github/workflows/ci.yml` (e.g. `node-version: 24`) instead of `node-version-file: .nvmrc`.
 
 ### 5. OpenAPI Client Generation
 - **Hard-fail** any PR that manually edits `lib/blueprint/generated/client.ts` without updating the source OpenAPI spec at `openapi/blueprint.openapi.json` and re-running the generation script. The OpenAPI spec is the source of truth for the external contract.
@@ -117,3 +118,4 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 | **#37 (Audit fix)** | Lockfile-only refresh clearing 12 npm audit advisories (next 16.3.7, sharp 0.35.5, postcss 8.5.28, ai 6.0.296, vitest 4.1.11, tsx 4.23.15/esbuild 0.28.2); no package.json or source changes. | Shipped |
 | **#38 (Pin rolldown binding)** | CI `test`/`smoke` jobs install `@rolldown/binding-linux-x64-gnu` pinned to the lockfile's `rolldown` version instead of latest; no job added or removed. | Shipped |
 | **#39 (Next.js security patch)** | Next.js ^16.4.3 (clears GHSA-2464-fhr4-w9xw), lockfile refresh of transitive advisories, and Node pin 24.22.2; no source changes. | Shipped |
+| **#TBD (Documentation audit)** | Align the README and agent guidance with the runtime, cron, environment, and CI configuration, and document private vulnerability reporting. | Shipped |
