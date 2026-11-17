@@ -191,8 +191,8 @@ export default function HomePage() {
           <nav className="nav-links" aria-label="Primary">
             <PrimaryNavLinks />
           </nav>
-          <a href="#subscribe" className="nav-cta">
-            Get the brief
+          <a href="mailto:roy@brightline.io" className="nav-cta">
+            Contact
             <span aria-hidden>→</span>
           </a>
         </div>
@@ -241,11 +241,7 @@ export default function HomePage() {
                 </p>
 
                 <div className="hero-actions">
-                  <a className="btn btn-primary" href="#subscribe">
-                    Subscribe — it&apos;s free
-                    <span aria-hidden>→</span>
-                  </a>
-                  <a className="btn btn-ghost" href="#anatomy">
+                  <a className="btn btn-primary" href="#anatomy">
                     See a sample
                   </a>
                 </div>
@@ -283,7 +279,7 @@ export default function HomePage() {
                         <span />
                       </div>
                       <div className="preview-from">
-                        brief@roymcfarland.news
+                        roy@brightline.io
                       </div>
                     </div>
 
@@ -648,14 +644,14 @@ export default function HomePage() {
         </section>
 
         {/* CTA */}
-        <section className="section" id="subscribe">
+        <section className="section" id="access">
           <div className="container">
             <div className="cta">
               <div className="cta-inner">
                 <div>
-                  <span className="eyebrow">Subscribe</span>
+                  <span className="eyebrow">Access</span>
                   <h2 className="cta-title">
-                    Start tomorrow at{" "}
+                    One brief, every morning at{" "}
                     <span className="accent">six</span>.
                   </h2>
                   <p>
@@ -663,12 +659,16 @@ export default function HomePage() {
                     second send. If a morning has nothing worth your time,
                     you&apos;ll hear that too.
                   </p>
+                  <p>
+                    The brief does not have an open sign-up. To ask about
+                    receiving it, email roy@brightline.io.
+                  </p>
                   <div className="cta-actions">
                     <a
                       className="btn btn-on-dark-primary"
-                      href="mailto:hello@roymcfarland.news?subject=Subscribe%20me%20to%20the%20brief"
+                      href="mailto:roy@brightline.io"
                     >
-                      Subscribe by email
+                      Email Roy
                       <span aria-hidden>→</span>
                     </a>
                     <a
@@ -703,7 +703,7 @@ export default function HomePage() {
             <a href="#beats">Beats</a>
             <a href="#how">How it works</a>
             <a href="#anatomy">Anatomy</a>
-            <a href="mailto:hello@roymcfarland.news">Contact</a>
+            <a href="mailto:roy@brightline.io">Contact</a>
           </div>
           <div className="footer-credit">
             © {currentYear} Roy McFarland · Made by{" "}

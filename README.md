@@ -4,7 +4,7 @@
 
 This is the source of a personal morning email briefing designed to run on Vercel Cron. It fetches my open tasks from a separate internal API I built ([Workflow Blueprint](https://www.workflowblueprint.io)), pulls live news from a curated set of Google News RSS feeds, ranks stories for decision relevance, and emails one digest to a configured list of recipients. The beats are fixed and the briefing is designed for a single reader.
 
-The public landing page lives at [roymcfarland.news](https://www.roymcfarland.news). The page still displays a 6:00 AM Mountain delivery time while the cron is paused.
+The public landing page lives at [roymcfarland.news](https://www.roymcfarland.news). The page still displays a 6:00 AM Mountain delivery time while the cron is paused. The page no longer invites sign-ups; visitors are directed to roy@brightline.io to ask about receiving the brief.
 
 If you want to understand the architectural reasoning, the constraints, and the rules a code-review agent enforces on every PR, read [`PROJECT.md`](./PROJECT.md) before the code itself. It is the authoritative source of truth for the project and gives more context than the code does on its own. [AGENTS.md](AGENTS.md) covers contributor and agent workflows.
 
