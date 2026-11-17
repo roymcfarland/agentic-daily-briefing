@@ -120,3 +120,4 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 | **#39 (Next.js security patch)** | Next.js ^16.4.3 (clears GHSA-2464-fhr4-w9xw), lockfile refresh of transitive advisories, and Node pin 24.22.2; no source changes. | Shipped |
 | **#53 (Documentation audit)** | Align the README and agent guidance with the runtime, cron, environment, and CI configuration, and document private vulnerability reporting. | Shipped |
 | **#54 (Private vulnerability reporting)** | Direct vulnerability reports to GitHub private vulnerability reporting and document the fallback for an unavailable form. | Shipped |
+| **#TBD (Remove public subscribe invitation)** | Landing page keeps the 6:00 AM Mountain wording but no longer invites sign-ups; visitors are pointed to roy@brightline.io. Copy only. | Shipped |
