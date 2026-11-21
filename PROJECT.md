@@ -15,7 +15,7 @@
 
 ## Purpose
 
-Agentic Daily Briefing is a proprietary Next.js application with two distinct surfaces:
+Agentic Daily Briefing is a source-available (PolyForm Noncommercial 1.0.0) Next.js application with two distinct surfaces:
 
 1. **Primary product surface — daily briefing cron job.** A route designed for Vercel Cron that aggregates live research (via Google News RSS) and task state (via the Workflow Blueprint v1 API), ranks the items for decision relevance, and sends a daily morning email briefing to the founder. It is designed for extreme reliability, idempotency, and graceful degradation. This is where the active development work happens. **Currently paused (2026-09-29):** the cron entry has been removed from `vercel.json`; restore it to resume (see README → Resuming the daily brief).
 2. **Secondary surface — public landing page.** A marketing landing page rendered on demand and served at `roymcfarland.news` and `www.roymcfarland.news`. This page exists deliberately and is preserved, but is intentionally minimal. No new pages, components, or interactive features should be added to this surface without an explicit PROJECT.md update.
@@ -118,6 +118,15 @@ Agentic Daily Briefing is a proprietary Next.js application with two distinct su
 | **#37 (Audit fix)** | Lockfile-only refresh clearing 12 npm audit advisories (next 16.3.7, sharp 0.35.5, postcss 8.5.28, ai 6.0.296, vitest 4.1.11, tsx 4.23.15/esbuild 0.28.2); no package.json or source changes. | Shipped |
 | **#38 (Pin rolldown binding)** | CI `test`/`smoke` jobs install `@rolldown/binding-linux-x64-gnu` pinned to the lockfile's `rolldown` version instead of latest; no job added or removed. | Shipped |
 | **#39 (Next.js security patch)** | Next.js ^16.4.3 (clears GHSA-2464-fhr4-w9xw), lockfile refresh of transitive advisories, and Node pin 24.22.2; no source changes. | Shipped |
+| **#42 (Advisory fix and gates)** | Clear the fast-xml-parser advisory, gate CI on the production audit, and add monthly Dependabot updates. Backfilled 2026-11-20. | Shipped |
+| **#43 (Actions bump)** | Dependabot group bump of two GitHub Actions. Backfilled 2026-11-20. | Shipped |
+| **#47 (Dependabot ignores)** | Ignore `@types/node` and TypeScript major updates. Backfilled 2026-11-20. | Shipped |
+| **#48 (npm minor/patch bump)** | Dependabot group bump of seven minor/patch npm updates. Backfilled 2026-11-20. | Shipped |
+| **#49 (Ignore `ai` majors)** | Ignore `ai` major updates until the cron resumes. Backfilled 2026-11-20. | Shipped |
+| **#50 (`ai` patch bump)** | `ai` 6.0.296 to 6.0.326 in the npm minor/patch group. Backfilled 2026-11-20. | Shipped |
+| **#51 (Vitest 5)** | `vitest` 4.1.12 to 5.1.0. Backfilled 2026-11-20. | Shipped |
+| **#52 (Research entity decode fix)** | Decode HTML entities in one pass and match script end tags with whitespace in the research fetcher. Backfilled 2026-11-20. | Shipped |
 | **#53 (Documentation audit)** | Align the README and agent guidance with the runtime, cron, environment, and CI configuration, and document private vulnerability reporting. | Shipped |
 | **#54 (Private vulnerability reporting)** | Direct vulnerability reports to GitHub private vulnerability reporting and document the fallback for an unavailable form. | Shipped |
 | **#55 (Remove public subscribe invitation)** | Landing page keeps the 6:00 AM Mountain wording but no longer invites sign-ups; visitors are pointed to roy@brightline.io. Copy only. | Shipped |
+| **#TBD (Documentation accuracy sweep)** | README and PROJECT.md describe the paused cron and the landing page's stale delivery copy accurately; PROJECT.md says source-available (PolyForm Noncommercial), not proprietary; `BRIEFING_MAX_ITEMS` clamp and `CRON_SECRET` placeholder corrected; PR Sequencing rows #42, #43 and #47 to #52 backfilled. Docs and `.env.example` only. | Shipped |
