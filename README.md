@@ -4,7 +4,7 @@
 
 This is the source of a personal morning email briefing designed to run on Vercel Cron. It fetches my open tasks from a separate internal API I built ([Workflow Blueprint](https://www.workflowblueprint.io)), pulls live news from a curated set of Google News RSS feeds, ranks stories for decision relevance, and emails one digest to a configured list of recipients. The beats are fixed and the briefing is designed for a single reader.
 
-The public landing page lives at [roymcfarland.news](https://www.roymcfarland.news). The page still displays a 6:00 AM Mountain delivery time while the cron is paused. The page no longer invites sign-ups; visitors are directed to roy@brightline.io to ask about receiving the brief.
+The public landing page lives at [roymcfarland.news](https://www.roymcfarland.news). While the cron is paused (`vercel.json` has an empty `crons` array, so nothing fires), the page still shows a 6:00 AM Mountain delivery time and says a Vercel Cron job fires daily at 12:00 UTC; both statements describe the paused schedule, not current behavior. The page no longer invites sign-ups; visitors are directed to roy@brightline.io to ask about receiving the brief.
 
 If you want to understand the architectural reasoning, the constraints, and the rules a code-review agent enforces on every PR, read [`PROJECT.md`](./PROJECT.md) before the code itself. It is the authoritative source of truth for the project and gives more context than the code does on its own. [AGENTS.md](AGENTS.md) covers contributor and agent workflows.
 
@@ -64,7 +64,7 @@ cp .env.example .env.local
 | `BRIEFING_IDEMPOTENCY_LOCK_TTL_SECONDS` | Redis retention for an in-progress send lock | Optional | Local / Vercel |
 | `BLUEPRINT_TIMEOUT_MS` | Blueprint request timeout | Optional | Local / Vercel |
 | `BRIEFING_SUBJECT_PREFIX` | Email subject prefix | Optional | Local / Vercel |
-| `BRIEFING_MAX_ITEMS` | Maximum stories selected for the digest | Optional | Local / Vercel |
+| `BRIEFING_MAX_ITEMS` | Maximum stories selected for the digest (clamped to 10-20; default 10) | Optional | Local / Vercel |
 | `BRIEFING_SUMMARY_MODEL` | Override the default Gateway model in [the summarizer](lib/research/summarize.ts) | Optional | Local / Vercel |
 | `BRIEFING_SUMMARIES_ENABLED` | Control article summaries, which are enabled by default | Optional | Local / Vercel |
 | `AI_GATEWAY_API_KEY` | AI SDK key for Gateway authentication | Optional for local summaries | Local |
